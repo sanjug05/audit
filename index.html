@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIS Showroom Audit</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+  --navy: #0a1628;
+  --navy2: #0f1f3d;
+  --navy3: #162442;
+  --navy4: #1c2d52;
+  --cyan: #00d4ff;
+  --cyan2: #00b8e0;
+  --cyan-dim: rgba(0,212,255,0.12);
+  --gold: #f0a500;
+  --gold2: #d4920a;
+  --gold-dim: rgba(240,165,0,0.12);
+  --green: #00e676;
+  --red: #ff4757;
+  --orange: #ffa502;
+  --text: #e8edf5;
+  --text2: #9fb3cc;
+  --text3: #5a7a99;
+  --border: rgba(0,212,255,0.15);
+  --border2: rgba(255,255,255,0.06);
+  --card: rgba(15,31,61,0.8);
+  --glass: rgba(22,36,66,0.6);
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --glow: 0 0 20px rgba(0,212,255,0.3);
+  --glow-gold: 0 0 20px rgba(240,165,0,0.3);
+  --radius: 12px;
+  --radius2: 8px;
+  --font-head: 'Orbitron', sans-serif;
+  --font-body: 'Exo 2', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--navy);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BG PATTERN */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(240,165,0,0.04) 0%, transparent 50%),
+    linear-gradient(135deg, #0a1628 0%, #0d1e3a 50%, #0a1628 100%);
+  pointer-events:none;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:var(--navy2); }
+::-webkit-scrollbar-thumb { background:var(--cyan2); border-radius:3px; }
+
+/* ══════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════ */
+#loginScreen {
+  position:fixed; inset:0; z-index:1000;
+  display:flex; align-items:center; justify-content:center;
+  background: var(--navy);
+}
+#loginScreen::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(0,212,255,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 60%, rgba(240,165,0,0.07) 0%, transparent 60%);
+}
+.login-box {
+  position:relative; z-index:1;
+  width:420px; max-width:95vw;
+  background: var(--glass);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:48px 40px;
+  backdrop-filter:blur(20px);
+  box-shadow: var(--shadow), var(--glow);
+  animation: fadeUp 0.6s ease;
+}
+.login-logo {
+  text-align:center; margin-bottom:32px;
+}
+.login-logo .logo-icon {
+  width:72px; height:72px; margin:0 auto 16px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  border-radius:18px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; color:var(--navy);
+  box-shadow: var(--glow);
+}
+.login-logo h1 {
+  font-family: var(--font-head);
+  font-size:1.1rem; font-weight:700;
+  color:var(--cyan); letter-spacing:2px;
+}
+.login-logo p { color:var(--text2); font-size:0.85rem; margin-top:4px; }
+
+.form-group { margin-bottom:20px; }
+.form-group label {
+  display:block; font-size:0.8rem; font-weight:600;
+  color:var(--text2); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;
+}
+.form-group input {
+  width:100%; padding:12px 16px;
+  background: rgba(255,255,255,0.05);
+  border:1px solid var(--border);
+  border-radius:var(--radius2);
+  color:var(--text); font-family:var(--font-body); font-size:0.95rem;
+  transition:all 0.3s;
+  outline:none;
+}
+.form-group input:focus {
+  border-color:var(--cyan);
+  background: rgba(0,212,255,0.08);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+.form-group input::placeholder { color:var(--text3); }
+
+.btn-primary {
+  width:100%; padding:14px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  border:none; border-radius:var(--radius2);
+  color:var(--navy); font-family:var(--font-body); font-size:1rem; font-weight:700;
+  cursor:pointer; transition:all 0.3s;
+  letter-spacing:1px;
+}
+.btn-primary:hover { transform:translateY(-2px); box-shadow: var(--glow); }
+.btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+.login-error {
+  margin-top:16px; padding:10px 14px;
+  background: rgba(255,71,87,0.15);
+  border:1px solid rgba(255,71,87,0.4);
+  border-radius:var(--radius2);
+  color:#ff4757; font-size:0.85rem; text-align:center;
+  display:none;
+}
+
+/* ══════════════════════════════════
+   APP SHELL
+══════════════════════════════════ */
+#appShell { display:none; min-height:100vh; position:relative; z-index:1; }
+
+/* SIDEBAR */
+#sidebar {
+  position:fixed; left:0; top:0; bottom:0;
+  width:260px;
+  background: var(--navy2);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  z-index:100;
+  transition: transform 0.3s ease;
+}
+.sidebar-header {
+  padding:24px 20px;
+  border-bottom:1px solid var(--border2);
+}
+.sidebar-brand {
+  display:flex; align-items:center; gap:12px;
+}
+.brand-icon {
+  width:44px; height:44px; flex-shrink:0;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; color:var(--navy); font-weight:900;
+  font-family:var(--font-head);
+}
+.brand-text h2 {
+  font-family:var(--font-head); font-size:0.85rem; font-weight:700;
+  color:var(--cyan); letter-spacing:1px; line-height:1.2;
+}
+.brand-text p { font-size:0.7rem; color:var(--text3); margin-top:2px; }
+
+.sidebar-user {
+  padding:16px 20px;
+  border-bottom:1px solid var(--border2);
+  display:flex; align-items:center; gap:12px;
+}
+.user-avatar {
+  width:38px; height:38px; border-radius:50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:0.9rem; color:var(--navy); flex-shrink:0;
+}
+.user-info h4 { font-size:0.85rem; font-weight:600; color:var(--text); }
+.user-info p { font-size:0.72rem; color:var(--cyan); font-weight:500; margin-top:1px; }
+
+.sidebar-nav { flex:1; overflow-y:auto; padding:12px 12px; }
+.nav-section-label {
+  font-size:0.65rem; font-weight:700; color:var(--text3);
+  letter-spacing:2px; text-transform:uppercase;
+  padding:8px 8px 4px;
+  margin-top:8px;
+}
+.nav-item {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 12px; border-radius:var(--radius2);
+  cursor:pointer; transition:all 0.2s;
+  color:var(--text2); font-size:0.88rem; font-weight:500;
+  margin-bottom:2px; position:relative;
+}
+.nav-item:hover { background:var(--cyan-dim); color:var(--cyan); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,212,255,0.05));
+  color:var(--cyan);
+  border:1px solid rgba(0,212,255,0.2);
+}
+.nav-item.active::before {
+  content:'';
+  position:absolute; left:0; top:50%; transform:translateY(-50%);
+  width:3px; height:60%; background:var(--cyan);
+  border-radius:0 3px 3px 0;
+}
+.nav-item i { width:18px; text-align:center; font-size:0.9rem; }
+.nav-badge {
+  margin-left:auto; min-width:20px; height:20px;
+  background:var(--red); border-radius:10px;
+  font-size:0.68rem; font-weight:700; color:white;
+  display:flex; align-items:center; justify-content:center; padding:0 5px;
+}
+
+.sidebar-footer {
+  padding:16px 20px;
+  border-top:1px solid var(--border2);
+}
+.btn-logout {
+  width:100%; padding:10px;
+  background:transparent; border:1px solid rgba(255,71,87,0.3);
+  border-radius:var(--radius2);
+  color:#ff4757; font-family:var(--font-body); font-size:0.85rem;
+  cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-logout:hover { background:rgba(255,71,87,0.1); border-color:#ff4757; }
+
+/* MAIN CONTENT */
+#mainContent {
+  margin-left:260px;
+  min-height:100vh;
+  padding:24px;
+}
+
+.page-header {
+  margin-bottom:28px;
+  display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px;
+}
+.page-title h1 {
+  font-family:var(--font-head); font-size:1.4rem; font-weight:700;
+  color:var(--text); letter-spacing:1px;
+}
+.page-title p { color:var(--text2); font-size:0.85rem; margin-top:4px; }
+.page-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+/* BUTTONS */
+.btn { padding:10px 20px; border-radius:var(--radius2); border:none; cursor:pointer; font-family:var(--font-body); font-size:0.88rem; font-weight:600; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px; }
+.btn-cyan { background:linear-gradient(135deg,var(--cyan),var(--cyan2)); color:var(--navy); }
+.btn-cyan:hover { transform:translateY(-1px); box-shadow:var(--glow); }
+.btn-gold { background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); }
+.btn-gold:hover { transform:translateY(-1px); box-shadow:var(--glow-gold); }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text2); }
+.btn-outline:hover { border-color:var(--cyan); color:var(--cyan); }
+.btn-danger { background:rgba(255,71,87,0.15); border:1px solid rgba(255,71,87,0.4); color:#ff4757; }
+.btn-danger:hover { background:rgba(255,71,87,0.25); }
+.btn-sm { padding:7px 14px; font-size:0.8rem; }
+
+/* CARDS */
+.card {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  backdrop-filter:blur(10px);
+  transition:all 0.3s;
+}
+.card:hover { border-color:var(--border); }
+.card-header {
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.card-header h3 { font-family:var(--font-head); font-size:0.85rem; font-weight:700; color:var(--text); letter-spacing:1px; }
+.card-body { padding:20px; }
+
+/* KPI CARDS */
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+.kpi-card {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  padding:20px;
+  position:relative; overflow:hidden;
+  transition:all 0.3s;
+}
+.kpi-card:hover { transform:translateY(-3px); border-color:var(--border); box-shadow:var(--shadow); }
+.kpi-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:3px;
+}
+.kpi-card.cyan::before { background:linear-gradient(90deg,var(--cyan),var(--cyan2)); }
+.kpi-card.gold::before { background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+.kpi-card.green::before { background:linear-gradient(90deg,var(--green),#00c853); }
+.kpi-card.red::before { background:linear-gradient(90deg,var(--red),#ff6b7a); }
+.kpi-card.orange::before { background:linear-gradient(90deg,var(--orange),#ff8c00); }
+
+.kpi-icon {
+  width:44px; height:44px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.2rem; margin-bottom:14px;
+}
+.kpi-icon.cyan { background:var(--cyan-dim); color:var(--cyan); }
+.kpi-icon.gold { background:var(--gold-dim); color:var(--gold); }
+.kpi-icon.green { background:rgba(0,230,118,0.1); color:var(--green); }
+.kpi-icon.red { background:rgba(255,71,87,0.1); color:var(--red); }
+.kpi-icon.orange { background:rgba(255,165,2,0.1); color:var(--orange); }
+
+.kpi-value { font-family:var(--font-head); font-size:2rem; font-weight:700; color:var(--text); line-height:1; }
+.kpi-label { font-size:0.78rem; color:var(--text2); margin-top:6px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; }
+.kpi-sub { font-size:0.75rem; color:var(--text3); margin-top:4px; }
+
+/* GRID LAYOUTS */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+.grid-65-35 { display:grid; grid-template-columns:1fr 0.54fr; gap:20px; }
+
+/* PAGES */
+.page { display:none; animation:fadeIn 0.3s ease; }
+.page.active { display:block; }
+
+/* TABLE */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th {
+  padding:10px 14px; text-align:left;
+  font-size:0.72rem; font-weight:700; color:var(--text3);
+  text-transform:uppercase; letter-spacing:1px;
+  border-bottom:1px solid var(--border2);
+  white-space:nowrap;
+}
+.data-table td {
+  padding:12px 14px; font-size:0.85rem; color:var(--text2);
+  border-bottom:1px solid var(--border2);
+  transition:background 0.2s;
+}
+.data-table tr:hover td { background:rgba(255,255,255,0.02); }
+.data-table tr:last-child td { border-bottom:none; }
+
+/* BADGES */
+.badge {
+  display:inline-flex; align-items:center;
+  padding:3px 10px; border-radius:20px;
+  font-size:0.72rem; font-weight:700; letter-spacing:0.5px;
+}
+.badge-excellent { background:rgba(0,230,118,0.15); color:var(--green); border:1px solid rgba(0,230,118,0.3); }
+.badge-good { background:rgba(0,212,255,0.15); color:var(--cyan); border:1px solid rgba(0,212,255,0.3); }
+.badge-average { background:rgba(255,165,2,0.15); color:var(--orange); border:1px solid rgba(255,165,2,0.3); }
+.badge-critical { background:rgba(255,71,87,0.15); color:var(--red); border:1px solid rgba(255,71,87,0.3); }
+.badge-open { background:rgba(255,71,87,0.15); color:var(--red); }
+.badge-closed { background:rgba(0,230,118,0.15); color:var(--green); }
+.badge-pending { background:rgba(255,165,2,0.15); color:var(--orange); }
+
+/* SCORE CIRCLE */
+.score-circle {
+  width:80px; height:80px; border-radius:50%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border:3px solid var(--cyan);
+  font-family:var(--font-head);
+}
+.score-circle .score-num { font-size:1.4rem; font-weight:700; color:var(--cyan); line-height:1; }
+.score-circle .score-max { font-size:0.6rem; color:var(--text3); }
+
+/* FORM STYLES */
+.audit-form { max-width:900px; }
+.form-section {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  overflow:hidden;
+}
+.form-section-header {
+  padding:16px 20px;
+  background:rgba(0,212,255,0.05);
+  border-bottom:1px solid var(--border2);
+  display:flex; align-items:center; gap:12px;
+}
+.form-section-header .section-num {
+  width:28px; height:28px; border-radius:50%;
+  background:var(--cyan); color:var(--navy);
+  font-weight:700; font-size:0.8rem; font-family:var(--font-head);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.form-section-header h3 { font-family:var(--font-head); font-size:0.88rem; font-weight:700; color:var(--text); }
+.form-section-body { padding:20px; }
+
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.form-row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.form-row.cols-1 { grid-template-columns:1fr; }
+
+.field-group { display:flex; flex-direction:column; gap:6px; }
+.field-group label { font-size:0.78rem; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; }
+.field-group input,
+.field-group select,
+.field-group textarea {
+  padding:10px 14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius2);
+  color:var(--text); font-family:var(--font-body); font-size:0.9rem;
+  transition:all 0.3s; outline:none;
+}
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus {
+  border-color:var(--cyan);
+  background:rgba(0,212,255,0.06);
+  box-shadow:0 0 0 3px rgba(0,212,255,0.1);
+}
+.field-group select option { background:var(--navy2); }
+.field-group textarea { resize:vertical; min-height:80px; }
+
+/* RATING WIDGET */
+.rating-param { margin-bottom:14px; }
+.rating-label { font-size:0.82rem; color:var(--text); margin-bottom:8px; font-weight:500; }
+.rating-stars { display:flex; gap:6px; }
+.rating-btn {
+  width:36px; height:36px; border-radius:var(--radius2);
+  border:1px solid var(--border);
+  background:transparent; color:var(--text3);
+  font-family:var(--font-head); font-size:0.8rem; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center;
+}
+.rating-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.rating-btn.selected-1, .rating-btn.selected-2 { background:rgba(255,71,87,0.2); border-color:var(--red); color:var(--red); }
+.rating-btn.selected-3 { background:rgba(255,165,2,0.2); border-color:var(--orange); color:var(--orange); }
+.rating-btn.selected-4 { background:rgba(0,212,255,0.2); border-color:var(--cyan); color:var(--cyan); }
+.rating-btn.selected-5 { background:rgba(0,230,118,0.2); border-color:var(--green); color:var(--green); }
+
+/* SCORE BAR */
+.score-bar-wrap { margin-bottom:10px; }
+.score-bar-label { display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text2); margin-bottom:4px; }
+.score-bar { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
+.score-bar-fill { height:100%; border-radius:3px; transition:width 0.6s ease; }
+.fill-excellent { background:linear-gradient(90deg,var(--green),#00c853); }
+.fill-good { background:linear-gradient(90deg,var(--cyan),var(--cyan2)); }
+.fill-average { background:linear-gradient(90deg,var(--orange),#ff8c00); }
+.fill-critical { background:linear-gradient(90deg,var(--red),#ff6b7a); }
+
+/* SVG CHARTS */
+.chart-container { position:relative; }
+svg text { font-family:var(--font-body); }
+
+/* FILTERS BAR */
+.filters-bar {
+  display:flex; gap:10px; flex-wrap:wrap;
+  padding:14px 16px;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  margin-bottom:16px;
+}
+.filter-select {
+  padding:8px 12px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius2);
+  color:var(--text2); font-family:var(--font-body); font-size:0.85rem;
+  outline:none; cursor:pointer; min-width:140px;
+  transition:all 0.2s;
+}
+.filter-select:focus { border-color:var(--cyan); color:var(--text); }
+.filter-select option { background:var(--navy2); }
+
+/* SEARCH */
+.search-box {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius2);
+  flex:1; min-width:200px;
+}
+.search-box input {
+  background:none; border:none; outline:none;
+  color:var(--text); font-family:var(--font-body); font-size:0.88rem; flex:1;
+}
+.search-box input::placeholder { color:var(--text3); }
+.search-box i { color:var(--text3); font-size:0.85rem; }
+
+/* MODAL */
+.modal-overlay {
+  position:fixed; inset:0; z-index:500;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; animation:fadeIn 0.2s; }
+.modal-box {
+  background:var(--navy2);
+  border:1px solid var(--border);
+  border-radius:16px;
+  width:600px; max-width:96vw; max-height:90vh;
+  overflow-y:auto;
+  box-shadow:var(--shadow);
+  animation:fadeUp 0.3s ease;
+}
+.modal-header {
+  padding:20px 24px 16px;
+  border-bottom:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.modal-header h3 { font-family:var(--font-head); font-size:1rem; color:var(--text); }
+.modal-close { background:none; border:none; color:var(--text3); font-size:1.2rem; cursor:pointer; transition:color 0.2s; }
+.modal-close:hover { color:var(--red); }
+.modal-body { padding:24px; }
+.modal-footer { padding:16px 24px; border-top:1px solid var(--border2); display:flex; gap:10px; justify-content:flex-end; }
+
+/* TOAST */
+#toast {
+  position:fixed; bottom:24px; right:24px; z-index:1000;
+  padding:14px 20px; border-radius:var(--radius2);
+  font-size:0.88rem; font-weight:500;
+  max-width:360px; display:none;
+  animation:slideUp 0.3s ease;
+}
+#toast.success { background:rgba(0,230,118,0.15); border:1px solid rgba(0,230,118,0.4); color:var(--green); }
+#toast.error { background:rgba(255,71,87,0.15); border:1px solid rgba(255,71,87,0.4); color:var(--red); }
+#toast.info { background:rgba(0,212,255,0.15); border:1px solid rgba(0,212,255,0.4); color:var(--cyan); }
+
+/* LOADING */
+#loadingOverlay {
+  position:fixed; inset:0; z-index:900;
+  background:rgba(10,22,40,0.85);
+  backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center;
+  flex-direction:column; gap:16px;
+}
+#loadingOverlay.active { display:flex; }
+.spinner {
+  width:48px; height:48px; border-radius:50%;
+  border:3px solid var(--border);
+  border-top-color:var(--cyan);
+  animation:spin 0.8s linear infinite;
+}
+#loadingOverlay p { color:var(--text2); font-size:0.9rem; }
+
+/* STEP INDICATOR */
+.step-indicator {
+  display:flex; align-items:center; gap:0;
+  margin-bottom:24px;
+}
+.step {
+  display:flex; align-items:center; gap:8px;
+  font-size:0.78rem; font-weight:600; color:var(--text3);
+  position:relative;
+}
+.step-num {
+  width:28px; height:28px; border-radius:50%;
+  border:2px solid var(--border); color:var(--text3);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-head); font-size:0.72rem;
+  transition:all 0.3s; flex-shrink:0;
+}
+.step.active .step-num { border-color:var(--cyan); color:var(--cyan); background:var(--cyan-dim); }
+.step.done .step-num { border-color:var(--green); background:var(--green); color:var(--navy); }
+.step.active { color:var(--cyan); }
+.step-line { flex:1; height:2px; background:var(--border); margin:0 8px; min-width:20px; transition:background 0.3s; }
+.step-line.done { background:var(--green); }
+
+/* REGION MAP (SVG INDIA) */
+.region-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+.region-card {
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--radius2);
+  padding:16px;
+  cursor:pointer; transition:all 0.3s;
+  text-align:center;
+}
+.region-card:hover { border-color:var(--cyan); transform:translateY(-2px); }
+.region-card .region-name { font-family:var(--font-head); font-size:0.75rem; font-weight:700; color:var(--text); margin-bottom:8px; }
+.region-card .region-score { font-family:var(--font-head); font-size:1.8rem; font-weight:700; }
+.region-card .region-audits { font-size:0.72rem; color:var(--text3); margin-top:4px; }
+
+/* PHOTO UPLOAD */
+.photo-upload-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.photo-slot {
+  border:2px dashed var(--border);
+  border-radius:var(--radius2);
+  height:100px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; cursor:pointer; transition:all 0.2s;
+  position:relative; overflow:hidden;
+}
+.photo-slot:hover { border-color:var(--cyan); }
+.photo-slot i { font-size:1.5rem; color:var(--text3); }
+.photo-slot span { font-size:0.75rem; color:var(--text3); }
+.photo-slot img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.photo-slot input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+
+/* ANIMATIONS */
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+/* MOBILE */
+@media (max-width:768px) {
+  #sidebar { transform:translateX(-260px); }
+  #sidebar.open { transform:translateX(0); box-shadow:20px 0 40px rgba(0,0,0,0.5); }
+  #mainContent { margin-left:0; padding:16px; }
+  .grid-2, .grid-65-35 { grid-template-columns:1fr; }
+  .grid-3 { grid-template-columns:1fr 1fr; }
+  .form-row { grid-template-columns:1fr; }
+  #menuToggle { display:flex; }
+  .kpi-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+#menuToggle {
+  display:none; position:fixed; top:16px; left:16px; z-index:200;
+  width:40px; height:40px; background:var(--navy2);
+  border:1px solid var(--border); border-radius:var(--radius2);
+  align-items:center; justify-content:center;
+  color:var(--cyan); cursor:pointer; font-size:1rem;
+}
+
+.empty-state {
+  text-align:center; padding:60px 20px;
+  color:var(--text3);
+}
+.empty-state i { font-size:3rem; margin-bottom:16px; opacity:0.3; display:block; }
+.empty-state p { font-size:0.9rem; }
+
+/* SCORE SUMMARY LIVE */
+.live-score-box {
+  position:sticky; top:24px;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  padding:20px;
+}
+.live-score-num {
+  font-family:var(--font-head); font-size:3rem; font-weight:900;
+  text-align:center; line-height:1;
+}
+.live-score-label { text-align:center; font-size:0.78rem; color:var(--text2); margin-top:4px; }
+.live-score-category { text-align:center; margin-top:12px; }
+.live-score-cat-bars { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+
+/* DONUT CHART WRAPPER */
+.donut-wrap { display:flex; align-items:center; gap:20px; }
+.donut-legend { display:flex; flex-direction:column; gap:10px; }
+.legend-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text2); }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* DETAIL VIEW */
+.audit-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.detail-field { padding:12px; background:rgba(255,255,255,0.03); border-radius:var(--radius2); }
+.detail-field label { font-size:0.7rem; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+.detail-field p { font-size:0.9rem; color:var(--text); margin-top:4px; font-weight:500; }
+
+/* PARAM GRID in detail */
+.param-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
+.param-item { padding:12px; background:rgba(255,255,255,0.03); border-radius:var(--radius2); }
+.param-item .p-label { font-size:0.72rem; color:var(--text3); margin-bottom:6px; }
+.param-item .p-score { display:flex; gap:4px; }
+.p-dot { width:18px; height:18px; border-radius:4px; }
+
+/* NATIONAL DASHBOARD */
+.national-table-wrap { overflow-x:auto; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p>Loading AIS Showroom Audit...</p>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon"><i class="fas fa-store-alt"></i></div>
+      <h1>AIS SHOWROOM AUDIT</h1>
+      <p>Channel Management · Audit Intelligence Platform</p>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="loginEmail" placeholder="you@aiswindows.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">
+      <i class="fas fa-sign-in-alt" style="margin-right:8px"></i> Sign In
+    </button>
+    <div id="loginError" class="login-error"></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell">
+
+  <!-- MENU TOGGLE (mobile) -->
+  <div id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-icon">A</div>
+        <div class="brand-text">
+          <h2>AIS AUDIT</h2>
+          <p>Showroom Intelligence</p>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-info">
+        <h4 id="userName">User</h4>
+        <p id="userRole">Loading...</p>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item active" onclick="showPage('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
+      <div class="nav-item" onclick="showPage('newAudit')"><i class="fas fa-plus-circle"></i> New Audit</div>
+
+      <div class="nav-section-label">Views</div>
+      <div class="nav-item" onclick="showPage('auditSummary')"><i class="fas fa-list-ul"></i> Audit Summary</div>
+      <div class="nav-item" onclick="showPage('categoryDist')"><i class="fas fa-chart-pie"></i> Category Distribution</div>
+      <div class="nav-item" onclick="showPage('criticalAudits')">
+        <i class="fas fa-exclamation-triangle"></i> Critical Audits
+        <span class="nav-badge" id="criticalBadge">0</span>
+      </div>
+
+      <div class="nav-section-label">Analytics</div>
+      <div class="nav-item" onclick="showPage('nationalDashboard')"><i class="fas fa-globe-asia"></i> National Dashboard</div>
+      <div class="nav-item" onclick="showPage('regionPerformance')"><i class="fas fa-map-marked-alt"></i> Region Performance</div>
+    </div>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main id="mainContent">
+
+    <!-- ═══════════════ DASHBOARD ═══════════════ -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Dashboard</h1>
+          <p id="dashGreeting">Welcome back · <span id="dashDate"></span></p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-cyan" onclick="showPage('newAudit')"><i class="fas fa-plus"></i> New Audit</button>
+          <button class="btn btn-outline" onclick="refreshDashboard()"><i class="fas fa-sync"></i> Refresh</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="dashKPIs">
+        <div class="kpi-card cyan">
+          <div class="kpi-icon cyan"><i class="fas fa-clipboard-check"></i></div>
+          <div class="kpi-value" id="kpiTotal">—</div>
+          <div class="kpi-label">Total Audits</div>
+          <div class="kpi-sub">This month</div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="kpi-icon gold"><i class="fas fa-star"></i></div>
+          <div class="kpi-value" id="kpiAvgScore">—</div>
+          <div class="kpi-label">Avg Score</div>
+          <div class="kpi-sub">Out of 105</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon green"><i class="fas fa-trophy"></i></div>
+          <div class="kpi-value" id="kpiExcellent">—</div>
+          <div class="kpi-label">Excellent</div>
+          <div class="kpi-sub">90+ score</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-icon red"><i class="fas fa-exclamation-circle"></i></div>
+          <div class="kpi-value" id="kpiCritical">—</div>
+          <div class="kpi-label">Critical</div>
+          <div class="kpi-sub">Below 55</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-icon orange"><i class="fas fa-tasks"></i></div>
+          <div class="kpi-value" id="kpiOpenActions">—</div>
+          <div class="kpi-label">Open Actions</div>
+          <div class="kpi-sub">Pending closure</div>
+        </div>
+      </div>
+
+      <div class="grid-65-35" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar" style="color:var(--cyan);margin-right:8px"></i>Score Distribution</h3>
+            <span style="font-size:0.78rem;color:var(--text3)">All audits</span>
+          </div>
+          <div class="card-body">
+            <svg id="barChart" width="100%" height="200" viewBox="0 0 500 200"></svg>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-circle" style="color:var(--gold);margin-right:8px"></i>Category Mix</h3>
+          </div>
+          <div class="card-body">
+            <div class="donut-wrap">
+              <svg id="donutChart" width="120" height="120" viewBox="0 0 120 120"></svg>
+              <div class="donut-legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-clock" style="color:var(--cyan);margin-right:8px"></i>Recent Audits</h3>
+            <button class="btn btn-outline btn-sm" onclick="showPage('auditSummary')">View All</button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table class="data-table" id="recentAuditsTable">
+              <thead><tr>
+                <th>Partner</th><th>Score</th><th>Category</th><th>Date</th>
+              </tr></thead>
+              <tbody id="recentAuditsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-map-marker-alt" style="color:var(--gold);margin-right:8px"></i>Region Snapshot</h3>
+          </div>
+          <div class="card-body">
+            <div id="regionSnapshot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ NEW AUDIT ═══════════════ -->
+    <div id="page-newAudit" class="page">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>New Audit</h1>
+          <p>Conduct a showroom inspection & score the partner</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:24px;align-items:flex-start">
+        <div class="audit-form" style="flex:1">
+
+          <!-- STEP 1: IDENTITY -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-num">1</div>
+              <h3>Audit Identity & Location</h3>
+            </div>
+            <div class="form-section-body">
+              <div class="form-row cols-3">
+                <div class="field-group">
+                  <label>Audit Date</label>
+                  <input type="date" id="f_audit_date">
+                </div>
+                <div class="field-group">
+                  <label>Audit Type</label>
+                  <select id="f_audit_type">
+                    <option value="">Select...</option>
+                    <option value="Internal">Internal</option>
+                    <option value="External">External</option>
+                    <option value="Surprise">Surprise</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label>Region</label>
+                  <select id="f_region">
+                    <option value="">Select...</option>
+                    <option>N1</option><option>N2</option>
+                    <option>S1</option><option>S2</option>
+                    <option>E1</option><option>E2</option>
+                    <option>W1</option><option>W2</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="field-group">
+                  <label>Channel Partner Name</label>
+                  <input type="text" id="f_partner" placeholder="e.g. Inxterior Solution LLP">
+                </div>
+                <div class="field-group">
+                  <label>ASM / RM Name</label>
+                  <input type="text" id="f_asm" placeholder="Area Sales Manager">
+                </div>
+              </div>
+              <div class="form-row cols-3">
+                <div class="field-group">
+                  <label>CSE / DSE Name</label>
+                  <input type="text" id="f_cse" placeholder="Sales Executive">
+                </div>
+                <div class="field-group">
+                  <label>City</label>
+                  <input type="text" id="f_city" placeholder="e.g. Bangalore">
+                </div>
+                <div class="field-group">
+                  <label>State</label>
+                  <input type="text" id="f_state" placeholder="e.g. Karnataka">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: PRODUCT DISPLAY -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-num">2</div>
+              <h3>Product Display — 9 Parameters (max 45)</h3>
+            </div>
+            <div class="form-section-body">
+              <div id="params-product"></div>
+            </div>
+          </div>
+
+          <!-- STEP 3: STAFF & SERVICE -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-num">3</div>
+              <h3>Staff & Service — 5 Parameters (max 25)</h3>
+            </div>
+            <div class="form-section-body">
+              <div id="params-staff"></div>
+            </div>
+          </div>
+
+          <!-- STEP 4: BRANDING -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-num">4</div>
+              <h3>Branding & Marketing — 4 Parameters (max 20)</h3>
+            </div>
+            <div class="form-section-body">
+              <div id="params-branding"></div>
+            </div>
+          </div>
+
+          <!-- STEP 5: AMBIENCE -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-num">5</div>
+              <h3>Ambience — 3 Parameters (max 15)</h3>
+            </div>
+            <div class="form-section-body">
+              <div id="params-ambience"></div>
+            </div>
+          </div>
+
+          <!-- STEP 6: ACTIONS & PHOTOS -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-num">6</div>
+              <h3>Observations, Actions & Photos</h3>
+            </div>
+            <div class="form-section-body">
+              <div class="form-row">
+                <div class="field-group">
+                  <label>Critical Observations?</label>
+                  <select id="f_critical_obs">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label>Action Required?</label>
+                  <select id="f_action_required">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row" id="actionFields" style="display:none">
+                <div class="field-group">
+                  <label>Responsible Person</label>
+                  <input type="text" id="f_responsible" placeholder="Name">
+                </div>
+                <div class="field-group">
+                  <label>Target Date</label>
+                  <input type="date" id="f_target_date">
+                </div>
+              </div>
+              <div class="form-row cols-1" id="obsField" style="display:none">
+                <div class="field-group">
+                  <label>Critical Observations Detail</label>
+                  <textarea id="f_obs_detail" placeholder="Describe critical observations..."></textarea>
+                </div>
+              </div>
+
+              <div style="margin-top:16px">
+                <label style="font-size:0.78rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:10px">Showroom Photos</label>
+                <div class="photo-upload-grid">
+                  <div class="photo-slot" id="slot-front">
+                    <i class="fas fa-camera"></i><span>Front Elevation</span>
+                    <input type="file" accept="image/*" onchange="handlePhoto(this,'front')">
+                  </div>
+                  <div class="photo-slot" id="slot-display">
+                    <i class="fas fa-camera"></i><span>Display Area</span>
+                    <input type="file" accept="image/*" onchange="handlePhoto(this,'display')">
+                  </div>
+                  <div class="photo-slot" id="slot-branding">
+                    <i class="fas fa-camera"></i><span>Branding</span>
+                    <input type="file" accept="image/*" onchange="handlePhoto(this,'branding')">
+                  </div>
+                  <div class="photo-slot" id="slot-reception">
+                    <i class="fas fa-camera"></i><span>Reception</span>
+                    <input type="file" accept="image/*" onchange="handlePhoto(this,'reception')">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-bottom:40px">
+            <button class="btn btn-outline" onclick="resetForm()"><i class="fas fa-undo"></i> Reset</button>
+            <button class="btn btn-cyan" onclick="submitAudit()" style="flex:1"><i class="fas fa-paper-plane"></i> Submit Audit</button>
+          </div>
+        </div>
+
+        <!-- LIVE SCORE SIDEBAR -->
+        <div style="width:220px;flex-shrink:0">
+          <div class="live-score-box">
+            <div class="live-score-num" id="liveScoreNum" style="color:var(--text3)">0</div>
+            <div class="live-score-label">/ 105 Points</div>
+            <div class="live-score-category" id="liveCategory">
+              <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--text3)">Not Scored</span>
+            </div>
+            <div class="live-score-cat-bars" id="liveCatBars">
+              <div class="score-bar-wrap">
+                <div class="score-bar-label"><span style="font-size:0.7rem">Product Display</span><span id="lb-product">0/45</span></div>
+                <div class="score-bar"><div class="score-bar-fill fill-good" id="bar-product" style="width:0%"></div></div>
+              </div>
+              <div class="score-bar-wrap">
+                <div class="score-bar-label"><span style="font-size:0.7rem">Staff & Service</span><span id="lb-staff">0/25</span></div>
+                <div class="score-bar"><div class="score-bar-fill fill-good" id="bar-staff" style="width:0%"></div></div>
+              </div>
+              <div class="score-bar-wrap">
+                <div class="score-bar-label"><span style="font-size:0.7rem">Branding</span><span id="lb-branding">0/20</span></div>
+                <div class="score-bar"><div class="score-bar-fill fill-good" id="bar-branding" style="width:0%"></div></div>
+              </div>
+              <div class="score-bar-wrap">
+                <div class="score-bar-label"><span style="font-size:0.7rem">Ambience</span><span id="lb-ambience">0/15</span></div>
+                <div class="score-bar"><div class="score-bar-fill fill-good" id="bar-ambience" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ AUDIT SUMMARY ═══════════════ -->
+    <div id="page-auditSummary" class="page">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Audit Summary</h1>
+          <p>All recorded showroom audits</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-cyan" onclick="showPage('newAudit')"><i class="fas fa-plus"></i> New Audit</button>
+          <button class="btn btn-outline" onclick="exportCSV()"><i class="fas fa-download"></i> Export</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="summarySearch" placeholder="Search partner, city, ASM..." oninput="filterSummary()">
+        </div>
+        <select class="filter-select" id="filterRegion" onchange="filterSummary()">
+          <option value="">All Regions</option>
+          <option>N1</option><option>N2</option>
+          <option>S1</option><option>S2</option>
+          <option>E1</option><option>E2</option>
+          <option>W1</option><option>W2</option>
+        </select>
+        <select class="filter-select" id="filterCategory" onchange="filterSummary()">
+          <option value="">All Categories</option>
+          <option>Excellent</option><option>Good</option>
+          <option>Average</option><option>Critical</option>
+        </select>
+        <select class="filter-select" id="filterType" onchange="filterSummary()">
+          <option value="">All Types</option>
+          <option>Internal</option><option>External</option><option>Surprise</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0;overflow-x:auto">
+          <table class="data-table" id="summaryTable">
+            <thead><tr>
+              <th>Audit ID</th>
+              <th>Channel Partner</th>
+              <th>ASM/RM</th>
+              <th>Region</th>
+              <th>City</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Score</th>
+              <th>Category</th>
+              <th>Actions</th>
+            </tr></thead>
+            <tbody id="summaryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ CATEGORY DISTRIBUTION ═══════════════ -->
+    <div id="page-categoryDist" class="page">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Category Distribution</h1>
+          <p>Performance breakdown by audit scoring categories</p>
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi-card green">
+          <div class="kpi-icon green"><i class="fas fa-trophy"></i></div>
+          <div class="kpi-value" id="cd-excellent">0</div>
+          <div class="kpi-label">Excellent</div>
+          <div class="kpi-sub">Score 90–105</div>
+        </div>
+        <div class="kpi-card cyan">
+          <div class="kpi-icon cyan"><i class="fas fa-thumbs-up"></i></div>
+          <div class="kpi-value" id="cd-good">0</div>
+          <div class="kpi-label">Good</div>
+          <div class="kpi-sub">Score 75–89</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-icon orange"><i class="fas fa-minus-circle"></i></div>
+          <div class="kpi-value" id="cd-average">0</div>
+          <div class="kpi-label">Average</div>
+          <div class="kpi-sub">Score 55–74</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="kpi-value" id="cd-critical">0</div>
+          <div class="kpi-label">Critical</div>
+          <div class="kpi-sub">Score &lt;55</div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:20px">
+        <div class="card">
+          <div class="card-header"><h3>Category Breakdown</h3></div>
+          <div class="card-body">
+            <svg id="catBarChart" width="100%" height="200" viewBox="0 0 400 200"></svg>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Parameter Avg Scores</h3></div>
+          <div class="card-body" id="paramAvgBars"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <div class="card-header"><h3>Region × Category Matrix</h3></div>
+        <div class="card-body" id="regionMatrix"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ CRITICAL AUDITS ═══════════════ -->
+    <div id="page-criticalAudits" class="page">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Critical Audits</h1>
+          <p>Showrooms scoring below 55 — immediate action required</p>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="critSearch" placeholder="Search..." oninput="filterCritical()">
+        </div>
+        <select class="filter-select" id="critFilterRegion" onchange="filterCritical()">
+          <option value="">All Regions</option>
+          <option>N1</option><option>N2</option><option>S1</option><option>S2</option>
+          <option>E1</option><option>E2</option><option>W1</option><option>W2</option>
+        </select>
+        <select class="filter-select" id="critFilterStatus" onchange="filterCritical()">
+          <option value="">All Statuses</option>
+          <option>Open</option><option>In Progress</option><option>Closed</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0;overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Audit ID</th><th>Partner</th><th>Region</th><th>City</th>
+              <th>Score</th><th>Critical Areas</th><th>Action Status</th>
+              <th>Responsible</th><th>Target</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="criticalBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ NATIONAL DASHBOARD ═══════════════ -->
+    <div id="page-nationalDashboard" class="page">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>National Dashboard</h1>
+          <p>Bird's-eye view across all regions & states</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="refreshDashboard()"><i class="fas fa-sync"></i> Refresh</button>
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+        <div class="kpi-card cyan"><div class="kpi-icon cyan"><i class="fas fa-store"></i></div>
+          <div class="kpi-value" id="nat-partners">—</div><div class="kpi-label">Channel Partners</div></div>
+        <div class="kpi-card gold"><div class="kpi-icon gold"><i class="fas fa-clipboard"></i></div>
+          <div class="kpi-value" id="nat-audits">—</div><div class="kpi-label">Total Audits</div></div>
+        <div class="kpi-card green"><div class="kpi-icon green"><i class="fas fa-percentage"></i></div>
+          <div class="kpi-value" id="nat-compliance">—</div><div class="kpi-label">Compliance %</div><div class="kpi-sub">Good + Excellent</div></div>
+        <div class="kpi-card red"><div class="kpi-icon red"><i class="fas fa-flag"></i></div>
+          <div class="kpi-value" id="nat-critical">—</div><div class="kpi-label">Critical Showrooms</div></div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><h3>Region-wise Performance</h3></div>
+        <div class="card-body">
+          <div class="region-grid" id="regionGrid"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>State-wise Audit Summary</h3></div>
+        <div class="national-table-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>State</th><th>Region</th><th>Audits</th>
+              <th>Avg Score</th><th>Excellent</th><th>Good</th><th>Average</th><th>Critical</th>
+            </tr></thead>
+            <tbody id="nationalBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ REGION PERFORMANCE ═══════════════ -->
+    <div id="page-regionPerformance" class="page">
+      <div class="page-header">
+        <div class="page-title">
+          <h1>Region Performance</h1>
+          <p>Drill-down performance analysis by region</p>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <select class="filter-select" id="rpRegion" onchange="loadRegionPerf()" style="width:200px">
+          <option value="">Select Region...</option>
+          <option>N1</option><option>N2</option>
+          <option>S1</option><option>S2</option>
+          <option>E1</option><option>E2</option>
+          <option>W1</option><option>W2</option>
+        </select>
+      </div>
+      <div id="rpContent">
+        <div class="empty-state"><i class="fas fa-map-marked-alt"></i><p>Select a region to view performance breakdown</p></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- AUDIT DETAIL MODAL -->
+<div class="modal-overlay" id="auditDetailModal">
+  <div class="modal-box" style="width:800px">
+    <div class="modal-header">
+      <h3 id="modalAuditID">Audit Detail</h3>
+      <button class="modal-close" onclick="closeModal('auditDetailModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalAuditBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('auditDetailModal')">Close</button>
+      <button class="btn btn-gold" id="modalUpdateStatus">Update Action Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE STATUS MODAL -->
+<div class="modal-overlay" id="statusModal">
+  <div class="modal-box" style="width:400px">
+    <div class="modal-header">
+      <h3>Update Action Status</h3>
+      <button class="modal-close" onclick="closeModal('statusModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group" style="margin-bottom:16px">
+        <label>Action Status</label>
+        <select id="statusSelect">
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Remarks</label>
+        <textarea id="statusRemarks" placeholder="Add closure remarks..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('statusModal')">Cancel</button>
+      <button class="btn btn-cyan" onclick="saveStatus()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE + APP JS -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
+  query, where, orderBy, serverTimestamp, getDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ══════════════════════════════════
+// FIREBASE CONFIG — NEW PROJECT ID
+// ══════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyC2vut9SiDDvIxGmFPIFJsXuHqhJJI1234",
+  authDomain: "ais-showroom-audit.firebaseapp.com",
+  projectId: "ais-showroom-audit",
+  storageBucket: "ais-showroom-audit.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890abcdef"
+};
+
+// NOTE: Replace the above with your actual Firebase config
+// Create a new project at https://console.firebase.google.com
+// Project name: ais-showroom-audit (or any name)
+// Then enable Email/Password auth and Firestore
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ══════════════════════════════════
+// GLOBALS
+// ══════════════════════════════════
+window.db = db;
+window.auth = auth;
+window.currentUser = null;
+window.allAudits = [];
+window.currentAuditId = null;
+window.scores = {};
+window.uploadedPhotos = {};
+
+const COLLECTION = 'sa_audits';
+
+// ══════════════════════════════════
+// AUDIT PARAMETERS DEFINITION
+// ══════════════════════════════════
+const PARAMS = {
+  product: [
+    { key:'smooth_operation', label:'Smooth Operation of Doors & Windows' },
+    { key:'locking_system',   label:'Locking System Functionality' },
+    { key:'premium_products', label:'Premium & New Products Displayed' },
+    { key:'display_products', label:'Display of Products (Range & Variety)' },
+    { key:'hardware_board',   label:'Hardware Board & Security Glass Demo' },
+    { key:'glass_cleanliness',label:'Glass Cleanliness' },
+    { key:'product_appearance',label:'Product Appearance & Condition' },
+    { key:'missing_accessories',label:'Missing Accessories (5=none missing)' },
+    { key:'hardware_functioning',label:'Hardware Functioning' },
+  ],
+  staff: [
+    { key:'staff_grooming',   label:'Staff Grooming & Uniform' },
+    { key:'visitor_register', label:'Visitor Register Maintained' },
+    { key:'cse_availability', label:'CSE/DSE Availability at Showroom' },
+    { key:'competitor_awareness',label:'Competitor Awareness of Staff' },
+    { key:'walkin_management',label:'Walk-in Management Process' },
+  ],
+  branding: [
+    { key:'external_branding',label:'External Branding Visibility' },
+    { key:'product_descriptors',label:'Product Descriptors Available' },
+    { key:'marketing_material',label:'Marketing Material Availability' },
+    { key:'backlit_fabric',   label:'Backlit Fabric Branding' },
+  ],
+  ambience: [
+    { key:'showroom_cleanliness',label:'Showroom Cleanliness' },
+    { key:'aroma_temperature',label:'Aroma & Temperature Control' },
+    { key:'showroom_lighting',label:'Showroom Lighting Quality' },
+  ]
+};
+
+const CAT_MAX = { product:45, staff:25, branding:20, ambience:15 };
+
+window.PARAMS = PARAMS;
+window.CAT_MAX = CAT_MAX;
+
+// ══════════════════════════════════
+// AUTH LISTENER
+// ══════════════════════════════════
+onAuthStateChanged(auth, user => {
+  document.getElementById('loadingOverlay').classList.remove('active');
+  if(user) {
+    window.currentUser = user;
+    showApp(user);
+  } else {
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('appShell').style.display='none';
+  }
+});
+
+// ══════════════════════════════════
+// LOGIN / LOGOUT
+// ══════════════════════════════════
+window.doLogin = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw    = document.getElementById('loginPassword').value;
+  const btn   = document.getElementById('loginBtn');
+  const err   = document.getElementById('loginError');
+  err.style.display='none';
+  if(!email||!pw){ err.textContent='Please enter email and password.'; err.style.display='block'; return; }
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Signing in...';
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+  } catch(e) {
+    err.textContent = e.code==='auth/user-not-found'||e.code==='auth/wrong-password'
+      ? 'Invalid email or password.' : e.message;
+    err.style.display='block';
+    btn.disabled=false;
+    btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Sign In';
+  }
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+  window.allAudits=[];
+};
+
+// Handle Enter key on login
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if(e.key==='Enter') window.doLogin();
+});
+
+// ══════════════════════════════════
+// SHOW APP
+// ══════════════════════════════════
+async function showApp(user) {
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+
+  // Set user info
+  const name = user.displayName || user.email.split('@')[0];
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+  document.getElementById('userRole').textContent = 'Channel Manager';
+
+  // Init date
+  document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Build audit form params
+  buildParamWidgets();
+
+  // Today's date for form
+  document.getElementById('f_audit_date').value = new Date().toISOString().split('T')[0];
+
+  // Load data
+  await loadAllAudits();
+  refreshDashboard();
+}
+
+// ══════════════════════════════════
+// BUILD PARAM WIDGETS
+// ══════════════════════════════════
+function buildParamWidgets() {
+  ['product','staff','branding','ambience'].forEach(cat => {
+    const container = document.getElementById(`params-${cat}`);
+    container.innerHTML = PARAMS[cat].map((p,i) => `
+      <div class="rating-param">
+        <div class="rating-label">${i+1}. ${p.label}</div>
+        <div class="rating-stars">
+          ${[1,2,3,4,5].map(n=>`
+            <button class="rating-btn" data-cat="${cat}" data-key="${p.key}" data-val="${n}" onclick="setRating(this,${n},'${cat}','${p.key}')">${n}</button>
+          `).join('')}
+          <span style="margin-left:8px;font-size:0.78rem;color:var(--text3)" id="hint-${p.key}">Not rated</span>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+
+window.setRating = function(btn, val, cat, key) {
+  // Clear siblings
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.rating-btn').forEach(b => {
+    b.className='rating-btn';
+  });
+  // Set selected
+  parent.querySelectorAll('.rating-btn').forEach(b => {
+    const bv = parseInt(b.dataset.val);
+    if(bv <= val) b.classList.add(`selected-${val}`);
+  });
+  // Store
+  if(!window.scores[cat]) window.scores[cat]={};
+  window.scores[cat][key] = val;
+  // Hint
+  const hints = ['','Poor — Immediate action needed','Below average — Needs improvement','Average — Meets basic standards','Good — Above expectations','Excellent — Best in class'];
+  document.getElementById(`hint-${key}`).textContent = hints[val];
+  updateLiveScore();
+};
+
+// ══════════════════════════════════
+// LIVE SCORE UPDATER
+// ══════════════════════════════════
+function updateLiveScore() {
+  let total=0;
+  const catTotals = {product:0,staff:0,branding:0,ambience:0};
+  Object.entries(window.scores).forEach(([cat,params])=>{
+    Object.values(params).forEach(v=>{ catTotals[cat]+=v; total+=v; });
+  });
+  document.getElementById('liveScoreNum').textContent = total;
+  const cat = getCategory(total);
+  const colors = {Excellent:'var(--green)',Good:'var(--cyan)',Average:'var(--orange)',Critical:'var(--red)','Not Scored':'var(--text3)'};
+  document.getElementById('liveScoreNum').style.color = colors[cat]||'var(--text3)';
+  document.getElementById('liveCategory').innerHTML = `<span class="badge badge-${cat.toLowerCase()}">${cat}</span>`;
+
+  // Category bars
+  ['product','staff','branding','ambience'].forEach(c=>{
+    const max = CAT_MAX[c];
+    const v = catTotals[c];
+    const pct = max>0?Math.round(v/max*100):0;
+    document.getElementById(`bar-${c}`).style.width = pct+'%';
+    document.getElementById(`lb-${c}`).textContent = `${v}/${max}`;
+  });
+}
+
+function getCategory(score) {
+  if(score>=90) return 'Excellent';
+  if(score>=75) return 'Good';
+  if(score>=55) return 'Average';
+  if(score>0)   return 'Critical';
+  return 'Not Scored';
+}
+window.getCategory = getCategory;
+
+// ══════════════════════════════════
+// ACTION REQUIRED TOGGLE
+// ══════════════════════════════════
+document.getElementById('f_action_required').addEventListener('change', function() {
+  document.getElementById('actionFields').style.display = this.value==='Yes'?'grid':'none';
+});
+document.getElementById('f_critical_obs').addEventListener('change', function() {
+  document.getElementById('obsField').style.display = this.value==='Yes'?'grid':'none';
+});
+
+// ══════════════════════════════════
+// PHOTO HANDLER
+// ══════════════════════════════════
+window.handlePhoto = function(input, slot) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const slotEl = document.getElementById(`slot-${slot}`);
+    slotEl.innerHTML = `<img src="${e.target.result}"><input type="file" accept="image/*" onchange="handlePhoto(this,'${slot}')">`;
+    window.uploadedPhotos[slot] = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+// ══════════════════════════════════
+// SUBMIT AUDIT
+// ══════════════════════════════════
+window.submitAudit = async function() {
+  // Validate
+  const required = ['f_partner','f_asm','f_region','f_city','f_state','f_audit_date','f_audit_type','f_cse'];
+  for(const id of required) {
+    if(!document.getElementById(id).value.trim()) {
+      showToast('Please fill all required fields.','error');
+      document.getElementById(id).focus();
+      return;
+    }
+  }
+
+  // Check all params scored
+  let totalParams=0, scoredParams=0;
+  Object.values(PARAMS).forEach(arr=>{ totalParams+=arr.length; });
+  Object.values(window.scores).forEach(cat=>{ scoredParams+=Object.keys(cat).length; });
+  if(scoredParams<totalParams) {
+    showToast(`Please score all ${totalParams} parameters. (${scoredParams}/${totalParams} done)`, 'error');
+    return;
+  }
+
+  // Calculate final score
+  let finalScore=0;
+  const allScores = {};
+  Object.entries(window.scores).forEach(([cat,params])=>{
+    Object.entries(params).forEach(([key,val])=>{
+      allScores[key]=val; finalScore+=val;
+    });
+  });
+
+  const auditData = {
+    audit_id: generateAuditID(),
+    audit_date: document.getElementById('f_audit_date').value,
+    audit_type: document.getElementById('f_audit_type').value,
+    channel_partner: document.getElementById('f_partner').value.trim(),
+    asm_rm_name: document.getElementById('f_asm').value.trim(),
+    cse_dse_name: document.getElementById('f_cse').value.trim(),
+    region: document.getElementById('f_region').value,
+    city: document.getElementById('f_city').value.trim(),
+    state: document.getElementById('f_state').value.trim(),
+    scores: allScores,
+    category_scores: {
+      product: Object.values(window.scores.product||{}).reduce((a,b)=>a+b,0),
+      staff:   Object.values(window.scores.staff||{}).reduce((a,b)=>a+b,0),
+      branding:Object.values(window.scores.branding||{}).reduce((a,b)=>a+b,0),
+      ambience:Object.values(window.scores.ambience||{}).reduce((a,b)=>a+b,0),
+    },
+    final_score: finalScore,
+    final_category: getCategory(finalScore),
+    critical_flag: finalScore < 55,
+    critical_observations: document.getElementById('f_critical_obs').value,
+    action_required: document.getElementById('f_action_required').value,
+    action_status: document.getElementById('f_action_required').value==='Yes' ? 'Open' : 'N/A',
+    responsible_person: document.getElementById('f_responsible').value.trim(),
+    target_date: document.getElementById('f_target_date').value,
+    obs_detail: document.getElementById('f_obs_detail').value.trim(),
+    photos: window.uploadedPhotos,
+    submitted_by: window.currentUser.email,
+    submitted_on: serverTimestamp(),
+    created_at: new Date().toISOString(),
+  };
+
+  showLoading(true);
+  try {
+    await addDoc(collection(db, COLLECTION), auditData);
+    showLoading(false);
+    showToast(`Audit submitted! Score: ${finalScore}/105 — ${getCategory(finalScore)}`,'success');
+    resetForm();
+    await loadAllAudits();
+    refreshDashboard();
+    showPage('auditSummary');
+  } catch(e) {
+    showLoading(false);
+    // Demo mode fallback
+    const demo = { ...auditData, id: 'demo-'+Date.now(), submitted_on: { toDate:()=>new Date() } };
+    window.allAudits.unshift(demo);
+    showToast(`Demo Mode: Audit saved locally (Firebase not configured yet). Score: ${finalScore}/105`,'info');
+    resetForm();
+    refreshDashboard();
+    showPage('auditSummary');
+  }
+};
+
+function generateAuditID() {
+  const d = new Date();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const rand = Math.random().toString(36).substr(2,4);
+  return `AUD-${d.getFullYear().toString().substr(2)}${mm}${dd}-${rand}`;
+}
+
+// ══════════════════════════════════
+// RESET FORM
+// ══════════════════════════════════
+window.resetForm = function() {
+  ['f_partner','f_asm','f_cse','f_city','f_state','f_responsible','f_obs_detail'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  ['f_region','f_audit_type','f_critical_obs','f_action_required'].forEach(id=>{
+    document.getElementById(id).selectedIndex=0;
+  });
+  document.getElementById('f_audit_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f_target_date').value='';
+  document.getElementById('actionFields').style.display='none';
+  document.getElementById('obsField').style.display='none';
+  window.scores={};
+  window.uploadedPhotos={};
+  document.querySelectorAll('.rating-btn').forEach(b=>b.className='rating-btn');
+  document.querySelectorAll('[id^="hint-"]').forEach(el=>el.textContent='Not rated');
+  ['front','display','branding','reception'].forEach(s=>{
+    const sl = document.getElementById(`slot-${s}`);
+    const labels = {front:'Front Elevation',display:'Display Area',branding:'Branding',reception:'Reception'};
+    sl.innerHTML=`<i class="fas fa-camera"></i><span>${labels[s]}</span><input type="file" accept="image/*" onchange="handlePhoto(this,'${s}')">`;
+  });
+  updateLiveScore();
+};
+
+// ══════════════════════════════════
+// LOAD ALL AUDITS
+// ══════════════════════════════════
+async function loadAllAudits() {
+  showLoading(true);
+  try {
+    const snap = await getDocs(query(collection(db,COLLECTION), orderBy('created_at','desc')));
+    window.allAudits = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e) {
+    // Demo data if Firebase not configured
+    if(!window.allAudits.length) window.allAudits = generateDemoData();
+  }
+  showLoading(false);
+}
+
+// ══════════════════════════════════
+// DEMO DATA GENERATOR
+// ══════════════════════════════════
+function generateDemoData() {
+  const partners = [
+    {name:'Inxterior Solution LLP',city:'Bangalore',state:'Karnataka',region:'S1'},
+    {name:'Home Glass Works',city:'Chennai',state:'Tamil Nadu',region:'S2'},
+    {name:'Crystal Windows Pvt Ltd',city:'Mumbai',state:'Maharashtra',region:'W1'},
+    {name:'Arco Fenestra',city:'Pune',state:'Maharashtra',region:'W1'},
+    {name:'Nord Glass Solutions',city:'Delhi',state:'Delhi',region:'N1'},
+    {name:'Sunrise Windows',city:'Gurgaon',state:'Haryana',region:'N1'},
+    {name:'East View Glass Co.',city:'Kolkata',state:'West Bengal',region:'E1'},
+    {name:'Bright Space Interiors',city:'Hyderabad',state:'Telangana',region:'S1'},
+    {name:'Premier Glass House',city:'Ahmedabad',state:'Gujarat',region:'W2'},
+    {name:'Windows World India',city:'Jaipur',state:'Rajasthan',region:'N2'},
+    {name:'Vista Glass Emporium',city:'Chandigarh',state:'Punjab',region:'N2'},
+    {name:'Horizon Fenestration',city:'Bhubaneswar',state:'Odisha',region:'E2'},
+  ];
+  const asms = ['Hussain','Ravi Kumar','Priya Singh','Amit Desai','Neha Gupta','Rahul Mehta'];
+  const cats = ['Excellent','Excellent','Good','Good','Average','Critical'];
+  const types = ['Internal','External','Surprise'];
+
+  return Array.from({length:24}, (_,i)=>{
+    const p = partners[i%partners.length];
+    const score = [92,88,95,78,72,45,81,63,55,97,68,52,90,76,58,85,42,91,74,83,61,47,79,96][i]||70;
+    const cat = getCategory(score);
+    const d = new Date(); d.setDate(d.getDate()-i*3);
+    const paramScores = {};
+    let rem = score;
+    const allKeys = [...PARAMS.product,...PARAMS.staff,...PARAMS.branding,...PARAMS.ambience];
+    allKeys.forEach((p2,j)=>{
+      const base = Math.max(1,Math.min(5,Math.round(score/105*5 + (Math.random()-0.5)*2)));
+      paramScores[p2.key]=base;
+    });
+    return {
+      id:`demo-${i}`,
+      audit_id: `AUD-${d.getFullYear().toString().substr(2)}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${Math.random().toString(36).substr(2,4)}`,
+      channel_partner: p.name,
+      asm_rm_name: asms[i%asms.length],
+      cse_dse_name: `CSE-${i+1}`,
+      region: p.region,
+      city: p.city,
+      state: p.state,
+      audit_date: d.toISOString().split('T')[0],
+      audit_type: types[i%3],
+      scores: paramScores,
+      category_scores: {
+        product: Math.round(score*45/105),
+        staff:   Math.round(score*25/105),
+        branding:Math.round(score*20/105),
+        ambience:Math.round(score*15/105),
+      },
+      final_score: score,
+      final_category: cat,
+      critical_flag: score<55,
+      action_required: score<75?'Yes':'No',
+      action_status: score<55?['Open','In Progress','Closed'][i%3]:'N/A',
+      responsible_person: score<75?asms[i%asms.length]:'',
+      target_date: score<75 ? new Date(d.getTime()+14*86400000).toISOString().split('T')[0] : '',
+      critical_observations: score<55?'Yes':'No',
+      created_at: d.toISOString(),
+      submitted_on: { toDate:()=>d },
+    };
+  });
+}
+
+// ══════════════════════════════════
+// DASHBOARD REFRESH
+// ══════════════════════════════════
+window.refreshDashboard = function() {
+  const audits = window.allAudits;
+  const total = audits.length;
+  const avgScore = total? Math.round(audits.reduce((a,b)=>a+b.final_score,0)/total) : 0;
+  const excellent = audits.filter(a=>a.final_category==='Excellent').length;
+  const critical  = audits.filter(a=>a.final_category==='Critical').length;
+  const openActions = audits.filter(a=>a.action_status==='Open'||a.action_status==='In Progress').length;
+
+  document.getElementById('kpiTotal').textContent    = total;
+  document.getElementById('kpiAvgScore').textContent = avgScore;
+  document.getElementById('kpiExcellent').textContent= excellent;
+  document.getElementById('kpiCritical').textContent = critical;
+  document.getElementById('kpiOpenActions').textContent = openActions;
+  document.getElementById('criticalBadge').textContent  = critical;
+
+  // National KPIs
+  const partners = [...new Set(audits.map(a=>a.channel_partner))].length;
+  const compliance = total ? Math.round((excellent+audits.filter(a=>a.final_category==='Good').length)/total*100) : 0;
+  document.getElementById('nat-partners').textContent  = partners;
+  document.getElementById('nat-audits').textContent    = total;
+  document.getElementById('nat-compliance').textContent= compliance+'%';
+  document.getElementById('nat-critical').textContent  = critical;
+
+  // Charts
+  renderBarChart(audits);
+  renderDonutChart(audits);
+  renderRecentAudits(audits);
+  renderRegionSnapshot(audits);
+  renderCategoryDist(audits);
+  renderNationalDashboard(audits);
+};
+
+// ══════════════════════════════════
+// BAR CHART
+// ══════════════════════════════════
+function renderBarChart(audits) {
+  const buckets = {'<55':0,'55-74':0,'75-89':0,'90+':0};
+  audits.forEach(a=>{
+    const s=a.final_score;
+    if(s<55) buckets['<55']++;
+    else if(s<75) buckets['55-74']++;
+    else if(s<90) buckets['75-89']++;
+    else buckets['90+']++;
+  });
+  const max = Math.max(...Object.values(buckets),1);
+  const colors = {'<55':'#ff4757','55-74':'#ffa502','75-89':'#00d4ff','90+':'#00e676'};
+  const keys = Object.keys(buckets);
+  const svg = document.getElementById('barChart');
+  const W=500, H=200, PL=40, PT=10, PB=30;
+  const bw = (W-PL-20)/keys.length - 10;
+
+  svg.innerHTML = keys.map((k,i)=>{
+    const bh = Math.max(4, (buckets[k]/max)*(H-PT-PB));
+    const x = PL + i*((W-PL-20)/keys.length) + 5;
+    const y = H-PB-bh;
+    return `
+      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${colors[k]}" opacity="0.85"/>
+      <text x="${x+bw/2}" y="${y-5}" text-anchor="middle" fill="${colors[k]}" font-size="12" font-weight="bold">${buckets[k]}</text>
+      <text x="${x+bw/2}" y="${H-8}" text-anchor="middle" fill="#9fb3cc" font-size="11">${k}</text>
+    `;
+  }).join('') + `<text x="${PL-5}" y="${PT}" text-anchor="end" fill="#9fb3cc" font-size="10">Count</text>`;
+}
+
+// ══════════════════════════════════
+// DONUT CHART
+// ══════════════════════════════════
+function renderDonutChart(audits) {
+  const cats = {Excellent:0,Good:0,Average:0,Critical:0};
+  audits.forEach(a=>{ if(cats[a.final_category]!==undefined) cats[a.final_category]++; });
+  const total = audits.length||1;
+  const colors = {Excellent:'#00e676',Good:'#00d4ff',Average:'#ffa502',Critical:'#ff4757'};
+  const CX=60,CY=60,R=45,r=25;
+  let angle = -Math.PI/2;
+  const paths=[];
+  const legend=[];
+  Object.entries(cats).forEach(([cat,count])=>{
+    const slice = count/total*2*Math.PI;
+    if(slice===0) return;
+    const x1=CX+R*Math.cos(angle), y1=CY+R*Math.sin(angle);
+    const x2=CX+R*Math.cos(angle+slice), y2=CY+R*Math.sin(angle+slice);
+    const xi1=CX+r*Math.cos(angle), yi1=CY+r*Math.sin(angle);
+    const xi2=CX+r*Math.cos(angle+slice), yi2=CY+r*Math.sin(angle+slice);
+    const large = slice>Math.PI?1:0;
+    paths.push(`<path d="M${x1},${y1} A${R},${R} 0 ${large},1 ${x2},${y2} L${xi2},${yi2} A${r},${r} 0 ${large},0 ${xi1},${yi1} Z" fill="${colors[cat]}" opacity="0.85"/>`);
+    legend.push(`<div class="legend-item"><div class="legend-dot" style="background:${colors[cat]}"></div>${cat}: ${count}</div>`);
+    angle+=slice;
+  });
+  document.getElementById('donutChart').innerHTML = paths.join('')+`<text x="60" y="65" text-anchor="middle" fill="#e8edf5" font-size="13" font-weight="bold">${total}</text>`;
+  document.getElementById('donutLegend').innerHTML = legend.join('');
+}
+
+// ══════════════════════════════════
+// RECENT AUDITS
+// ══════════════════════════════════
+function renderRecentAudits(audits) {
+  const tbody = document.getElementById('recentAuditsBody');
+  if(!audits.length){ tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">No audits yet</td></tr>`; return; }
+  tbody.innerHTML = audits.slice(0,8).map(a=>`
+    <tr style="cursor:pointer" onclick="viewAudit('${a.id}')">
+      <td><div style="font-weight:600;color:var(--text)">${a.channel_partner}</div><div style="font-size:0.72rem;color:var(--text3)">${a.city}</div></td>
+      <td><span style="font-family:var(--font-head);font-size:1rem;color:${scoreColor(a.final_score)};font-weight:700">${a.final_score}</span><span style="font-size:0.72rem;color:var(--text3)">/105</span></td>
+      <td><span class="badge badge-${a.final_category.toLowerCase()}">${a.final_category}</span></td>
+      <td style="font-size:0.8rem;color:var(--text3)">${formatDate(a.audit_date)}</td>
+    </tr>
+  `).join('');
+}
+
+// ══════════════════════════════════
+// REGION SNAPSHOT
+// ══════════════════════════════════
+function renderRegionSnapshot(audits) {
+  const regions = {};
+  audits.forEach(a=>{
+    if(!regions[a.region]) regions[a.region]={total:0,score:0};
+    regions[a.region].total++;
+    regions[a.region].score+=a.final_score;
+  });
+  const el = document.getElementById('regionSnapshot');
+  if(!Object.keys(regions).length){ el.innerHTML=`<div class="empty-state" style="padding:20px"><i class="fas fa-map"></i><p>No data yet</p></div>`; return; }
+  el.innerHTML = Object.entries(regions).map(([reg,d])=>{
+    const avg = Math.round(d.score/d.total);
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border2)">
+        <div>
+          <div style="font-family:var(--font-head);font-size:0.8rem;font-weight:700;color:var(--text)">${reg}</div>
+          <div style="font-size:0.72rem;color:var(--text3)">${d.total} audit${d.total>1?'s':''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;color:${scoreColor(avg)}">${avg}</div>
+          <span class="badge badge-${getCategory(avg).toLowerCase()}" style="font-size:0.65rem">${getCategory(avg)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ══════════════════════════════════
+// CATEGORY DISTRIBUTION PAGE
+// ══════════════════════════════════
+function renderCategoryDist(audits) {
+  const cats = {Excellent:0,Good:0,Average:0,Critical:0};
+  audits.forEach(a=>{ if(cats[a.final_category]!==undefined) cats[a.final_category]++; });
+  document.getElementById('cd-excellent').textContent = cats.Excellent;
+  document.getElementById('cd-good').textContent      = cats.Good;
+  document.getElementById('cd-average').textContent   = cats.Average;
+  document.getElementById('cd-critical').textContent  = cats.Critical;
+
+  // Category bar chart
+  const colors={Excellent:'#00e676',Good:'#00d4ff',Average:'#ffa502',Critical:'#ff4757'};
+  const max = Math.max(...Object.values(cats),1);
+  const keys = Object.keys(cats);
+  const svg = document.getElementById('catBarChart');
+  const W=400,H=200,PL=30,PB=30,PT=10;
+  svg.innerHTML = keys.map((k,i)=>{
+    const bh = Math.max(4,(cats[k]/max)*(H-PT-PB));
+    const bw = (W-PL-10)/keys.length-10;
+    const x  = PL+i*((W-PL-10)/keys.length)+5;
+    const y  = H-PB-bh;
+    return `
+      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${colors[k]}" opacity="0.85"/>
+      <text x="${x+bw/2}" y="${y-5}" text-anchor="middle" fill="${colors[k]}" font-size="12" font-weight="bold">${cats[k]}</text>
+      <text x="${x+bw/2}" y="${H-8}" text-anchor="middle" fill="#9fb3cc" font-size="11">${k}</text>
+    `;
+  }).join('');
+
+  // Parameter avg bars
+  const paramAvg = {};
+  if(audits.length) {
+    const allKeys = [...PARAMS.product,...PARAMS.staff,...PARAMS.branding,...PARAMS.ambience];
+    allKeys.forEach(p=>{
+      const vals = audits.map(a=>a.scores&&a.scores[p.key]||0);
+      paramAvg[p.key]={label:p.label, avg: vals.reduce((a,b)=>a+b,0)/vals.length};
+    });
+  }
+  const pbEl = document.getElementById('paramAvgBars');
+  pbEl.innerHTML = Object.entries(paramAvg).map(([k,{label,avg}])=>`
+    <div class="score-bar-wrap">
+      <div class="score-bar-label">
+        <span style="font-size:0.72rem;color:var(--text2)">${label.length>30?label.substr(0,30)+'…':label}</span>
+        <span style="font-size:0.72rem">${avg.toFixed(1)}/5</span>
+      </div>
+      <div class="score-bar"><div class="score-bar-fill ${avg>=4?'fill-excellent':avg>=3?'fill-good':'fill-critical'}" style="width:${avg/5*100}%"></div></div>
+    </div>
+  `).join('');
+
+  // Region × Category Matrix
+  const regions = [...new Set(audits.map(a=>a.region))].sort();
+  const rmEl = document.getElementById('regionMatrix');
+  rmEl.innerHTML = `<div style="overflow-x:auto"><table class="data-table">
+    <thead><tr><th>Region</th><th style="color:#00e676">Excellent</th><th style="color:#00d4ff">Good</th><th style="color:#ffa502">Average</th><th style="color:#ff4757">Critical</th><th>Total</th><th>Avg Score</th></tr></thead>
+    <tbody>${regions.map(r=>{
+      const ra = audits.filter(a=>a.region===r);
+      const rc = {Excellent:0,Good:0,Average:0,Critical:0};
+      ra.forEach(a=>{ if(rc[a.final_category]!==undefined) rc[a.final_category]++; });
+      const avg = Math.round(ra.reduce((a,b)=>a+b.final_score,0)/ra.length);
+      return `<tr>
+        <td style="font-weight:600;color:var(--text)">${r}</td>
+        <td><span class="badge badge-excellent">${rc.Excellent}</span></td>
+        <td><span class="badge badge-good">${rc.Good}</span></td>
+        <td><span class="badge badge-average">${rc.Average}</span></td>
+        <td><span class="badge badge-critical">${rc.Critical}</span></td>
+        <td>${ra.length}</td>
+        <td style="font-family:var(--font-head);color:${scoreColor(avg)}">${avg}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+// ══════════════════════════════════
+// NATIONAL DASHBOARD
+// ══════════════════════════════════
+function renderNationalDashboard(audits) {
+  // Region grid
+  const regions = {};
+  audits.forEach(a=>{
+    if(!regions[a.region]) regions[a.region]={total:0,score:0,critical:0};
+    regions[a.region].total++;
+    regions[a.region].score+=a.final_score;
+    if(a.final_category==='Critical') regions[a.region].critical++;
+  });
+  const rg = document.getElementById('regionGrid');
+  rg.innerHTML = Object.entries(regions).map(([reg,d])=>{
+    const avg=Math.round(d.score/d.total);
+    return `
+      <div class="region-card" onclick="document.getElementById('rpRegion').value='${reg}';showPage('regionPerformance');loadRegionPerf()">
+        <div class="region-name">${reg}</div>
+        <div class="region-score" style="color:${scoreColor(avg)}">${avg}</div>
+        <div style="font-size:0.68rem;color:var(--text3);margin-top:2px">${getCategory(avg)}</div>
+        <div class="region-audits">${d.total} audits · ${d.critical} critical</div>
+        <div class="score-bar" style="margin-top:8px"><div class="score-bar-fill ${avg>=90?'fill-excellent':avg>=75?'fill-good':avg>=55?'fill-average':'fill-critical'}" style="width:${avg/105*100}%"></div></div>
+      </div>
+    `;
+  }).join('');
+
+  // State table
+  const states = {};
+  audits.forEach(a=>{
+    const sk=a.state+'|'+a.region;
+    if(!states[sk]) states[sk]={state:a.state,region:a.region,total:0,score:0,Excellent:0,Good:0,Average:0,Critical:0};
+    states[sk].total++;
+    states[sk].score+=a.final_score;
+    if(states[sk][a.final_category]!==undefined) states[sk][a.final_category]++;
+  });
+  document.getElementById('nationalBody').innerHTML = Object.values(states).map(s=>{
+    const avg=Math.round(s.score/s.total);
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${s.state}</td>
+      <td>${s.region}</td>
+      <td>${s.total}</td>
+      <td style="font-family:var(--font-head);color:${scoreColor(avg)}">${avg}/105</td>
+      <td><span class="badge badge-excellent">${s.Excellent}</span></td>
+      <td><span class="badge badge-good">${s.Good}</span></td>
+      <td><span class="badge badge-average">${s.Average}</span></td>
+      <td><span class="badge badge-critical">${s.Critical}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════
+// AUDIT SUMMARY TABLE
+// ══════════════════════════════════
+function renderSummaryTable(audits) {
+  const tbody = document.getElementById('summaryBody');
+  if(!audits.length){
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">No audits found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = audits.map(a=>`
+    <tr style="cursor:pointer" onclick="viewAudit('${a.id}')">
+      <td style="font-family:var(--font-head);font-size:0.72rem;color:var(--cyan)">${a.audit_id}</td>
+      <td><div style="font-weight:600;color:var(--text)">${a.channel_partner}</div><div style="font-size:0.72rem;color:var(--text3)">${a.asm_rm_name}</div></td>
+      <td>${a.asm_rm_name}</td>
+      <td><span style="font-family:var(--font-head);font-size:0.75rem;color:var(--gold)">${a.region}</span></td>
+      <td>${a.city}</td>
+      <td style="font-size:0.8rem;color:var(--text3)">${formatDate(a.audit_date)}</td>
+      <td style="font-size:0.8rem">${a.audit_type}</td>
+      <td><span style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:${scoreColor(a.final_score)}">${a.final_score}</span><span style="font-size:0.7rem;color:var(--text3)">/105</span></td>
+      <td><span class="badge badge-${a.final_category.toLowerCase()}">${a.final_category}</span></td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();viewAudit('${a.id}')"><i class="fas fa-eye"></i></button>
+        ${a.action_status&&a.action_status!=='N/A'?`<button class="btn btn-gold btn-sm" style="margin-left:4px" onclick="event.stopPropagation();openStatusModal('${a.id}')"><i class="fas fa-edit"></i></button>`:''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.filterSummary = function() {
+  const q = document.getElementById('summarySearch').value.toLowerCase();
+  const reg = document.getElementById('filterRegion').value;
+  const cat = document.getElementById('filterCategory').value;
+  const typ = document.getElementById('filterType').value;
+  const filtered = window.allAudits.filter(a=>{
+    const text = (a.channel_partner+a.asm_rm_name+a.city+a.state).toLowerCase();
+    return (!q||text.includes(q)) &&
+           (!reg||a.region===reg) &&
+           (!cat||a.final_category===cat) &&
+           (!typ||a.audit_type===typ);
+  });
+  renderSummaryTable(filtered);
+};
+
+// ══════════════════════════════════
+// CRITICAL AUDITS
+// ══════════════════════════════════
+function renderCriticalTable(audits) {
+  const critical = audits.filter(a=>a.final_category==='Critical'||a.critical_flag);
+  const tbody = document.getElementById('criticalBody');
+  if(!critical.length){
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">🎉 No critical audits found!</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = critical.map(a=>{
+    // Find lowest scored params
+    const allScored = Object.entries(a.scores||{}).sort((x,y)=>x[1]-y[1]).slice(0,3);
+    const lowParams = allScored.map(([k,v])=>`${k.replace(/_/g,' ')} (${v})`).join(', ');
+    const statusCls = a.action_status==='Closed'?'badge-closed':a.action_status==='In Progress'?'badge-pending':'badge-open';
+    return `<tr style="cursor:pointer" onclick="viewAudit('${a.id}')">
+      <td style="font-family:var(--font-head);font-size:0.7rem;color:var(--cyan)">${a.audit_id}</td>
+      <td><div style="font-weight:600;color:var(--text)">${a.channel_partner}</div></td>
+      <td>${a.region}</td>
+      <td>${a.city}</td>
+      <td><span style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--red)">${a.final_score}</span>/105</td>
+      <td style="font-size:0.72rem;color:var(--text3);max-width:150px">${lowParams}</td>
+      <td><span class="badge ${statusCls}">${a.action_status||'Open'}</span></td>
+      <td style="font-size:0.82rem">${a.responsible_person||'—'}</td>
+      <td style="font-size:0.8rem;color:var(--text3)">${a.target_date?formatDate(a.target_date):'—'}</td>
+      <td>
+        <button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openStatusModal('${a.id}')"><i class="fas fa-edit"></i> Update</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.filterCritical = function() {
+  const q = document.getElementById('critSearch').value.toLowerCase();
+  const reg = document.getElementById('critFilterRegion').value;
+  const status = document.getElementById('critFilterStatus').value;
+  const filtered = window.allAudits.filter(a=>{
+    if(!a.critical_flag && a.final_category!=='Critical') return false;
+    const text=(a.channel_partner+a.city).toLowerCase();
+    return (!q||text.includes(q))&&(!reg||a.region===reg)&&(!status||a.action_status===status);
+  });
+  renderCriticalTable(filtered);
+};
+
+// ══════════════════════════════════
+// REGION PERFORMANCE
+// ══════════════════════════════════
+window.loadRegionPerf = function() {
+  const region = document.getElementById('rpRegion').value;
+  if(!region) return;
+  const audits = window.allAudits.filter(a=>a.region===region);
+  const el = document.getElementById('rpContent');
+  if(!audits.length){
+    el.innerHTML=`<div class="empty-state"><i class="fas fa-info-circle"></i><p>No audits in region ${region} yet.</p></div>`;
+    return;
+  }
+  const avg = Math.round(audits.reduce((a,b)=>a+b.final_score,0)/audits.length);
+  const cats = {Excellent:0,Good:0,Average:0,Critical:0};
+  audits.forEach(a=>{ if(cats[a.final_category]!==undefined) cats[a.final_category]++; });
+
+  el.innerHTML=`
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+      <div class="kpi-card cyan"><div class="kpi-icon cyan"><i class="fas fa-clipboard"></i></div><div class="kpi-value">${audits.length}</div><div class="kpi-label">Audits</div></div>
+      <div class="kpi-card gold"><div class="kpi-icon gold"><i class="fas fa-star"></i></div><div class="kpi-value">${avg}</div><div class="kpi-label">Avg Score</div></div>
+      <div class="kpi-card green"><div class="kpi-icon green"><i class="fas fa-trophy"></i></div><div class="kpi-value">${cats.Excellent+cats.Good}</div><div class="kpi-label">Compliant</div></div>
+      <div class="kpi-card red"><div class="kpi-icon red"><i class="fas fa-flag"></i></div><div class="kpi-value">${cats.Critical}</div><div class="kpi-label">Critical</div></div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3>Parameter Performance — Region ${region}</h3></div>
+      <div class="card-body">
+        ${[...PARAMS.product,...PARAMS.staff,...PARAMS.branding,...PARAMS.ambience].map(p=>{
+          const vals = audits.map(a=>a.scores&&a.scores[p.key]||0);
+          const avg2 = vals.reduce((a,b)=>a+b,0)/vals.length;
+          return `<div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span style="font-size:0.78rem;color:var(--text2)">${p.label}</span>
+              <span>${avg2.toFixed(1)}/5</span>
+            </div>
+            <div class="score-bar" style="height:8px"><div class="score-bar-fill ${avg2>=4?'fill-excellent':avg2>=3?'fill-good':'fill-critical'}" style="width:${avg2/5*100}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Partner-wise Scores — ${region}</h3></div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Partner</th><th>City</th><th>Audits</th><th>Avg Score</th><th>Best</th><th>Worst</th><th>Category</th></tr></thead>
+          <tbody>
+            ${[...new Set(audits.map(a=>a.channel_partner))].map(partner=>{
+              const pa = audits.filter(a=>a.channel_partner===partner);
+              const pavg=Math.round(pa.reduce((a,b)=>a+b.final_score,0)/pa.length);
+              const pbest=Math.max(...pa.map(a=>a.final_score));
+              const pworst=Math.min(...pa.map(a=>a.final_score));
+              return `<tr>
+                <td style="font-weight:600;color:var(--text)">${partner}</td>
+                <td>${pa[0].city}</td>
+                <td>${pa.length}</td>
+                <td style="font-family:var(--font-head);color:${scoreColor(pavg)};font-weight:700">${pavg}</td>
+                <td style="color:var(--green)">${pbest}</td>
+                <td style="color:var(--red)">${pworst}</td>
+                <td><span class="badge badge-${getCategory(pavg).toLowerCase()}">${getCategory(pavg)}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+};
+
+// ══════════════════════════════════
+// VIEW AUDIT DETAIL
+// ══════════════════════════════════
+window.viewAudit = function(id) {
+  const a = window.allAudits.find(x=>x.id===id);
+  if(!a) return;
+  window.currentAuditId = id;
+  document.getElementById('modalAuditID').textContent = a.audit_id;
+  document.getElementById('modalUpdateStatus').onclick = ()=>{ closeModal('auditDetailModal'); openStatusModal(id); };
+
+  const allKeys = [...PARAMS.product,...PARAMS.staff,...PARAMS.branding,...PARAMS.ambience];
+  const catColors = {product:'var(--cyan)',staff:'var(--gold)',branding:'var(--green)',ambience:'var(--orange)'};
+
+  document.getElementById('modalAuditBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      <div class="detail-field"><label>Channel Partner</label><p>${a.channel_partner}</p></div>
+      <div class="detail-field"><label>ASM/RM</label><p>${a.asm_rm_name}</p></div>
+      <div class="detail-field"><label>CSE/DSE</label><p>${a.cse_dse_name}</p></div>
+      <div class="detail-field"><label>Region</label><p>${a.region}</p></div>
+      <div class="detail-field"><label>City</label><p>${a.city}, ${a.state}</p></div>
+      <div class="detail-field"><label>Audit Date</label><p>${formatDate(a.audit_date)}</p></div>
+      <div class="detail-field"><label>Audit Type</label><p>${a.audit_type}</p></div>
+      <div class="detail-field"><label>Submitted By</label><p>${a.submitted_by||'—'}</p></div>
+      <div class="detail-field"><label>Submitted On</label><p>${a.submitted_on?.toDate?formatDateTime(a.submitted_on.toDate()):formatDate(a.created_at)}</p></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:20px;padding:20px;background:rgba(0,0,0,0.2);border-radius:var(--radius);margin-bottom:20px">
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-family:var(--font-head);font-size:3rem;font-weight:900;color:${scoreColor(a.final_score)}">${a.final_score}</div>
+        <div style="font-size:0.78rem;color:var(--text3)">/105 points</div>
+        <span class="badge badge-${a.final_category.toLowerCase()}" style="margin-top:8px">${a.final_category}</span>
+      </div>
+      <div style="flex:1">
+        ${['product','staff','branding','ambience'].map(cat=>{
+          const max=CAT_MAX[cat];
+          const score=a.category_scores&&a.category_scores[cat]||0;
+          return `<div class="score-bar-wrap">
+            <div class="score-bar-label"><span style="font-size:0.78rem;color:${catColors[cat]};text-transform:capitalize">${cat}</span><span>${score}/${max}</span></div>
+            <div class="score-bar" style="height:8px"><div class="score-bar-fill ${score/max>=0.85?'fill-excellent':score/max>=0.71?'fill-good':score/max>=0.52?'fill-average':'fill-critical'}" style="width:${score/max*100}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <h4 style="font-family:var(--font-head);font-size:0.8rem;color:var(--text2);margin-bottom:12px;letter-spacing:1px">PARAMETER SCORES</h4>
+    <div class="param-grid" style="margin-bottom:20px">
+      ${allKeys.map(p=>{
+        const s=a.scores&&a.scores[p.key]||0;
+        const col = s>=4?'var(--green)':s===3?'var(--orange)':'var(--red)';
+        return `<div class="param-item">
+          <div class="p-label">${p.label}</div>
+          <div style="display:flex;gap:3px">
+            ${[1,2,3,4,5].map(n=>`<div style="width:16px;height:16px;border-radius:3px;background:${n<=s?col:'rgba(255,255,255,0.08)'}"></div>`).join('')}
+            <span style="font-size:0.72rem;color:${col};margin-left:4px;font-weight:700">${s}/5</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    ${a.action_required==='Yes'?`
+    <div style="padding:16px;background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);border-radius:var(--radius);margin-bottom:16px">
+      <h4 style="font-family:var(--font-head);font-size:0.8rem;color:var(--red);margin-bottom:10px">⚠ ACTION REQUIRED</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="detail-field"><label>Status</label><p><span class="badge ${a.action_status==='Closed'?'badge-closed':a.action_status==='In Progress'?'badge-pending':'badge-open'}">${a.action_status}</span></p></div>
+        <div class="detail-field"><label>Responsible</label><p>${a.responsible_person||'—'}</p></div>
+        <div class="detail-field"><label>Target Date</label><p>${a.target_date?formatDate(a.target_date):'—'}</p></div>
+      </div>
+      ${a.obs_detail?`<div style="margin-top:10px;font-size:0.85rem;color:var(--text2)">${a.obs_detail}</div>`:''}
+    </div>
+    `:''}
+  `;
+  openModal('auditDetailModal');
+};
+
+// ══════════════════════════════════
+// STATUS MODAL
+// ══════════════════════════════════
+window.openStatusModal = function(id) {
+  const a = window.allAudits.find(x=>x.id===id);
+  if(!a) return;
+  window.currentAuditId = id;
+  document.getElementById('statusSelect').value = a.action_status||'Open';
+  document.getElementById('statusRemarks').value = '';
+  openModal('statusModal');
+};
+
+window.saveStatus = async function() {
+  const id = window.currentAuditId;
+  const status = document.getElementById('statusSelect').value;
+  const remarks = document.getElementById('statusRemarks').value;
+  const a = window.allAudits.find(x=>x.id===id);
+  if(!a) return;
+  try {
+    if(!id.startsWith('demo-')) {
+      await updateDoc(doc(db,COLLECTION,id), {
+        action_status: status,
+        status_remarks: remarks,
+        updated_at: serverTimestamp()
+      });
+    }
+    a.action_status = status;
+    closeModal('statusModal');
+    showToast(`Status updated to "${status}"`,'success');
+    refreshDashboard();
+    renderSummaryTable(window.allAudits);
+    renderCriticalTable(window.allAudits);
+  } catch(e) {
+    a.action_status = status;
+    closeModal('statusModal');
+    showToast('Status updated locally','info');
+    refreshDashboard();
+  }
+};
+
+// ══════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════
+window.exportCSV = function() {
+  const audits = window.allAudits;
+  if(!audits.length){ showToast('No data to export','error'); return; }
+  const headers=['Audit ID','Partner','ASM','CSE','Region','City','State','Date','Type','Score','Category','Action Status','Responsible','Target Date'];
+  const rows = audits.map(a=>[
+    a.audit_id,a.channel_partner,a.asm_rm_name,a.cse_dse_name,a.region,a.city,a.state,
+    a.audit_date,a.audit_type,a.final_score,a.final_category,a.action_status,a.responsible_person,a.target_date
+  ].map(v=>`"${v||''}"`).join(','));
+  const csv = [headers.join(','),...rows].join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `AIS_Showroom_Audit_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('CSV exported successfully','success');
+};
+
+// ══════════════════════════════════
+// HELPERS
+// ══════════════════════════════════
+function scoreColor(score) {
+  if(score>=90) return 'var(--green)';
+  if(score>=75) return 'var(--cyan)';
+  if(score>=55) return 'var(--orange)';
+  return 'var(--red)';
+}
+function formatDate(d) {
+  if(!d) return '—';
+  return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function formatDateTime(d) {
+  return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+// ══════════════════════════════════
+// PAGE NAVIGATION
+// ══════════════════════════════════
+window.showPage = function(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+
+  // Activate nav item
+  const navMap = {
+    dashboard:0, newAudit:1, auditSummary:2, categoryDist:3, criticalAudits:4, nationalDashboard:5, regionPerformance:6
+  };
+  const navItems = document.querySelectorAll('.nav-item');
+  if(navMap[name]!==undefined) navItems[navMap[name]].classList.add('active');
+
+  // Page-specific renders
+  if(name==='auditSummary') renderSummaryTable(window.allAudits);
+  if(name==='criticalAudits') renderCriticalTable(window.allAudits);
+  if(name==='categoryDist') renderCategoryDist(window.allAudits);
+  if(name==='nationalDashboard') { renderNationalDashboard(window.allAudits); }
+
+  // Mobile: close sidebar
+  if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('open');
+};
+
+// ══════════════════════════════════
+// MODAL HELPERS
+// ══════════════════════════════════
+window.openModal = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+window.showToast = function(msg,type='info') {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className=type; t.style.display='block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>{ t.style.display='none'; },4000);
+};
+
+// ══════════════════════════════════
+// LOADING
+// ══════════════════════════════════
+window.showLoading = v => document.getElementById('loadingOverlay').classList[v?'add':'remove']('active');
+
+// ══════════════════════════════════
+// SIDEBAR TOGGLE (mobile)
+// ══════════════════════════════════
+window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+
+// Init loading spinner
+document.getElementById('loadingOverlay').classList.add('active');
+
+</script>
+</body>
+</html>
