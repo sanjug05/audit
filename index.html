@@ -713,6 +713,20 @@ svg text { font-family:var(--font-body); }
     <button class="btn-primary" id="loginBtn" onclick="doLogin()">
       <i class="fas fa-sign-in-alt" style="margin-right:8px"></i> Sign In
     </button>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-top:16px">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+      <span style="font-size:0.75rem;color:var(--text3)">or</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+    </div>
+
+    <button class="btn-primary" onclick="demoLogin()" style="margin-top:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy)">
+      <i class="fas fa-flask" style="margin-right:8px"></i> Enter Demo Mode
+    </button>
+    <p style="text-align:center;font-size:0.72rem;color:var(--text3);margin-top:10px">
+      Demo mode loads 24 sample audits — no login required
+    </p>
+
     <div id="loginError" class="login-error"></div>
   </div>
 </div>
@@ -1330,35 +1344,41 @@ svg text { font-family:var(--font-body); }
   </div>
 </div>
 
-<!-- FIREBASE + APP JS -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
-  query, where, orderBy, serverTimestamp, getDoc }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<!-- FIREBASE COMPAT CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 
-// ══════════════════════════════════
-// FIREBASE CONFIG — NEW PROJECT ID
-// ══════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// FIREBASE CONFIG
+// Replace with your real config once Firebase project is ready.
+// Until then, Demo Mode works without any Firebase connection.
+// ══════════════════════════════════════════════════════════════
+const FIREBASE_CONFIGURED = false; // ← set to true after adding real config below
+
 const firebaseConfig = {
-  apiKey: "AIzaSyC2vut9SiDDvIxGmFPIFJsXuHqhJJI1234",
-  authDomain: "ais-showroom-audit.firebaseapp.com",
-  projectId: "ais-showroom-audit",
-  storageBucket: "ais-showroom-audit.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE.firebaseapp.com",
+  projectId: "REPLACE_PROJECT_ID",
+  storageBucket: "REPLACE.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:000000000000"
 };
 
-// NOTE: Replace the above with your actual Firebase config
-// Create a new project at https://console.firebase.google.com
-// Project name: ais-showroom-audit (or any name)
-// Then enable Email/Password auth and Firestore
+// Safe Firebase init — only runs when FIREBASE_CONFIGURED = true
+let auth = null;
+let db   = null;
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+if (FIREBASE_CONFIGURED) {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db   = firebase.firestore();
+  } catch(e) {
+    console.warn('Firebase init failed:', e.message);
+  }
+}
 
 // ══════════════════════════════════
 // GLOBALS
@@ -1414,18 +1434,30 @@ window.PARAMS = PARAMS;
 window.CAT_MAX = CAT_MAX;
 
 // ══════════════════════════════════
-// AUTH LISTENER
+// DEMO LOGIN — no Firebase needed
 // ══════════════════════════════════
-onAuthStateChanged(auth, user => {
+window.demoLogin = function() {
+  window.isDemoMode = true;
+  window.currentUser = {
+    email: 'demo@aiswindows.com',
+    displayName: 'Demo User',
+    uid: 'demo-uid-001'
+  };
   document.getElementById('loadingOverlay').classList.remove('active');
-  if(user) {
-    window.currentUser = user;
-    showApp(user);
-  } else {
-    document.getElementById('loginScreen').style.display='flex';
-    document.getElementById('appShell').style.display='none';
-  }
-});
+  showApp(window.currentUser);
+};
+
+// ══════════════════════════════════
+// AUTH LISTENER (only when Firebase is configured)
+// ══════════════════════════════════
+if (FIREBASE_CONFIGURED && auth) {
+  auth.onAuthStateChanged(user => {
+    if(user && !window.isDemoMode) {
+      window.currentUser = user;
+      showApp(user);
+    }
+  });
+}
 
 // ══════════════════════════════════
 // LOGIN / LOGOUT
@@ -1436,10 +1468,17 @@ window.doLogin = async function() {
   const btn   = document.getElementById('loginBtn');
   const err   = document.getElementById('loginError');
   err.style.display='none';
+  if(!FIREBASE_CONFIGURED || !auth) {
+    err.innerHTML = 'Firebase not configured yet.<br>Please use <b>Demo Mode</b> to explore the app.';
+    err.style.display='block';
+    btn.disabled=false;
+    btn.innerHTML='<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>Sign In';
+    return;
+  }
   if(!email||!pw){ err.textContent='Please enter email and password.'; err.style.display='block'; return; }
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Signing in...';
   try {
-    await signInWithEmailAndPassword(auth, email, pw);
+    await auth.signInWithEmailAndPassword(email, pw);
   } catch(e) {
     err.textContent = e.code==='auth/user-not-found'||e.code==='auth/wrong-password'
       ? 'Invalid email or password.' : e.message;
@@ -1450,8 +1489,14 @@ window.doLogin = async function() {
 };
 
 window.doLogout = async function() {
-  await signOut(auth);
-  window.allAudits=[];
+  window.isDemoMode = false;
+  window.allAudits = [];
+  window.currentUser = null;
+  if(FIREBASE_CONFIGURED && auth) {
+    try { await auth.signOut(); } catch(e) {}
+  }
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('appShell').style.display='none';
 };
 
 // Handle Enter key on login
@@ -1468,9 +1513,10 @@ async function showApp(user) {
 
   // Set user info
   const name = user.displayName || user.email.split('@')[0];
-  document.getElementById('userName').textContent = name;
-  document.getElementById('userAvatar').textContent = name[0].toUpperCase();
-  document.getElementById('userRole').textContent = 'Channel Manager';
+  const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById('userName').textContent = displayName;
+  document.getElementById('userAvatar').textContent = displayName[0].toUpperCase();
+  document.getElementById('userRole').textContent = window.isDemoMode ? '🔶 Demo Mode' : 'Channel Manager';
 
   // Init date
   document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -1645,29 +1691,33 @@ window.submitAudit = async function() {
     obs_detail: document.getElementById('f_obs_detail').value.trim(),
     photos: window.uploadedPhotos,
     submitted_by: window.currentUser.email,
-    submitted_on: serverTimestamp(),
+    submitted_on: firebase.firestore.FieldValue.serverTimestamp(),
     created_at: new Date().toISOString(),
   };
 
   showLoading(true);
-  try {
-    await addDoc(collection(db, COLLECTION), auditData);
-    showLoading(false);
-    showToast(`Audit submitted! Score: ${finalScore}/105 — ${getCategory(finalScore)}`,'success');
-    resetForm();
-    await loadAllAudits();
-    refreshDashboard();
-    showPage('auditSummary');
-  } catch(e) {
-    showLoading(false);
-    // Demo mode fallback
-    const demo = { ...auditData, id: 'demo-'+Date.now(), submitted_on: { toDate:()=>new Date() } };
-    window.allAudits.unshift(demo);
-    showToast(`Demo Mode: Audit saved locally (Firebase not configured yet). Score: ${finalScore}/105`,'info');
-    resetForm();
-    refreshDashboard();
-    showPage('auditSummary');
+  if(FIREBASE_CONFIGURED && db) {
+    try {
+      await db.collection(COLLECTION).add(auditData);
+      showLoading(false);
+      showToast(`✅ Audit submitted! Score: ${finalScore}/105 — ${getCategory(finalScore)}`,'success');
+      resetForm();
+      await loadAllAudits();
+      refreshDashboard();
+      showPage('auditSummary');
+      return;
+    } catch(e) {
+      console.warn('Firestore save failed:', e.message);
+    }
   }
+  // Demo Mode — save to local array
+  showLoading(false);
+  const demo = { ...auditData, id: 'local-'+Date.now(), submitted_on: { toDate:()=>new Date() } };
+  window.allAudits.unshift(demo);
+  showToast(`✅ Audit recorded! Score: ${finalScore}/105 — ${getCategory(finalScore)}`,'success');
+  resetForm();
+  refreshDashboard();
+  showPage('auditSummary');
 };
 
 function generateAuditID() {
@@ -1709,13 +1759,18 @@ window.resetForm = function() {
 // ══════════════════════════════════
 async function loadAllAudits() {
   showLoading(true);
-  try {
-    const snap = await getDocs(query(collection(db,COLLECTION), orderBy('created_at','desc')));
-    window.allAudits = snap.docs.map(d=>({id:d.id,...d.data()}));
-  } catch(e) {
-    // Demo data if Firebase not configured
-    if(!window.allAudits.length) window.allAudits = generateDemoData();
+  if(FIREBASE_CONFIGURED && db) {
+    try {
+      const snap = await db.collection(COLLECTION).orderBy('created_at','desc').get();
+      window.allAudits = snap.docs.map(d=>({id:d.id,...d.data()}));
+      showLoading(false);
+      return;
+    } catch(e) {
+      console.warn('Firestore load failed:', e.message);
+    }
   }
+  // Demo mode — use generated data
+  if(!window.allAudits.length) window.allAudits = generateDemoData();
   showLoading(false);
 }
 
@@ -2292,26 +2347,26 @@ window.saveStatus = async function() {
   const remarks = document.getElementById('statusRemarks').value;
   const a = window.allAudits.find(x=>x.id===id);
   if(!a) return;
-  try {
-    if(!id.startsWith('demo-')) {
-      await updateDoc(doc(db,COLLECTION,id), {
+  // Update in Firestore if configured and it's a real record
+  if(FIREBASE_CONFIGURED && db && !id.startsWith('demo-') && !id.startsWith('local-')) {
+    try {
+      await db.collection(COLLECTION).doc(id).update({
         action_status: status,
         status_remarks: remarks,
-        updated_at: serverTimestamp()
+        updated_at: firebase.firestore.FieldValue.serverTimestamp()
       });
+    } catch(e) {
+      console.warn('Status update failed:', e.message);
     }
-    a.action_status = status;
-    closeModal('statusModal');
-    showToast(`Status updated to "${status}"`,'success');
-    refreshDashboard();
-    renderSummaryTable(window.allAudits);
-    renderCriticalTable(window.allAudits);
-  } catch(e) {
-    a.action_status = status;
-    closeModal('statusModal');
-    showToast('Status updated locally','info');
-    refreshDashboard();
   }
+  // Always update local state
+  a.action_status = status;
+  if(remarks) a.status_remarks = remarks;
+  closeModal('statusModal');
+  showToast(`✅ Status updated to "${status}"`,'success');
+  refreshDashboard();
+  renderSummaryTable(window.allAudits);
+  renderCriticalTable(window.allAudits);
 };
 
 // ══════════════════════════════════
@@ -2405,8 +2460,28 @@ window.showLoading = v => document.getElementById('loadingOverlay').classList[v?
 // ══════════════════════════════════
 window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
 
-// Init loading spinner
-document.getElementById('loadingOverlay').classList.add('active');
+// ══════════════════════════════════════════════════════════
+// STARTUP — always show login screen immediately.
+// Firebase auth listener (above) takes over ONLY if configured.
+// Demo button always works regardless of Firebase state.
+// ══════════════════════════════════════════════════════════
+document.getElementById('loadingOverlay').classList.remove('active');
+document.getElementById('loginScreen').style.display = 'flex';
+document.getElementById('appShell').style.display = 'none';
+
+// Hint to user on login screen if not configured
+if(!FIREBASE_CONFIGURED) {
+  setTimeout(()=>{
+    const err = document.getElementById('loginError');
+    if(err) {
+      err.innerHTML = '💡 Firebase not configured yet — use <b>Demo Mode</b> below';
+      err.style.display = 'block';
+      err.style.background = 'rgba(0,212,255,0.1)';
+      err.style.borderColor = 'rgba(0,212,255,0.3)';
+      err.style.color = 'var(--cyan)';
+    }
+  }, 300);
+}
 
 </script>
 </body>
