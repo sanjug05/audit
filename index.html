@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AIS Showroom Audit</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -81,14 +81,20 @@ body::before {
 }
 .login-box {
   position:relative; z-index:1;
-  width:420px; max-width:95vw;
+  width:420px; max-width:96vw;
   background: var(--glass);
   border:1px solid var(--border);
   border-radius:20px;
-  padding:48px 40px;
+  padding:40px 32px;
   backdrop-filter:blur(20px);
   box-shadow: var(--shadow), var(--glow);
   animation: fadeUp 0.6s ease;
+}
+@media (max-width:480px) {
+  .login-box { padding:32px 22px; border-radius:16px; }
+  .login-logo h1 { font-size:0.95rem; }
+  .login-logo .logo-icon { width:60px; height:60px; font-size:26px; }
+  .btn-primary { padding:13px; font-size:0.95rem; }
 }
 .login-logo {
   text-align:center; margin-bottom:32px;
@@ -263,10 +269,19 @@ body::before {
   color:var(--text); letter-spacing:1px;
 }
 .page-title p { color:var(--text2); font-size:0.85rem; margin-top:4px; }
+@media (max-width:768px) {
+  .page-title h1 { font-size:1.1rem; }
+  .page-title p  { font-size:0.78rem; }
+  .page-header   { margin-bottom:16px; }
+}
 .page-actions { display:flex; gap:10px; flex-wrap:wrap; }
 
 /* BUTTONS */
-.btn { padding:10px 20px; border-radius:var(--radius2); border:none; cursor:pointer; font-family:var(--font-body); font-size:0.88rem; font-weight:600; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px; }
+.btn { padding:10px 20px; border-radius:var(--radius2); border:none; cursor:pointer; font-family:var(--font-body); font-size:0.88rem; font-weight:600; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+@media (max-width:768px) {
+  .btn { padding:11px 16px; font-size:0.85rem; }
+  .btn-sm { padding:8px 12px; font-size:0.78rem; }
+}
 .btn-cyan { background:linear-gradient(135deg,var(--cyan),var(--cyan2)); color:var(--navy); }
 .btn-cyan:hover { transform:translateY(-1px); box-shadow:var(--glow); }
 .btn-gold { background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); }
@@ -329,6 +344,12 @@ body::before {
 .kpi-value { font-family:var(--font-head); font-size:2rem; font-weight:700; color:var(--text); line-height:1; }
 .kpi-label { font-size:0.78rem; color:var(--text2); margin-top:6px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; }
 .kpi-sub { font-size:0.75rem; color:var(--text3); margin-top:4px; }
+@media (max-width:480px) {
+  .kpi-value { font-size:1.6rem; }
+  .kpi-card { padding:14px; }
+  .kpi-icon { width:36px; height:36px; font-size:1rem; margin-bottom:10px; }
+  .kpi-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+}
 
 /* GRID LAYOUTS */
 .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
@@ -346,15 +367,20 @@ body::before {
   font-size:0.72rem; font-weight:700; color:var(--text3);
   text-transform:uppercase; letter-spacing:1px;
   border-bottom:1px solid var(--border2);
-  white-space:nowrap;
+  white-space:nowrap; background:var(--navy2);
+  position:sticky; top:0; z-index:1;
 }
 .data-table td {
   padding:12px 14px; font-size:0.85rem; color:var(--text2);
   border-bottom:1px solid var(--border2);
-  transition:background 0.2s;
+  transition:background 0.2s; white-space:nowrap;
 }
 .data-table tr:hover td { background:rgba(255,255,255,0.02); }
 .data-table tr:last-child td { border-bottom:none; }
+@media (max-width:768px) {
+  .data-table th { font-size:0.68rem; padding:8px 10px; }
+  .data-table td { font-size:0.8rem;  padding:10px 10px; }
+}
 
 /* BADGES */
 .badge {
@@ -419,6 +445,19 @@ body::before {
   border-radius:var(--radius2);
   color:var(--text); font-family:var(--font-body); font-size:0.9rem;
   transition:all 0.3s; outline:none;
+  -webkit-appearance:none; appearance:none;
+}
+@media (max-width:768px) {
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    font-size:1rem; /* prevents iOS auto-zoom on focus */
+    padding:12px 14px;
+  }
+  .field-group label { font-size:0.82rem; }
+  .form-section-body { padding:14px; }
+  .form-section-header { padding:12px 14px; }
+  .form-section-header h3 { font-size:0.82rem; }
 }
 .field-group input:focus,
 .field-group select:focus,
@@ -435,18 +474,26 @@ body::before {
 .rating-label { font-size:0.82rem; color:var(--text); margin-bottom:8px; font-weight:500; }
 .rating-stars { display:flex; gap:6px; }
 .rating-btn {
-  width:36px; height:36px; border-radius:var(--radius2);
+  width:40px; height:40px; border-radius:var(--radius2);
   border:1px solid var(--border);
   background:transparent; color:var(--text3);
-  font-family:var(--font-head); font-size:0.8rem; font-weight:700;
+  font-family:var(--font-head); font-size:0.82rem; font-weight:700;
   cursor:pointer; transition:all 0.2s;
   display:flex; align-items:center; justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
 .rating-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.rating-btn:active { transform:scale(0.92); }
 .rating-btn.selected-1, .rating-btn.selected-2 { background:rgba(255,71,87,0.2); border-color:var(--red); color:var(--red); }
 .rating-btn.selected-3 { background:rgba(255,165,2,0.2); border-color:var(--orange); color:var(--orange); }
 .rating-btn.selected-4 { background:rgba(0,212,255,0.2); border-color:var(--cyan); color:var(--cyan); }
 .rating-btn.selected-5 { background:rgba(0,230,118,0.2); border-color:var(--green); color:var(--green); }
+@media (max-width:768px) {
+  .rating-btn { width:44px; height:44px; font-size:0.9rem; }
+  .rating-param { margin-bottom:18px; }
+  .rating-label { font-size:0.85rem; margin-bottom:10px; }
+}
 
 /* SCORE BAR */
 .score-bar-wrap { margin-bottom:10px; }
@@ -465,11 +512,23 @@ svg text { font-family:var(--font-body); }
 /* FILTERS BAR */
 .filters-bar {
   display:flex; gap:10px; flex-wrap:wrap;
-  padding:14px 16px;
+  padding:12px 14px;
   background:var(--card);
   border:1px solid var(--border2);
   border-radius:var(--radius);
   margin-bottom:16px;
+}
+@media (max-width:768px) {
+  .filters-bar {
+    gap:8px;
+    padding:10px 12px;
+  }
+  .filter-select {
+    flex:1;
+    min-width:0;
+    font-size:0.8rem;
+    padding:8px 10px;
+  }
 }
 .filter-select {
   padding:8px 12px;
@@ -580,7 +639,12 @@ svg text { font-family:var(--font-body); }
 .step-line.done { background:var(--green); }
 
 /* REGION MAP (SVG INDIA) */
-.region-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+.region-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
+@media (max-width:480px) {
+  .region-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+  .region-card { padding:12px; }
+  .region-card .region-score { font-size:1.5rem; }
+}
 .region-card {
   background:var(--card);
   border:1px solid var(--border2);
@@ -596,6 +660,11 @@ svg text { font-family:var(--font-body); }
 
 /* PHOTO UPLOAD */
 .photo-upload-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+@media (max-width:480px) {
+  .photo-slot { height:80px; }
+  .photo-slot i { font-size:1.2rem; }
+  .photo-slot span { font-size:0.68rem; }
+}
 .photo-slot {
   border:2px dashed var(--border);
   border-radius:var(--radius2);
@@ -617,24 +686,108 @@ svg text { font-family:var(--font-body); }
 @keyframes spin { to { transform:rotate(360deg); } }
 @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
 
-/* MOBILE */
-@media (max-width:768px) {
-  #sidebar { transform:translateX(-260px); }
-  #sidebar.open { transform:translateX(0); box-shadow:20px 0 40px rgba(0,0,0,0.5); }
-  #mainContent { margin-left:0; padding:16px; }
-  .grid-2, .grid-65-35 { grid-template-columns:1fr; }
-  .grid-3 { grid-template-columns:1fr 1fr; }
-  .form-row { grid-template-columns:1fr; }
-  #menuToggle { display:flex; }
-  .kpi-grid { grid-template-columns:repeat(2,1fr); }
+/* ── MOBILE OVERLAY BACKDROP ── */
+#sidebarOverlay {
+  display:none; position:fixed; inset:0; z-index:99;
+  background:rgba(0,0,0,0.6); backdrop-filter:blur(2px);
+}
+#sidebarOverlay.open { display:block; }
+
+/* ── HAMBURGER TOGGLE ── */
+#menuToggle {
+  display:none;
+  position:fixed; top:0; left:0; right:0; z-index:150;
+  height:52px;
+  background:var(--navy2);
+  border-bottom:1px solid var(--border);
+  align-items:center; padding:0 16px; gap:12px;
+}
+#menuToggle .toggle-btn {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--cyan-dim); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--cyan); font-size:1rem; cursor:pointer; flex-shrink:0;
+}
+#menuToggle .toggle-title {
+  font-family:var(--font-head); font-size:0.85rem; font-weight:700;
+  color:var(--cyan); letter-spacing:1px; flex:1;
+}
+#menuToggle .toggle-user {
+  font-size:0.75rem; color:var(--text3);
 }
 
-#menuToggle {
-  display:none; position:fixed; top:16px; left:16px; z-index:200;
-  width:40px; height:40px; background:var(--navy2);
-  border:1px solid var(--border); border-radius:var(--radius2);
-  align-items:center; justify-content:center;
-  color:var(--cyan); cursor:pointer; font-size:1rem;
+/* ── MOBILE BOTTOM NAV ── */
+#bottomNav {
+  display:none;
+  position:fixed; bottom:0; left:0; right:0; z-index:150;
+  background:var(--navy2); border-top:1px solid var(--border);
+  height:58px; padding:0 4px;
+  align-items:center; justify-content:space-around;
+}
+.bnav-item {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; padding:6px 10px; border-radius:8px;
+  cursor:pointer; transition:all 0.2s; flex:1;
+  color:var(--text3); font-size:0.6rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.5px;
+}
+.bnav-item i { font-size:1.1rem; }
+.bnav-item.active { color:var(--cyan); background:var(--cyan-dim); }
+.bnav-item:active { transform:scale(0.92); }
+
+/* ── MOBILE LAYOUT ── */
+@media (max-width:768px) {
+  #sidebar {
+    transform:translateX(-260px);
+    z-index:100;
+    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  #sidebar.open {
+    transform:translateX(0);
+    box-shadow:4px 0 40px rgba(0,0,0,0.6);
+  }
+  #mainContent {
+    margin-left:0;
+    padding:12px 12px 80px 12px; /* bottom padding for bottom nav */
+    padding-top:64px;            /* top padding for top bar */
+  }
+  #menuToggle { display:flex; }
+  #bottomNav  { display:flex; }
+  .grid-2, .grid-65-35 { grid-template-columns:1fr; }
+  .grid-3 { grid-template-columns:1fr 1fr; }
+  .grid-65-35 { grid-template-columns:1fr; }
+  .form-row { grid-template-columns:1fr !important; }
+  .form-row.cols-3 { grid-template-columns:1fr !important; }
+  .kpi-grid { grid-template-columns:repeat(2,1fr); }
+  .page-header { flex-direction:column; gap:10px; }
+  .page-actions { width:100%; }
+  .page-actions .btn { flex:1; justify-content:center; }
+  .audit-form { width:100%; }
+  /* hide live score sidebar on mobile — show inline instead */
+  #liveScoreSidebar { display:none !important; }
+  .audit-form-wrap { flex-direction:column !important; }
+  /* modal full screen on mobile */
+  .modal-box { width:96vw !important; max-height:95vh; border-radius:12px; }
+  /* table scroll */
+  .card .card-body { overflow-x:auto; }
+  .national-table-wrap { overflow-x:auto; }
+  /* region grid 2 cols */
+  .region-grid { grid-template-columns:repeat(2,1fr) !important; }
+  /* filters bar wrap nicely */
+  .filters-bar { gap:8px; }
+  .search-box { min-width:100%; order:-1; }
+  .filter-select { flex:1; min-width:calc(50% - 4px); }
+  /* audit detail grid */
+  .audit-detail-grid { grid-template-columns:1fr !important; }
+  /* donut chart */
+  .donut-wrap { flex-direction:column; align-items:center; }
+  /* bottom nav label hide on very small */
+  @media (max-width:360px) {
+    .bnav-item span { display:none; }
+    .bnav-item i { font-size:1.3rem; }
+    #bottomNav { height:52px; }
+    #mainContent { padding-bottom:64px; }
+  }
 }
 
 .empty-state {
@@ -661,7 +814,10 @@ svg text { font-family:var(--font-body); }
 .live-score-cat-bars { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
 
 /* DONUT CHART WRAPPER */
-.donut-wrap { display:flex; align-items:center; gap:20px; }
+.donut-wrap { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+@media (max-width:480px) {
+  .donut-wrap { justify-content:center; }
+}
 .donut-legend { display:flex; flex-direction:column; gap:10px; }
 .legend-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text2); }
 .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
@@ -734,8 +890,34 @@ svg text { font-family:var(--font-body); }
 <!-- APP SHELL -->
 <div id="appShell">
 
-  <!-- MENU TOGGLE (mobile) -->
-  <div id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+  <!-- SIDEBAR OVERLAY BACKDROP -->
+  <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- MOBILE TOP BAR -->
+  <div id="menuToggle">
+    <div class="toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+    <div class="toggle-title">AIS AUDIT</div>
+    <div class="toggle-user" id="mobileUserLabel">Demo Mode</div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <div id="bottomNav">
+    <div class="bnav-item active" id="bn-dashboard" onclick="showPage('dashboard');setBottomNav('dashboard')">
+      <i class="fas fa-chart-line"></i><span>Home</span>
+    </div>
+    <div class="bnav-item" id="bn-newAudit" onclick="showPage('newAudit');setBottomNav('newAudit')">
+      <i class="fas fa-plus-circle"></i><span>Audit</span>
+    </div>
+    <div class="bnav-item" id="bn-auditSummary" onclick="showPage('auditSummary');setBottomNav('auditSummary')">
+      <i class="fas fa-list-ul"></i><span>List</span>
+    </div>
+    <div class="bnav-item" id="bn-criticalAudits" onclick="showPage('criticalAudits');setBottomNav('criticalAudits')">
+      <i class="fas fa-exclamation-triangle"></i><span>Critical</span>
+    </div>
+    <div class="bnav-item" id="bn-more" onclick="toggleSidebar()">
+      <i class="fas fa-th-large"></i><span>More</span>
+    </div>
+  </div>
 
   <!-- SIDEBAR -->
   <nav id="sidebar">
@@ -884,7 +1066,19 @@ svg text { font-family:var(--font-body); }
         </div>
       </div>
 
-      <div style="display:flex;gap:24px;align-items:flex-start">
+      <!-- MOBILE INLINE SCORE BANNER (hidden on desktop) -->
+      <div id="mobileScoreBanner" style="display:none;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:baseline;gap:4px">
+          <span style="font-family:var(--font-head);font-size:2rem;font-weight:900" id="mobileScoreNum">0</span>
+          <span style="font-size:0.75rem;color:var(--text3)">/105</span>
+        </div>
+        <div id="mobileScoreCat"><span class="badge" style="background:rgba(255,255,255,0.05);color:var(--text3)">Not Scored</span></div>
+        <div style="flex:1;min-width:140px">
+          <div class="score-bar" style="height:8px"><div class="score-bar-fill fill-good" id="mobileScoreBar" style="width:0%;transition:width 0.4s"></div></div>
+        </div>
+      </div>
+
+      <div class="audit-form-wrap" style="display:flex;gap:24px;align-items:flex-start">
         <div class="audit-form" style="flex:1">
 
           <!-- STEP 1: IDENTITY -->
@@ -1061,7 +1255,7 @@ svg text { font-family:var(--font-body); }
         </div>
 
         <!-- LIVE SCORE SIDEBAR -->
-        <div style="width:220px;flex-shrink:0">
+        <div id="liveScoreSidebar" style="width:220px;flex-shrink:0">
           <div class="live-score-box">
             <div class="live-score-num" id="liveScoreNum" style="color:var(--text3)">0</div>
             <div class="live-score-label">/ 105 Points</div>
@@ -1517,6 +1711,9 @@ async function showApp(user) {
   document.getElementById('userName').textContent = displayName;
   document.getElementById('userAvatar').textContent = displayName[0].toUpperCase();
   document.getElementById('userRole').textContent = window.isDemoMode ? '🔶 Demo Mode' : 'Channel Manager';
+  // Mobile top bar label
+  const mobileLabel = document.getElementById('mobileUserLabel');
+  if(mobileLabel) mobileLabel.textContent = window.isDemoMode ? '🔶 Demo' : displayName;
 
   // Init date
   document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -1581,19 +1778,40 @@ function updateLiveScore() {
   Object.entries(window.scores).forEach(([cat,params])=>{
     Object.values(params).forEach(v=>{ catTotals[cat]+=v; total+=v; });
   });
-  document.getElementById('liveScoreNum').textContent = total;
-  const cat = getCategory(total);
-  const colors = {Excellent:'var(--green)',Good:'var(--cyan)',Average:'var(--orange)',Critical:'var(--red)','Not Scored':'var(--text3)'};
-  document.getElementById('liveScoreNum').style.color = colors[cat]||'var(--text3)';
-  document.getElementById('liveCategory').innerHTML = `<span class="badge badge-${cat.toLowerCase()}">${cat}</span>`;
 
-  // Category bars
+  const cat    = getCategory(total);
+  const colors = {Excellent:'var(--green)',Good:'var(--cyan)',Average:'var(--orange)',Critical:'var(--red)','Not Scored':'var(--text3)'};
+  const color  = colors[cat]||'var(--text3)';
+  const barCls = total>=90?'fill-excellent':total>=75?'fill-good':total>=55?'fill-average':total>0?'fill-critical':'fill-good';
+
+  // Desktop sidebar score
+  document.getElementById('liveScoreNum').textContent      = total;
+  document.getElementById('liveScoreNum').style.color      = color;
+  document.getElementById('liveCategory').innerHTML        = `<span class="badge badge-${cat.toLowerCase()}">${cat}</span>`;
+
+  // Mobile inline banner
+  const banner = document.getElementById('mobileScoreBanner');
+  const mob    = document.getElementById('mobileScoreNum');
+  const mobCat = document.getElementById('mobileScoreCat');
+  const mobBar = document.getElementById('mobileScoreBar');
+  if(banner) {
+    banner.style.display = 'flex';
+    mob.textContent  = total;
+    mob.style.color  = color;
+    mobCat.innerHTML = `<span class="badge badge-${cat.toLowerCase()}">${cat}</span>`;
+    mobBar.className = `score-bar-fill ${barCls}`;
+    mobBar.style.width = (total/105*100)+'%';
+  }
+
+  // Category bars (desktop)
   ['product','staff','branding','ambience'].forEach(c=>{
     const max = CAT_MAX[c];
-    const v = catTotals[c];
+    const v   = catTotals[c];
     const pct = max>0?Math.round(v/max*100):0;
-    document.getElementById(`bar-${c}`).style.width = pct+'%';
-    document.getElementById(`lb-${c}`).textContent = `${v}/${max}`;
+    const el  = document.getElementById(`bar-${c}`);
+    const lb  = document.getElementById(`lb-${c}`);
+    if(el) el.style.width = pct+'%';
+    if(lb) lb.textContent = `${v}/${max}`;
   });
 }
 
@@ -2427,8 +2645,10 @@ window.showPage = function(name) {
   if(name==='categoryDist') renderCategoryDist(window.allAudits);
   if(name==='nationalDashboard') { renderNationalDashboard(window.allAudits); }
 
-  // Mobile: close sidebar
-  if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('open');
+  // Sync bottom nav
+  setBottomNav(name);
+  // Mobile: close sidebar + overlay
+  closeSidebar();
 };
 
 // ══════════════════════════════════
@@ -2458,7 +2678,33 @@ window.showLoading = v => document.getElementById('loadingOverlay').classList[v?
 // ══════════════════════════════════
 // SIDEBAR TOGGLE (mobile)
 // ══════════════════════════════════
-window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+// ── MOBILE SIDEBAR ──────────────────────────────────────
+window.toggleSidebar = function() {
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  const isOpen   = sidebar.classList.contains('open');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('open', !isOpen);
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+};
+
+window.closeSidebar = function() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+// ── BOTTOM NAV SYNC ──────────────────────────────────────
+window.setBottomNav = function(name) {
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  const bnMap = {
+    dashboard:'bn-dashboard', newAudit:'bn-newAudit',
+    auditSummary:'bn-auditSummary', criticalAudits:'bn-criticalAudits'
+  };
+  const el = document.getElementById(bnMap[name]);
+  if(el) el.classList.add('active');
+  else document.getElementById('bn-more').classList.add('active');
+};
 
 // ══════════════════════════════════════════════════════════
 // STARTUP — always show login screen immediately.
