@@ -679,6 +679,39 @@ svg text { font-family:var(--font-body); }
 .photo-slot img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .photo-slot input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
 
+/* SKIP LINK */
+.skip-link {
+  position:absolute; top:-100px; left:16px; z-index:9999;
+  background:var(--cyan); color:var(--navy);
+  padding:8px 16px; border-radius:var(--radius2);
+  font-family:var(--font-body); font-size:0.85rem; font-weight:700;
+  text-decoration:none; transition:top 0.2s;
+}
+.skip-link:focus { top:16px; }
+
+/* FOCUS RING — visible for keyboard users */
+:focus-visible {
+  outline:2px solid var(--cyan);
+  outline-offset:2px;
+  border-radius:4px;
+}
+button:focus-visible, [role="button"]:focus-visible {
+  outline:2px solid var(--cyan);
+  outline-offset:3px;
+}
+
+/* VALIDATION ERROR highlight */
+.field-error input, .field-error select, .field-error textarea {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 3px rgba(255,71,87,0.15);
+}
+.field-error-msg {
+  font-size:0.75rem; color:var(--red); margin-top:4px;
+}
+
+/* SUBMIT LOCK overlay on submit button */
+.btn-submitting { opacity:0.6; pointer-events:none; }
+
 /* ANIMATIONS */
 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
@@ -840,6 +873,8 @@ svg text { font-family:var(--font-body); }
 </style>
 </head>
 <body>
+<!-- SKIP TO CONTENT -->
+<a href="#mainContent" class="skip-link">Skip to content</a>
 
 <!-- LOADING -->
 <div id="loadingOverlay">
@@ -848,7 +883,7 @@ svg text { font-family:var(--font-body); }
 </div>
 
 <!-- TOAST -->
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- LOGIN -->
 <div id="loginScreen">
@@ -939,20 +974,20 @@ svg text { font-family:var(--font-body); }
     </div>
     <div class="sidebar-nav">
       <div class="nav-section-label">Main</div>
-      <div class="nav-item active" onclick="showPage('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
-      <div class="nav-item" onclick="showPage('newAudit')"><i class="fas fa-plus-circle"></i> New Audit</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" role="button" tabindex="0" aria-label="Dashboard"><i class="fas fa-chart-line" aria-hidden="true"></i> Dashboard</div>
+      <div class="nav-item" onclick="showPage('newAudit')" role="button" tabindex="0" aria-label="New Audit"><i class="fas fa-plus-circle" aria-hidden="true"></i> New Audit</div>
 
       <div class="nav-section-label">Views</div>
-      <div class="nav-item" onclick="showPage('auditSummary')"><i class="fas fa-list-ul"></i> Audit Summary</div>
-      <div class="nav-item" onclick="showPage('categoryDist')"><i class="fas fa-chart-pie"></i> Category Distribution</div>
-      <div class="nav-item" onclick="showPage('criticalAudits')">
-        <i class="fas fa-exclamation-triangle"></i> Critical Audits
-        <span class="nav-badge" id="criticalBadge">0</span>
+      <div class="nav-item" onclick="showPage('auditSummary')" role="button" tabindex="0" aria-label="Audit Summary"><i class="fas fa-list-ul" aria-hidden="true"></i> Audit Summary</div>
+      <div class="nav-item" onclick="showPage('categoryDist')" role="button" tabindex="0" aria-label="Category Distribution"><i class="fas fa-chart-pie" aria-hidden="true"></i> Category Distribution</div>
+      <div class="nav-item" onclick="showPage('criticalAudits')" role="button" tabindex="0" aria-label="Critical Audits">
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Critical Audits
+        <span class="nav-badge" id="criticalBadge" aria-label="critical count">0</span>
       </div>
 
       <div class="nav-section-label">Analytics</div>
-      <div class="nav-item" onclick="showPage('nationalDashboard')"><i class="fas fa-globe-asia"></i> National Dashboard</div>
-      <div class="nav-item" onclick="showPage('regionPerformance')"><i class="fas fa-map-marked-alt"></i> Region Performance</div>
+      <div class="nav-item" onclick="showPage('nationalDashboard')" role="button" tabindex="0" aria-label="National Dashboard"><i class="fas fa-globe-asia" aria-hidden="true"></i> National Dashboard</div>
+      <div class="nav-item" onclick="showPage('regionPerformance')" role="button" tabindex="0" aria-label="Region Performance"><i class="fas fa-map-marked-alt" aria-hidden="true"></i> Region Performance</div>
     </div>
     <div class="sidebar-footer">
       <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
@@ -960,7 +995,7 @@ svg text { font-family:var(--font-body); }
   </nav>
 
   <!-- MAIN CONTENT -->
-  <main id="mainContent">
+  <main id="mainContent" aria-label="Main content">
 
     <!-- ═══════════════ DASHBOARD ═══════════════ -->
     <div id="page-dashboard" class="page active">
@@ -970,8 +1005,9 @@ svg text { font-family:var(--font-body); }
           <p id="dashGreeting">Welcome back · <span id="dashDate"></span></p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-cyan" onclick="showPage('newAudit')"><i class="fas fa-plus"></i> New Audit</button>
-          <button class="btn btn-outline" onclick="refreshDashboard()"><i class="fas fa-sync"></i> Refresh</button>
+          <button class="btn btn-cyan" onclick="showPage('newAudit')"><i class="fas fa-plus" aria-hidden="true"></i> New Audit</button>
+          <button class="btn btn-outline" onclick="refreshDashboard()"><i class="fas fa-sync" aria-hidden="true"></i> Refresh</button>
+          <button class="btn btn-outline" id="clearDemoBtn" onclick="clearDemoData()" title="Clear saved demo data and reload fresh seed" style="display:none"><i class="fas fa-trash-alt" aria-hidden="true"></i> Reset Demo</button>
         </div>
       </div>
 
@@ -980,7 +1016,7 @@ svg text { font-family:var(--font-body); }
           <div class="kpi-icon cyan"><i class="fas fa-clipboard-check"></i></div>
           <div class="kpi-value" id="kpiTotal">—</div>
           <div class="kpi-label">Total Audits</div>
-          <div class="kpi-sub">This month</div>
+          <div class="kpi-sub" id="kpiTotalSub">All records</div>
         </div>
         <div class="kpi-card gold">
           <div class="kpi-icon gold"><i class="fas fa-star"></i></div>
@@ -1090,12 +1126,12 @@ svg text { font-family:var(--font-body); }
             <div class="form-section-body">
               <div class="form-row cols-3">
                 <div class="field-group">
-                  <label>Audit Date</label>
-                  <input type="date" id="f_audit_date">
+                  <label for="f_audit_date">Audit Date</label>
+                  <input type="date" id="f_audit_date" aria-required="true">
                 </div>
                 <div class="field-group">
-                  <label>Audit Type</label>
-                  <select id="f_audit_type">
+                  <label for="f_audit_type">Audit Type</label>
+                  <select id="f_audit_type" aria-required="true">
                     <option value="">Select...</option>
                     <option value="Internal">Internal</option>
                     <option value="External">External</option>
@@ -1103,8 +1139,8 @@ svg text { font-family:var(--font-body); }
                   </select>
                 </div>
                 <div class="field-group">
-                  <label>Region</label>
-                  <select id="f_region">
+                  <label for="f_region">Region</label>
+                  <select id="f_region" aria-required="true">
                     <option value="">Select...</option>
                     <option>N1</option><option>N2</option>
                     <option>S1</option><option>S2</option>
@@ -1115,25 +1151,25 @@ svg text { font-family:var(--font-body); }
               </div>
               <div class="form-row">
                 <div class="field-group">
-                  <label>Channel Partner Name</label>
+                  <label for="f_partner">Channel Partner Name</label>
                   <input type="text" id="f_partner" placeholder="e.g. Inxterior Solution LLP">
                 </div>
                 <div class="field-group">
-                  <label>ASM / RM Name</label>
+                  <label for="f_asm">ASM / RM Name</label>
                   <input type="text" id="f_asm" placeholder="Area Sales Manager">
                 </div>
               </div>
               <div class="form-row cols-3">
                 <div class="field-group">
-                  <label>CSE / DSE Name</label>
+                  <label for="f_cse">CSE / DSE Name</label>
                   <input type="text" id="f_cse" placeholder="Sales Executive">
                 </div>
                 <div class="field-group">
-                  <label>City</label>
+                  <label for="f_city">City</label>
                   <input type="text" id="f_city" placeholder="e.g. Bangalore">
                 </div>
                 <div class="field-group">
-                  <label>State</label>
+                  <label for="f_state">State</label>
                   <input type="text" id="f_state" placeholder="e.g. Karnataka">
                 </div>
               </div>
@@ -1193,14 +1229,14 @@ svg text { font-family:var(--font-body); }
             <div class="form-section-body">
               <div class="form-row">
                 <div class="field-group">
-                  <label>Critical Observations?</label>
+                  <label for="f_critical_obs">Critical Observations?</label>
                   <select id="f_critical_obs">
                     <option value="No">No</option>
                     <option value="Yes">Yes</option>
                   </select>
                 </div>
                 <div class="field-group">
-                  <label>Action Required?</label>
+                  <label for="f_action_required">Action Required?</label>
                   <select id="f_action_required">
                     <option value="No">No</option>
                     <option value="Yes">Yes</option>
@@ -1209,17 +1245,17 @@ svg text { font-family:var(--font-body); }
               </div>
               <div class="form-row" id="actionFields" style="display:none">
                 <div class="field-group">
-                  <label>Responsible Person</label>
+                  <label for="f_responsible">Responsible Person</label>
                   <input type="text" id="f_responsible" placeholder="Name">
                 </div>
                 <div class="field-group">
-                  <label>Target Date</label>
+                  <label for="f_target_date">Target Date</label>
                   <input type="date" id="f_target_date">
                 </div>
               </div>
               <div class="form-row cols-1" id="obsField" style="display:none">
                 <div class="field-group">
-                  <label>Critical Observations Detail</label>
+                  <label for="f_obs_detail">Critical Observations Detail</label>
                   <textarea id="f_obs_detail" placeholder="Describe critical observations..."></textarea>
                 </div>
               </div>
@@ -1249,8 +1285,8 @@ svg text { font-family:var(--font-body); }
           </div>
 
           <div style="display:flex;gap:12px;margin-bottom:40px">
-            <button class="btn btn-outline" onclick="resetForm()"><i class="fas fa-undo"></i> Reset</button>
-            <button class="btn btn-cyan" onclick="submitAudit()" style="flex:1"><i class="fas fa-paper-plane"></i> Submit Audit</button>
+            <button class="btn btn-outline" onclick="resetForm(false)" aria-label="Reset audit form"><i class="fas fa-undo" aria-hidden="true"></i> Reset</button>
+            <button class="btn btn-cyan" id="submitAuditBtn" onclick="submitAudit()" style="flex:1" aria-label="Submit audit"><i class="fas fa-paper-plane" aria-hidden="true"></i> Submit Audit</button>
           </div>
         </div>
 
@@ -1496,11 +1532,11 @@ svg text { font-family:var(--font-body); }
 </div>
 
 <!-- AUDIT DETAIL MODAL -->
-<div class="modal-overlay" id="auditDetailModal">
+<div class="modal-overlay" id="auditDetailModal" role="dialog" aria-modal="true" aria-labelledby="modalAuditID">
   <div class="modal-box" style="width:800px">
     <div class="modal-header">
       <h3 id="modalAuditID">Audit Detail</h3>
-      <button class="modal-close" onclick="closeModal('auditDetailModal')"><i class="fas fa-times"></i></button>
+      <button class="modal-close" onclick="closeModal('auditDetailModal')" aria-label="Close audit detail"><i class="fas fa-times" aria-hidden="true"></i></button>
     </div>
     <div class="modal-body" id="modalAuditBody"></div>
     <div class="modal-footer">
@@ -1511,15 +1547,15 @@ svg text { font-family:var(--font-body); }
 </div>
 
 <!-- UPDATE STATUS MODAL -->
-<div class="modal-overlay" id="statusModal">
+<div class="modal-overlay" id="statusModal" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
   <div class="modal-box" style="width:400px">
     <div class="modal-header">
-      <h3>Update Action Status</h3>
-      <button class="modal-close" onclick="closeModal('statusModal')"><i class="fas fa-times"></i></button>
+      <h3 id="statusModalTitle">Update Action Status</h3>
+      <button class="modal-close" onclick="closeModal('statusModal')" aria-label="Close status update"><i class="fas fa-times" aria-hidden="true"></i></button>
     </div>
     <div class="modal-body">
       <div class="field-group" style="margin-bottom:16px">
-        <label>Action Status</label>
+        <label for="statusSelect">Action Status</label>
         <select id="statusSelect">
           <option value="Open">Open</option>
           <option value="In Progress">In Progress</option>
@@ -1527,13 +1563,13 @@ svg text { font-family:var(--font-body); }
         </select>
       </div>
       <div class="field-group">
-        <label>Remarks</label>
+        <label for="statusRemarks">Remarks (optional)</label>
         <textarea id="statusRemarks" placeholder="Add closure remarks..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('statusModal')">Cancel</button>
-      <button class="btn btn-cyan" onclick="saveStatus()">Save</button>
+      <button class="btn btn-cyan" id="saveStatusBtn" onclick="saveStatus()">Save</button>
     </div>
   </div>
 </div>
@@ -1584,8 +1620,126 @@ window.allAudits = [];
 window.currentAuditId = null;
 window.scores = {};
 window.uploadedPhotos = {};
+window.isSubmitting = false;   // submit lock
+window.formIsDirty = false;    // unsaved progress flag
 
-const COLLECTION = 'sa_audits';
+const COLLECTION      = 'sa_audits';
+const DEMO_STORAGE_KEY = 'ais_showroom_audit_demo_v1';
+const PHOTO_MAX_BYTES  = 5 * 1024 * 1024; // 5MB per photo
+
+// ══════════════════════════════════
+// DEMO PERSISTENCE HELPERS
+// ══════════════════════════════════
+// Called from dashboard "Reset Demo" button
+window.clearDemoData = function() {
+  if(!confirm('This will clear all demo audits and reload fresh seed data. Continue?')) return;
+  try { localStorage.removeItem(DEMO_STORAGE_KEY); } catch(e) {}
+  window.allAudits = [];
+  loadAllAudits().then(()=>{
+    refreshDashboard();
+    showToast('Demo data reset to fresh seed.', 'info');
+  });
+};
+function saveDemoAudits() {
+  if(FIREBASE_CONFIGURED) return; // never shadow real data
+  try {
+    // Strip non-serialisable submitted_on wrappers before saving
+    const serialisable = window.allAudits.map(a => {
+      const copy = Object.assign({}, a);
+      if(copy.submitted_on && typeof copy.submitted_on.toDate === 'function') {
+        copy.submitted_on_iso = copy.submitted_on.toDate().toISOString();
+        delete copy.submitted_on;
+      }
+      return copy;
+    });
+    localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(serialisable));
+  } catch(e) {
+    console.warn('saveDemoAudits failed:', e.message);
+  }
+}
+
+function loadDemoAudits() {
+  try {
+    const raw = localStorage.getItem(DEMO_STORAGE_KEY);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed) || !parsed.length) return null;
+    // Re-attach submitted_on helper
+    return parsed.map(a => {
+      if(!a.submitted_on) {
+        const iso = a.submitted_on_iso || a.created_at || new Date().toISOString();
+        a.submitted_on = { toDate: () => new Date(iso) };
+      }
+      return a;
+    });
+  } catch(e) {
+    console.warn('loadDemoAudits failed:', e.message);
+    return null;
+  }
+}
+
+// ══════════════════════════════════
+// DATA NORMALISATION HELPER
+// ══════════════════════════════════
+function collapseSpaces(s) {
+  return (s||'').trim().replace(/\s+/g,' ');
+}
+
+function normalizeAuditData(raw) {
+  const n = Object.assign({}, raw);
+  // Trim/collapse all text fields
+  ['channel_partner','asm_rm_name','cse_dse_name','city','state',
+   'responsible_person','obs_detail','status_remarks'].forEach(k => {
+    if(n[k] !== undefined) n[k] = collapseSpaces(n[k]);
+  });
+  // Normalise Yes/No fields
+  ['action_required','critical_observations'].forEach(k => {
+    if(n[k] !== undefined) n[k] = n[k]==='Yes' ? 'Yes' : 'No';
+  });
+  // Normalise action_status
+  const validStatuses = ['Open','In Progress','Closed','N/A'];
+  if(!validStatuses.includes(n.action_status)) n.action_status = 'N/A';
+  // Ensure photos always exist
+  if(!n.photos || typeof n.photos !== 'object') n.photos = {};
+  // Ensure category_scores always exist
+  if(!n.category_scores) n.category_scores = {product:0,staff:0,branding:0,ambience:0};
+  // Ensure scores always exist
+  if(!n.scores || typeof n.scores !== 'object') n.scores = {};
+  // Ensure critical_flag is boolean
+  n.critical_flag = n.final_score < 55;
+  // Ensure final_category is always set
+  n.final_category = getCategory(n.final_score);
+  return n;
+}
+
+// ══════════════════════════════════
+// PHOTO CANVAS COMPRESSION HELPER
+// ══════════════════════════════════
+function compressImageFile(file) {
+  return new Promise((resolve) => {
+    const maxW = 800, maxH = 600, quality = 0.72;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxW || h > maxH) {
+          const ratio = Math.min(maxW/w, maxH/h);
+          w = Math.round(w*ratio); h = Math.round(h*ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(e.target.result); // fallback: uncompressed
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+}
 
 // ══════════════════════════════════
 // AUDIT PARAMETERS DEFINITION
@@ -1705,6 +1859,8 @@ async function showApp(user) {
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appShell').style.display='block';
 
+  // Set document title
+  document.title = 'Dashboard — AIS Showroom Audit';
   // Set user info
   const name = user.displayName || user.email.split('@')[0];
   const displayName = name.charAt(0).toUpperCase() + name.slice(1);
@@ -1714,6 +1870,10 @@ async function showApp(user) {
   // Mobile top bar label
   const mobileLabel = document.getElementById('mobileUserLabel');
   if(mobileLabel) mobileLabel.textContent = window.isDemoMode ? '🔶 Demo' : displayName;
+
+  // Show "Reset Demo" button only in demo mode
+  const clearBtn = document.getElementById('clearDemoBtn');
+  if(clearBtn) clearBtn.style.display = (!FIREBASE_CONFIGURED || window.isDemoMode) ? 'inline-flex' : 'none';
 
   // Init date
   document.getElementById('dashDate').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -1750,22 +1910,24 @@ function buildParamWidgets() {
 }
 
 window.setRating = function(btn, val, cat, key) {
-  // Clear siblings
   const parent = btn.parentElement;
-  parent.querySelectorAll('.rating-btn').forEach(b => {
-    b.className='rating-btn';
-  });
-  // Set selected
+  // Clear all buttons in this group
+  parent.querySelectorAll('.rating-btn').forEach(b => { b.className='rating-btn'; });
+  // Mark selected
   parent.querySelectorAll('.rating-btn').forEach(b => {
     const bv = parseInt(b.dataset.val);
-    if(bv <= val) b.classList.add(`selected-${val}`);
+    if(bv <= val) b.classList.add('selected-'+val);
   });
-  // Store
+  // Store score
   if(!window.scores[cat]) window.scores[cat]={};
   window.scores[cat][key] = val;
-  // Hint
-  const hints = ['','Poor — Immediate action needed','Below average — Needs improvement','Average — Meets basic standards','Good — Above expectations','Excellent — Best in class'];
-  document.getElementById(`hint-${key}`).textContent = hints[val];
+  // Mark form dirty
+  window.formIsDirty = true;
+  // Update hint text
+  const hints = ['','Poor — Immediate action needed','Below average — Needs improvement',
+    'Average — Meets basic standards','Good — Above expectations','Excellent — Best in class'];
+  const hint = document.getElementById('hint-'+key);
+  if(hint) hint.textContent = hints[val];
   updateLiveScore();
 };
 
@@ -1835,90 +1997,164 @@ document.getElementById('f_critical_obs').addEventListener('change', function() 
 });
 
 // ══════════════════════════════════
-// PHOTO HANDLER
+// PHOTO HANDLER — with validation + compression
 // ══════════════════════════════════
-window.handlePhoto = function(input, slot) {
+window.handlePhoto = async function(input, slot) {
   const file = input.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const slotEl = document.getElementById(`slot-${slot}`);
-    slotEl.innerHTML = `<img src="${e.target.result}"><input type="file" accept="image/*" onchange="handlePhoto(this,'${slot}')">`;
-    window.uploadedPhotos[slot] = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  // MIME check
+  if(!file.type.startsWith('image/')) {
+    showToast('Please upload an image file (JPG, PNG, WEBP).', 'error');
+    input.value = '';
+    return;
+  }
+  // Size check (5MB raw)
+  if(file.size > PHOTO_MAX_BYTES) {
+    showToast(`Photo too large (max 5MB). Compressing…`, 'info');
+  }
+  // Compress via canvas
+  const dataUrl = await compressImageFile(file);
+  if(!dataUrl) {
+    showToast('Could not process this image. Please try another.', 'error');
+    return;
+  }
+  const slotEl = document.getElementById(`slot-${slot}`);
+  slotEl.innerHTML = `<img src="${dataUrl}" alt="${slot} photo"><input type="file" accept="image/*" onchange="handlePhoto(this,'${slot}')">`;
+  window.uploadedPhotos[slot] = dataUrl;
+  window.formIsDirty = true;
 };
 
 // ══════════════════════════════════
-// SUBMIT AUDIT
+// SUBMIT AUDIT — with full validation, normalisation, persistence
 // ══════════════════════════════════
 window.submitAudit = async function() {
-  // Validate
-  const required = ['f_partner','f_asm','f_region','f_city','f_state','f_audit_date','f_audit_type','f_cse'];
-  for(const id of required) {
+  if(window.isSubmitting) return; // prevent double submit
+
+  // ── Helper to mark a field invalid ──
+  function fieldErr(id, msg) {
+    const el = document.getElementById(id);
+    const wrap = el ? el.closest('.field-group') : null;
+    if(wrap) wrap.classList.add('field-error');
+    showToast(msg, 'error');
+    if(el) el.focus();
+  }
+  // Clear previous errors
+  document.querySelectorAll('.field-error').forEach(el=>el.classList.remove('field-error'));
+
+  // ── Required base fields ──
+  const requiredFields = [
+    {id:'f_partner',  label:'Channel Partner Name'},
+    {id:'f_asm',      label:'ASM / RM Name'},
+    {id:'f_cse',      label:'CSE / DSE Name'},
+    {id:'f_region',   label:'Region'},
+    {id:'f_city',     label:'City'},
+    {id:'f_state',    label:'State'},
+    {id:'f_audit_date',label:'Audit Date'},
+    {id:'f_audit_type',label:'Audit Type'},
+  ];
+  for(const {id, label} of requiredFields) {
     if(!document.getElementById(id).value.trim()) {
-      showToast('Please fill all required fields.','error');
-      document.getElementById(id).focus();
+      fieldErr(id, `"${label}" is required.`);
       return;
     }
   }
 
-  // Check all params scored
+  // ── Conditional: Action Required → Responsible + Target Date ──
+  const actionReq = document.getElementById('f_action_required').value;
+  if(actionReq === 'Yes') {
+    if(!document.getElementById('f_responsible').value.trim()) {
+      fieldErr('f_responsible', '"Responsible Person" is required when Action Required = Yes.');
+      return;
+    }
+    if(!document.getElementById('f_target_date').value) {
+      fieldErr('f_target_date', '"Target Date" is required when Action Required = Yes.');
+      return;
+    }
+    // Target date must not be before audit date
+    const auditDate  = document.getElementById('f_audit_date').value;
+    const targetDate = document.getElementById('f_target_date').value;
+    if(targetDate < auditDate) {
+      fieldErr('f_target_date', 'Target Date cannot be earlier than Audit Date.');
+      return;
+    }
+  }
+
+  // ── Conditional: Critical Observations → Detail required ──
+  const critObs = document.getElementById('f_critical_obs').value;
+  if(critObs === 'Yes') {
+    if(!document.getElementById('f_obs_detail').value.trim()) {
+      fieldErr('f_obs_detail', '"Critical Observation Detail" is required when Critical Observations = Yes.');
+      return;
+    }
+  }
+
+  // ── Check all 21 params scored ──
   let totalParams=0, scoredParams=0;
   Object.values(PARAMS).forEach(arr=>{ totalParams+=arr.length; });
   Object.values(window.scores).forEach(cat=>{ scoredParams+=Object.keys(cat).length; });
   if(scoredParams<totalParams) {
-    showToast(`Please score all ${totalParams} parameters. (${scoredParams}/${totalParams} done)`, 'error');
+    const missing = totalParams - scoredParams;
+    showToast(`Please score all parameters. ${missing} still unrated (${scoredParams}/${totalParams} done).`, 'error');
     return;
   }
 
-  // Calculate final score
+  // ── Calculate final score ──
   let finalScore=0;
   const allScores = {};
+  const catScores = {product:0, staff:0, branding:0, ambience:0};
   Object.entries(window.scores).forEach(([cat,params])=>{
     Object.entries(params).forEach(([key,val])=>{
       allScores[key]=val; finalScore+=val;
+      if(catScores[cat]!==undefined) catScores[cat]+=val;
     });
   });
 
-  const auditData = {
+  const rawAuditData = {
     audit_id: generateAuditID(),
     audit_date: document.getElementById('f_audit_date').value,
     audit_type: document.getElementById('f_audit_type').value,
-    channel_partner: document.getElementById('f_partner').value.trim(),
-    asm_rm_name: document.getElementById('f_asm').value.trim(),
-    cse_dse_name: document.getElementById('f_cse').value.trim(),
+    channel_partner: document.getElementById('f_partner').value,
+    asm_rm_name: document.getElementById('f_asm').value,
+    cse_dse_name: document.getElementById('f_cse').value,
     region: document.getElementById('f_region').value,
-    city: document.getElementById('f_city').value.trim(),
-    state: document.getElementById('f_state').value.trim(),
+    city: document.getElementById('f_city').value,
+    state: document.getElementById('f_state').value,
     scores: allScores,
-    category_scores: {
-      product: Object.values(window.scores.product||{}).reduce((a,b)=>a+b,0),
-      staff:   Object.values(window.scores.staff||{}).reduce((a,b)=>a+b,0),
-      branding:Object.values(window.scores.branding||{}).reduce((a,b)=>a+b,0),
-      ambience:Object.values(window.scores.ambience||{}).reduce((a,b)=>a+b,0),
-    },
+    category_scores: catScores,
     final_score: finalScore,
     final_category: getCategory(finalScore),
     critical_flag: finalScore < 55,
-    critical_observations: document.getElementById('f_critical_obs').value,
-    action_required: document.getElementById('f_action_required').value,
-    action_status: document.getElementById('f_action_required').value==='Yes' ? 'Open' : 'N/A',
-    responsible_person: document.getElementById('f_responsible').value.trim(),
+    critical_observations: critObs,
+    action_required: actionReq,
+    action_status: actionReq === 'Yes' ? 'Open' : 'N/A',
+    responsible_person: document.getElementById('f_responsible').value,
     target_date: document.getElementById('f_target_date').value,
-    obs_detail: document.getElementById('f_obs_detail').value.trim(),
-    photos: window.uploadedPhotos,
-    submitted_by: window.currentUser.email,
-    submitted_on: firebase.firestore.FieldValue.serverTimestamp(),
+    obs_detail: document.getElementById('f_obs_detail').value,
+    photos: Object.assign({}, window.uploadedPhotos),
+    submitted_by: window.currentUser ? window.currentUser.email : 'demo@aiswindows.com',
     created_at: new Date().toISOString(),
   };
 
+  // Normalise before save
+  const auditData = normalizeAuditData(rawAuditData);
+
+  // Lock submit button
+  window.isSubmitting = true;
+  const submitBtn = document.getElementById('submitAuditBtn');
+  if(submitBtn) { submitBtn.classList.add('btn-submitting'); submitBtn.textContent = 'Submitting…'; }
   showLoading(true);
+
   if(FIREBASE_CONFIGURED && db) {
     try {
-      await db.collection(COLLECTION).add(auditData);
+      await db.collection(COLLECTION).add({
+        ...auditData,
+        submitted_on: firebase.firestore.FieldValue.serverTimestamp()
+      });
       showLoading(false);
+      window.isSubmitting = false;
+      if(submitBtn) { submitBtn.classList.remove('btn-submitting'); submitBtn.innerHTML = '<i class="fas fa-paper-plane" aria-hidden="true"></i> Submit Audit'; }
       showToast(`✅ Audit submitted! Score: ${finalScore}/105 — ${getCategory(finalScore)}`,'success');
+      window.formIsDirty = false;
       resetForm();
       await loadAllAudits();
       refreshDashboard();
@@ -1928,10 +2164,21 @@ window.submitAudit = async function() {
       console.warn('Firestore save failed:', e.message);
     }
   }
-  // Demo Mode — save to local array
+
+  // Demo Mode — save to local array and persist
   showLoading(false);
-  const demo = { ...auditData, id: 'local-'+Date.now(), submitted_on: { toDate:()=>new Date() } };
+  const nowDate = new Date();
+  const demo = {
+    ...auditData,
+    id: 'local-' + Date.now(),
+    submitted_on: { toDate: () => nowDate },
+    submitted_on_iso: nowDate.toISOString(),
+  };
   window.allAudits.unshift(demo);
+  saveDemoAudits(); // persist immediately
+  window.isSubmitting = false;
+  window.formIsDirty = false;
+  if(submitBtn) { submitBtn.classList.remove('btn-submitting'); submitBtn.innerHTML = '<i class="fas fa-paper-plane" aria-hidden="true"></i> Submit Audit'; }
   showToast(`✅ Audit recorded! Score: ${finalScore}/105 — ${getCategory(finalScore)}`,'success');
   resetForm();
   refreshDashboard();
@@ -1947,9 +2194,12 @@ function generateAuditID() {
 }
 
 // ══════════════════════════════════
-// RESET FORM
+// RESET FORM — with unsaved-progress guard
 // ══════════════════════════════════
-window.resetForm = function() {
+window.resetForm = function(force) {
+  if(!force && window.formIsDirty) {
+    if(!confirm('You have unsaved audit progress. Are you sure you want to reset?')) return;
+  }
   ['f_partner','f_asm','f_cse','f_city','f_state','f_responsible','f_obs_detail'].forEach(id=>{
     document.getElementById(id).value='';
   });
@@ -1960,23 +2210,34 @@ window.resetForm = function() {
   document.getElementById('f_target_date').value='';
   document.getElementById('actionFields').style.display='none';
   document.getElementById('obsField').style.display='none';
+  document.querySelectorAll('.field-error').forEach(el=>el.classList.remove('field-error'));
   window.scores={};
   window.uploadedPhotos={};
+  window.formIsDirty = false;
   document.querySelectorAll('.rating-btn').forEach(b=>b.className='rating-btn');
   document.querySelectorAll('[id^="hint-"]').forEach(el=>el.textContent='Not rated');
   ['front','display','branding','reception'].forEach(s=>{
     const sl = document.getElementById(`slot-${s}`);
     const labels = {front:'Front Elevation',display:'Display Area',branding:'Branding',reception:'Reception'};
-    sl.innerHTML=`<i class="fas fa-camera"></i><span>${labels[s]}</span><input type="file" accept="image/*" onchange="handlePhoto(this,'${s}')">`;
+    sl.innerHTML=`<i class="fas fa-camera" aria-hidden="true"></i><span>${labels[s]}</span><input type="file" accept="image/*" aria-label="${labels[s]} photo" onchange="handlePhoto(this,'${s}')">`;
   });
   updateLiveScore();
 };
 
+// Mark form dirty on any input change
+['f_partner','f_asm','f_cse','f_city','f_state','f_region','f_audit_type','f_audit_date'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', ()=>{ window.formIsDirty = true; });
+  if(el) el.addEventListener('change', ()=>{ window.formIsDirty = true; });
+});
+
 // ══════════════════════════════════
-// LOAD ALL AUDITS
+// LOAD ALL AUDITS — prefer localStorage, fallback to seed data
 // ══════════════════════════════════
 async function loadAllAudits() {
   showLoading(true);
+
+  // ── Real Firebase path ──
   if(FIREBASE_CONFIGURED && db) {
     try {
       const snap = await db.collection(COLLECTION).orderBy('created_at','desc').get();
@@ -1985,10 +2246,19 @@ async function loadAllAudits() {
       return;
     } catch(e) {
       console.warn('Firestore load failed:', e.message);
+      showLoading(false);
+      return;
     }
   }
-  // Demo mode — use generated data
-  if(!window.allAudits.length) window.allAudits = generateDemoData();
+
+  // ── Demo path: prefer persisted data, fallback to seed ──
+  const persisted = loadDemoAudits();
+  if(persisted && persisted.length) {
+    window.allAudits = persisted;
+  } else {
+    window.allAudits = generateDemoData();
+    saveDemoAudits(); // persist seed data for future reloads
+  }
   showLoading(false);
 }
 
@@ -2063,35 +2333,47 @@ function generateDemoData() {
 // ══════════════════════════════════
 window.refreshDashboard = function() {
   const audits = window.allAudits;
-  const total = audits.length;
-  const avgScore = total? Math.round(audits.reduce((a,b)=>a+b.final_score,0)/total) : 0;
-  const excellent = audits.filter(a=>a.final_category==='Excellent').length;
-  const critical  = audits.filter(a=>a.final_category==='Critical').length;
-  const openActions = audits.filter(a=>a.action_status==='Open'||a.action_status==='In Progress').length;
+  if(!audits) return;
+  const total      = audits.length;
+  const avgScore   = total ? Math.round(audits.reduce((a,b)=>a+(b.final_score||0),0)/total) : 0;
+  // Centralised category counts — used consistently everywhere
+  const countByCategory = {Excellent:0,Good:0,Average:0,Critical:0};
+  audits.forEach(a=>{ if(countByCategory[a.final_category]!==undefined) countByCategory[a.final_category]++; });
+  const excellent    = countByCategory.Excellent;
+  const good         = countByCategory.Good;
+  const critical     = countByCategory.Critical;
+  const openActions  = audits.filter(a=>a.action_status==='Open'||a.action_status==='In Progress').length;
+  const partners     = [...new Set(audits.map(a=>a.channel_partner).filter(Boolean))].length;
+  const compliance   = total ? Math.round((excellent+good)/total*100) : 0;
 
-  document.getElementById('kpiTotal').textContent    = total;
-  document.getElementById('kpiAvgScore').textContent = avgScore;
-  document.getElementById('kpiExcellent').textContent= excellent;
-  document.getElementById('kpiCritical').textContent = critical;
-  document.getElementById('kpiOpenActions').textContent = openActions;
-  document.getElementById('criticalBadge').textContent  = critical;
+  // ── Dashboard KPIs ──
+  setText('kpiTotal',       total);
+  setText('kpiAvgScore',    avgScore);
+  setText('kpiExcellent',   excellent);
+  setText('kpiCritical',    critical);
+  setText('kpiOpenActions', openActions);
+  setText('criticalBadge',  critical);
 
-  // National KPIs
-  const partners = [...new Set(audits.map(a=>a.channel_partner))].length;
-  const compliance = total ? Math.round((excellent+audits.filter(a=>a.final_category==='Good').length)/total*100) : 0;
-  document.getElementById('nat-partners').textContent  = partners;
-  document.getElementById('nat-audits').textContent    = total;
-  document.getElementById('nat-compliance').textContent= compliance+'%';
-  document.getElementById('nat-critical').textContent  = critical;
+  // ── National KPIs (same dataset, same counts) ──
+  setText('nat-partners',   partners);
+  setText('nat-audits',     total);
+  setText('nat-compliance', compliance + '%');
+  setText('nat-critical',   critical);
 
-  // Charts
+  // ── Charts ──
   renderBarChart(audits);
-  renderDonutChart(audits);
+  renderDonutChart(audits, countByCategory);
   renderRecentAudits(audits);
   renderRegionSnapshot(audits);
-  renderCategoryDist(audits);
+  renderCategoryDist(audits, countByCategory);
   renderNationalDashboard(audits);
 };
+
+// ── Small helper to safely set element text ──
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
 
 // ══════════════════════════════════
 // BAR CHART
@@ -2127,9 +2409,11 @@ function renderBarChart(audits) {
 // ══════════════════════════════════
 // DONUT CHART
 // ══════════════════════════════════
-function renderDonutChart(audits) {
-  const cats = {Excellent:0,Good:0,Average:0,Critical:0};
-  audits.forEach(a=>{ if(cats[a.final_category]!==undefined) cats[a.final_category]++; });
+function renderDonutChart(audits, cats) {
+  if(!cats) {
+    cats = {Excellent:0,Good:0,Average:0,Critical:0};
+    audits.forEach(a=>{ if(cats[a.final_category]!==undefined) cats[a.final_category]++; });
+  }
   const total = audits.length||1;
   const colors = {Excellent:'#00e676',Good:'#00d4ff',Average:'#ffa502',Critical:'#ff4757'};
   const CX=60,CY=60,R=45,r=25;
@@ -2173,13 +2457,15 @@ function renderRecentAudits(audits) {
 // ══════════════════════════════════
 function renderRegionSnapshot(audits) {
   const regions = {};
-  audits.forEach(a=>{
+  (audits||[]).forEach(a=>{
+    if(!a.region) return;
     if(!regions[a.region]) regions[a.region]={total:0,score:0};
     regions[a.region].total++;
-    regions[a.region].score+=a.final_score;
+    regions[a.region].score+=(a.final_score||0);
   });
   const el = document.getElementById('regionSnapshot');
-  if(!Object.keys(regions).length){ el.innerHTML=`<div class="empty-state" style="padding:20px"><i class="fas fa-map"></i><p>No data yet</p></div>`; return; }
+  if(!el) return;
+  if(!Object.keys(regions).length){ el.innerHTML='<div class="empty-state" style="padding:20px"><i class="fas fa-map" aria-hidden="true"></i><p>No data yet</p></div>'; return; }
   el.innerHTML = Object.entries(regions).map(([reg,d])=>{
     const avg = Math.round(d.score/d.total);
     return `
@@ -2200,9 +2486,11 @@ function renderRegionSnapshot(audits) {
 // ══════════════════════════════════
 // CATEGORY DISTRIBUTION PAGE
 // ══════════════════════════════════
-function renderCategoryDist(audits) {
-  const cats = {Excellent:0,Good:0,Average:0,Critical:0};
-  audits.forEach(a=>{ if(cats[a.final_category]!==undefined) cats[a.final_category]++; });
+function renderCategoryDist(audits, cats) {
+  if(!cats) {
+    cats = {Excellent:0,Good:0,Average:0,Critical:0};
+    audits.forEach(a=>{ if(cats[a.final_category]!==undefined) cats[a.final_category]++; });
+  }
   document.getElementById('cd-excellent').textContent = cats.Excellent;
   document.getElementById('cd-good').textContent      = cats.Good;
   document.getElementById('cd-average').textContent   = cats.Average;
@@ -2273,15 +2561,17 @@ function renderCategoryDist(audits) {
 // NATIONAL DASHBOARD
 // ══════════════════════════════════
 function renderNationalDashboard(audits) {
-  // Region grid
+  // Region grid — safe with empty sets
   const regions = {};
-  audits.forEach(a=>{
+  (audits||[]).forEach(a=>{
+    if(!a.region) return;
     if(!regions[a.region]) regions[a.region]={total:0,score:0,critical:0};
     regions[a.region].total++;
-    regions[a.region].score+=a.final_score;
+    regions[a.region].score+=(a.final_score||0);
     if(a.final_category==='Critical') regions[a.region].critical++;
   });
   const rg = document.getElementById('regionGrid');
+  if(!rg) return;
   rg.innerHTML = Object.entries(regions).map(([reg,d])=>{
     const avg=Math.round(d.score/d.total);
     return `
@@ -2324,8 +2614,15 @@ function renderNationalDashboard(audits) {
 // ══════════════════════════════════
 function renderSummaryTable(audits) {
   const tbody = document.getElementById('summaryBody');
-  if(!audits.length){
-    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">No audits found</td></tr>`;
+  if(!audits || !audits.length){
+    const hasFilters = document.getElementById('summarySearch').value ||
+      document.getElementById('filterRegion').value ||
+      document.getElementById('filterCategory').value ||
+      document.getElementById('filterType').value;
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:48px;color:var(--text3)">
+      <i class="fas ${hasFilters?'fa-search':'fa-clipboard'}" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:12px"></i>
+      ${hasFilters ? 'No audits match your filters. Try adjusting the search or filters.' : 'No audits recorded yet. Submit your first audit!'}
+    </td></tr>`;
     return;
   }
   tbody.innerHTML = audits.map(a=>`
@@ -2366,10 +2663,17 @@ window.filterSummary = function() {
 // CRITICAL AUDITS
 // ══════════════════════════════════
 function renderCriticalTable(audits) {
-  const critical = audits.filter(a=>a.final_category==='Critical'||a.critical_flag);
+  const all = audits || [];
+  const critical = all.filter(a=>a.final_category==='Critical'||a.critical_flag);
   const tbody = document.getElementById('criticalBody');
   if(!critical.length){
-    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">🎉 No critical audits found!</td></tr>`;
+    const hasFilters = (document.getElementById('critSearch')||{}).value ||
+      (document.getElementById('critFilterRegion')||{}).value ||
+      (document.getElementById('critFilterStatus')||{}).value;
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:48px;color:var(--text3)">
+      <i class="fas ${hasFilters?'fa-search':'fa-check-circle'}" style="font-size:2rem;display:block;margin-bottom:12px;opacity:0.4"></i>
+      ${hasFilters ? 'No critical audits match your filters.' : '🎉 No critical audits — great performance!'}
+    </td></tr>`;
     return;
   }
   tbody.innerHTML = critical.map(a=>{
@@ -2560,28 +2864,46 @@ window.openStatusModal = function(id) {
 };
 
 window.saveStatus = async function() {
-  const id = window.currentAuditId;
-  const status = document.getElementById('statusSelect').value;
-  const remarks = document.getElementById('statusRemarks').value;
-  const a = window.allAudits.find(x=>x.id===id);
-  if(!a) return;
-  // Update in Firestore if configured and it's a real record
+  const id      = window.currentAuditId;
+  const status  = document.getElementById('statusSelect').value;
+  const remarks = (document.getElementById('statusRemarks').value || '').trim();
+  const a       = window.allAudits.find(x=>x.id===id);
+  if(!a) { showToast('Audit record not found.','error'); return; }
+
+  const saveBtn = document.getElementById('saveStatusBtn');
+  if(saveBtn) { saveBtn.disabled=true; saveBtn.textContent='Saving…'; }
+
+  let firebaseOk = false;
+
+  // ── Firestore update for real records ──
   if(FIREBASE_CONFIGURED && db && !id.startsWith('demo-') && !id.startsWith('local-')) {
     try {
       await db.collection(COLLECTION).doc(id).update({
-        action_status: status,
-        status_remarks: remarks,
-        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+        action_status:      status,
+        status_remarks:     remarks,
+        status_updated_at:  firebase.firestore.FieldValue.serverTimestamp(),
+        updated_at:         firebase.firestore.FieldValue.serverTimestamp()
       });
+      firebaseOk = true;
     } catch(e) {
       console.warn('Status update failed:', e.message);
+      if(saveBtn) { saveBtn.disabled=false; saveBtn.textContent='Save'; }
+      showToast('Could not update status in Firestore. Please retry.','error');
+      return; // don't show false success
     }
   }
-  // Always update local state
-  a.action_status = status;
-  if(remarks) a.status_remarks = remarks;
+
+  // ── Always update local state ──
+  a.action_status      = status;
+  a.status_remarks     = remarks;
+  a.status_updated_at  = new Date().toISOString();
+
+  // ── Persist in demo mode ──
+  if(!FIREBASE_CONFIGURED) saveDemoAudits();
+
+  if(saveBtn) { saveBtn.disabled=false; saveBtn.textContent='Save'; }
   closeModal('statusModal');
-  showToast(`✅ Status updated to "${status}"`,'success');
+  showToast(`✅ Status updated to "${status}"`, 'success');
   refreshDashboard();
   renderSummaryTable(window.allAudits);
   renderCriticalTable(window.allAudits);
@@ -2592,19 +2914,50 @@ window.saveStatus = async function() {
 // ══════════════════════════════════
 window.exportCSV = function() {
   const audits = window.allAudits;
-  if(!audits.length){ showToast('No data to export','error'); return; }
-  const headers=['Audit ID','Partner','ASM','CSE','Region','City','State','Date','Type','Score','Category','Action Status','Responsible','Target Date'];
+  if(!audits || !audits.length){ showToast('No data to export','error'); return; }
+
+  function cell(v) {
+    const s = (v===null||v===undefined) ? '' : String(v);
+    return '"' + s.replace(/"/g,'""') + '"';
+  }
+  function dtCell(a) {
+    try {
+      const d = a.submitted_on && typeof a.submitted_on.toDate==='function'
+        ? a.submitted_on.toDate() : new Date(a.submitted_on_iso||a.created_at||'');
+      return cell(isNaN(d.getTime()) ? '' : formatDateTime(d));
+    } catch(e){ return cell(''); }
+  }
+
+  const headers = [
+    'Audit ID','Channel Partner','ASM / RM','CSE / DSE',
+    'Region','City','State','Audit Date','Audit Type',
+    'Final Score','Category','Critical Flag',
+    'Critical Observations','Observation Detail',
+    'Action Required','Action Status','Responsible Person','Target Date',
+    'Status Remarks','Submitted By','Submitted On'
+  ];
+
   const rows = audits.map(a=>[
-    a.audit_id,a.channel_partner,a.asm_rm_name,a.cse_dse_name,a.region,a.city,a.state,
-    a.audit_date,a.audit_type,a.final_score,a.final_category,a.action_status,a.responsible_person,a.target_date
-  ].map(v=>`"${v||''}"`).join(','));
-  const csv = [headers.join(','),...rows].join('\n');
-  const blob = new Blob([csv],{type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `AIS_Showroom_Audit_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  showToast('CSV exported successfully','success');
+    cell(a.audit_id), cell(a.channel_partner), cell(a.asm_rm_name), cell(a.cse_dse_name),
+    cell(a.region), cell(a.city), cell(a.state), cell(a.audit_date), cell(a.audit_type),
+    cell(a.final_score), cell(a.final_category), cell(a.critical_flag?'Yes':'No'),
+    cell(a.critical_observations), cell(a.obs_detail),
+    cell(a.action_required), cell(a.action_status),
+    cell(a.responsible_person), cell(a.target_date),
+    cell(a.status_remarks), cell(a.submitted_by), dtCell(a)
+  ].join(','));
+
+  const csv  = [headers.map(h=>cell(h)).join(','), ...rows].join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const lnk  = document.createElement('a');
+  lnk.href     = url;
+  lnk.download = 'AIS_Showroom_Audit_'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(lnk);
+  lnk.click();
+  document.body.removeChild(lnk);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  showToast('CSV exported — '+audits.length+' audit'+(audits.length!==1?'s':''), 'success');
 };
 
 // ══════════════════════════════════
@@ -2627,37 +2980,91 @@ function formatDateTime(d) {
 // ══════════════════════════════════
 // PAGE NAVIGATION
 // ══════════════════════════════════
-window.showPage = function(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById(`page-${name}`).classList.add('active');
+const PAGE_TITLES = {
+  dashboard:'Dashboard', newAudit:'New Audit', auditSummary:'Audit Summary',
+  categoryDist:'Category Distribution', criticalAudits:'Critical Audits',
+  nationalDashboard:'National Dashboard', regionPerformance:'Region Performance'
+};
 
-  // Activate nav item
+window.showPage = function(name) {
+  // Guard: page must exist
+  const pageEl = document.getElementById('page-'+name);
+  if(!pageEl) { console.warn('showPage: unknown page', name); return; }
+
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.remove('active');
+    n.setAttribute('aria-current','false');
+  });
+  pageEl.classList.add('active');
+
+  // Update document title
+  document.title = (PAGE_TITLES[name]||name) + ' — AIS Showroom Audit';
+
+  // Activate correct nav item
   const navMap = {
-    dashboard:0, newAudit:1, auditSummary:2, categoryDist:3, criticalAudits:4, nationalDashboard:5, regionPerformance:6
+    dashboard:0, newAudit:1, auditSummary:2, categoryDist:3,
+    criticalAudits:4, nationalDashboard:5, regionPerformance:6
   };
   const navItems = document.querySelectorAll('.nav-item');
-  if(navMap[name]!==undefined) navItems[navMap[name]].classList.add('active');
+  if(navMap[name]!==undefined) {
+    navItems[navMap[name]].classList.add('active');
+    navItems[navMap[name]].setAttribute('aria-current','page');
+  }
 
-  // Page-specific renders
-  if(name==='auditSummary') renderSummaryTable(window.allAudits);
-  if(name==='criticalAudits') renderCriticalTable(window.allAudits);
-  if(name==='categoryDist') renderCategoryDist(window.allAudits);
-  if(name==='nationalDashboard') { renderNationalDashboard(window.allAudits); }
+  // Page-specific renders — guard with null check
+  const audits = window.allAudits || [];
+  if(name==='auditSummary')      renderSummaryTable(audits);
+  if(name==='criticalAudits')    renderCriticalTable(audits);
+  if(name==='categoryDist')      renderCategoryDist(audits);
+  if(name==='nationalDashboard') renderNationalDashboard(audits);
 
-  // Sync bottom nav
+  // Sync bottom nav + close sidebar on mobile
   setBottomNav(name);
-  // Mobile: close sidebar + overlay
   closeSidebar();
 };
 
 // ══════════════════════════════════
-// MODAL HELPERS
+// MODAL HELPERS — with focus management + ESC key
 // ══════════════════════════════════
-window.openModal = id => document.getElementById(id).classList.add('open');
-window.closeModal = id => document.getElementById(id).classList.remove('open');
+let _lastFocus = null;
+
+window.openModal = function(id) {
+  _lastFocus = document.activeElement;
+  const modal = document.getElementById(id);
+  modal.classList.add('open');
+  // Move focus to first focusable element in modal
+  requestAnimationFrame(()=>{
+    const first = modal.querySelector('button,select,textarea,input,[tabindex]');
+    if(first) first.focus();
+  });
+};
+
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('open');
+  if(_lastFocus) { _lastFocus.focus(); _lastFocus = null; }
+};
+
+// Click outside to close
 document.querySelectorAll('.modal-overlay').forEach(m=>{
-  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+  m.addEventListener('click',e=>{ if(e.target===m) closeModal(m.id); });
+});
+
+// ESC key closes any open modal or sidebar
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Escape') return;
+  const openModal = document.querySelector('.modal-overlay.open');
+  if(openModal) { closeModal(openModal.id); return; }
+  const sidebar = document.getElementById('sidebar');
+  if(sidebar && sidebar.classList.contains('open')) closeSidebar();
+});
+
+// Keyboard: Enter/Space on nav-item divs triggers click
+document.addEventListener('keydown', e=>{
+  if((e.key==='Enter'||e.key===' ') && e.target.classList.contains('nav-item')) {
+    e.preventDefault();
+    e.target.click();
+  }
 });
 
 // ══════════════════════════════════
@@ -2673,7 +3080,10 @@ window.showToast = function(msg,type='info') {
 // ══════════════════════════════════
 // LOADING
 // ══════════════════════════════════
-window.showLoading = v => document.getElementById('loadingOverlay').classList[v?'add':'remove']('active');
+window.showLoading = function(v) {
+  const lo = document.getElementById('loadingOverlay');
+  if(lo) lo.classList[v?'add':'remove']('active');
+};
 
 // ══════════════════════════════════
 // SIDEBAR TOGGLE (mobile)
@@ -2709,26 +3119,36 @@ window.setBottomNav = function(name) {
 // ══════════════════════════════════════════════════════════
 // STARTUP — always show login screen immediately.
 // Firebase auth listener (above) takes over ONLY if configured.
-// Demo button always works regardless of Firebase state.
-// ══════════════════════════════════════════════════════════
-document.getElementById('loadingOverlay').classList.remove('active');
-document.getElementById('loginScreen').style.display = 'flex';
-document.getElementById('appShell').style.display = 'none';
-
-// Hint to user on login screen if not configured
-if(!FIREBASE_CONFIGURED) {
-  setTimeout(()=>{
-    const err = document.getElementById('loginError');
-    if(err) {
-      err.innerHTML = '💡 Firebase not configured yet — use <b>Demo Mode</b> below';
-      err.style.display = 'block';
-      err.style.background = 'rgba(0,212,255,0.1)';
-      err.style.borderColor = 'rgba(0,212,255,0.3)';
-      err.style.color = 'var(--cyan)';
+// ── Startup: show login immediately ──
+(function startupInit() {
+  try {
+    document.getElementById('loadingOverlay').classList.remove('active');
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appShell').style.display = 'none';
+    if(!FIREBASE_CONFIGURED) {
+      setTimeout(()=>{
+        const err = document.getElementById('loginError');
+        if(err) {
+          err.innerHTML = '💡 Firebase not yet connected — use <b>Demo Mode</b> to explore';
+          err.style.display     = 'block';
+          err.style.background  = 'rgba(0,212,255,0.08)';
+          err.style.borderColor = 'rgba(0,212,255,0.3)';
+          err.style.color       = 'var(--cyan)';
+        }
+      }, 300);
     }
-  }, 300);
-}
+  } catch(e) {
+    console.warn('startupInit:', e);
+    const lo = document.getElementById('loadingOverlay');
+    if(lo) lo.classList.remove('active');
+  }
+})();
 
+// Safety net: clear loading overlay if still active after 5s
+setTimeout(()=>{
+  const lo = document.getElementById('loadingOverlay');
+  if(lo && lo.classList.contains('active')) lo.classList.remove('active');
+}, 5000);
 </script>
 </body>
 </html>
