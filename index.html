@@ -144,6 +144,16 @@ body.dark #navbar{background:#060E1B;border-bottom:1px solid var(--border)}
   border-radius:var(--r);box-shadow:var(--shadow-sm);
   margin-bottom:14px;overflow:hidden;
 }
+/* Dealer-selection card must let the dropdown overflow the card boundary */
+.card-open{
+  overflow:visible;
+  position:relative;
+  z-index:40;   /* paint above sibling cards so dropdown is never hidden */
+}
+.card-open .card-hd{
+  /* Re-apply top radius since parent no longer clips */
+  border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0;
+}
 .card-hd{
   padding:14px 18px;border-bottom:1px solid var(--border-2);
   background:linear-gradient(135deg,var(--surface),var(--surface-2));
@@ -192,7 +202,7 @@ body.dark .fg .ro{background:rgba(0,0,0,.2)}
   position:absolute;top:calc(100% + 5px);left:0;right:0;
   background:var(--surface);border:1.5px solid var(--teal);
   border-radius:var(--r-sm);box-shadow:var(--shadow-md);
-  max-height:260px;overflow-y:auto;z-index:300;
+  max-height:260px;overflow-y:auto;z-index:9999;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent;
 }
 .sd-dropdown::-webkit-scrollbar{width:5px}
@@ -241,6 +251,16 @@ body.dark .fg .ro{background:rgba(0,0,0,.2)}
   border:1.5px solid var(--danger-border);
 }
 .btn-danger:hover{background:var(--danger-border)}
+.btn-whatsapp{
+  background:#25D366;color:#fff;
+  box-shadow:0 2px 10px rgba(37,211,102,.3);
+}
+.btn-whatsapp:hover{background:#1EB859;transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,211,102,.4)}
+.btn-email{
+  background:#4285F4;color:#fff;
+  box-shadow:0 2px 10px rgba(66,133,244,.3);
+}
+.btn-email:hover{background:#2B6FD4;transform:translateY(-1px);box-shadow:0 4px 14px rgba(66,133,244,.4)}
 .action-bar{
   display:flex;gap:10px;justify-content:flex-end;
   margin-top:22px;flex-wrap:wrap;
@@ -639,8 +659,21 @@ body.dark .sig-line{border-bottom-color:var(--border)}
 <!-- ════════════════════ NAVBAR ════════════════════ -->
 <nav id="navbar">
   <div class="nav-brand">
-    <div class="nav-brand-icon">AW</div>
-    <span class="nav-brand-name">AIS Windows</span>
+    <!-- AIS Windows SVG Logo -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="148" height="36" viewBox="0 0 148 36" style="flex-shrink:0;display:block" aria-label="AIS Windows">
+      <!-- 4-pane window icon -->
+      <rect x="1" y="2" width="30" height="30" rx="4" fill="none" stroke="#00B5CC" stroke-width="2"/>
+      <line x1="1" y1="17" x2="31" y2="17" stroke="#00B5CC" stroke-width="1.5"/>
+      <line x1="16" y1="2" x2="16" y2="32" stroke="#00B5CC" stroke-width="1.5"/>
+      <rect x="3.5" y="4.5" width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.22"/>
+      <rect x="18"  y="4.5" width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.55"/>
+      <rect x="3.5" y="19"  width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.12"/>
+      <rect x="18"  y="19"  width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.35"/>
+      <!-- AIS wordmark -->
+      <text x="38" y="22" font-family="'Plus Jakarta Sans',Arial Black,sans-serif" font-size="19" font-weight="800" fill="#FFFFFF" letter-spacing="-0.6">AIS</text>
+      <!-- WINDOWS subtitle -->
+      <text x="39.5" y="32" font-family="'Plus Jakarta Sans',Arial,sans-serif" font-size="8" font-weight="700" fill="#00B5CC" letter-spacing="3.5">WINDOWS</text>
+    </svg>
     <span class="nav-brand-sep">|</span>
     <span class="nav-brand-sub">Showroom Audit</span>
   </div>
@@ -680,7 +713,7 @@ body.dark .sig-line{border-bottom-color:var(--border)}
     </div>
 
     <!-- Dealer Selection -->
-    <div class="card">
+    <div class="card card-open">
       <div class="card-hd">
         <span class="card-hd-icon">🔍</span>
         <div class="card-hd-text">
@@ -807,6 +840,14 @@ body.dark .sig-line{border-bottom-color:var(--border)}
   <div class="vc">
     <div class="rep-actions no-print">
       <button class="btn btn-primary" onclick="window.print()">🖨 Print Report</button>
+      <button class="btn btn-whatsapp" onclick="shareWhatsApp()" title="Share audit summary via WhatsApp">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        WhatsApp
+      </button>
+      <button class="btn btn-email" onclick="shareEmail()" title="Email the full audit report">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        Email Report
+      </button>
       <button class="btn btn-ghost" onclick="exportJSON()">⬇ Export JSON</button>
       <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
       <button class="btn btn-danger" onclick="resetConfirm()">↺ Reset Form</button>
@@ -1748,6 +1789,151 @@ function toast(msg,type="info"){
 // ════════════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  SHARE — WHATSAPP
+// ════════════════════════════════════════════════════════════════
+function shareWhatsApp(){
+  const sc=finalScore();
+  const cat=getCategory(sc);
+  const h=S.header;
+  const ci=criticalIssues();
+  const co=completion();
+  const SEP='━━━━━━━━━━━━━━━━━━';
+
+  const icon=p=>p>=90?'🟢':p>=70?'🟡':p>=60?'🟠':'🔴';
+
+  let t=`🏠 *AIS WINDOWS – SHOWROOM AUDIT REPORT*\n${SEP}\n\n`;
+  t+=`📍 *Dealer:* ${h.dealer||'—'}\n`;
+  t+=`🏙 *City / State:* ${h.city||'—'}, ${h.state||'—'}\n`;
+  t+=`📌 *Territory:* ${h.territory||'—'}  |  *Zone:* ${h.region||'—'}\n`;
+  t+=`👔 *ASM / RM:* ${h.asm||'—'}\n\n`;
+  t+=`📅 *Audit Date:* ${h.auditDate||'—'}\n`;
+  t+=`📋 *Audit Type:* ${h.auditType||'—'}\n`;
+  t+=`👤 *Audited by (CSE/DSE):* ${h.cseDse||'—'}\n\n`;
+  t+=`${SEP}\n`;
+  t+=`📊 *FINAL SCORE: ${sc.toFixed(1)} / 100*\n`;
+  t+=`🏆 *CATEGORY: ${cat.label}*\n`;
+  t+=`✅ *Items Scored: ${co.s} / ${co.t}*\n`;
+  if(cat.override) t+=`⚠ _Downgraded: critical item scored Poor_\n`;
+  t+=`${SEP}\n\n`;
+  t+=`*Section-wise Performance:*\n`;
+  SECTIONS.forEach(sec=>{
+    const ss=secScore(sec.id);
+    t+=`${icon(ss.pct)} ${sec.name}\n    ${ss.actual.toFixed(1)} / ${ss.max.toFixed(1)} pts  (${ss.pct.toFixed(1)}%)\n`;
+  });
+  const cnt=statusCounts();
+  t+=`\n*Score Distribution:*\n`;
+  t+=`🟢 Excellent: ${cnt[5]}  🔵 Good: ${cnt[4]}  🟡 Average: ${cnt[3]}  🟠 Weak: ${cnt[2]}  🔴 Poor: ${cnt[1]}\n`;
+  if(ci.length){
+    t+=`\n${SEP}\n⚠ *${ci.length} CRITICAL ISSUE${ci.length>1?'S':''} FOUND:*\n`;
+    ci.forEach(c=>{
+      const is=IS(c.id);
+      t+=`• ${c.p}\n  Score: ${c.score} – ${SLBL[c.score]}`;
+      if(is.date) t+=`  |  Target: ${is.date}`;
+      t+='\n';
+    });
+  }
+  t+=`\n${SEP}\n_AIS Windows – Channel Sales Excellence Program_\n`;
+  t+=`_Report generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}_`;
+
+  const url='https://wa.me/?text='+encodeURIComponent(t);
+  window.open(url,'_blank','noopener');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SHARE — EMAIL
+// ════════════════════════════════════════════════════════════════
+function shareEmail(){
+  const sc=finalScore();
+  const cat=getCategory(sc);
+  const h=S.header;
+  const ci=criticalIssues();
+  const cnt=statusCounts();
+  const co=completion();
+  const LINE='='.repeat(56);
+  const DASH='-'.repeat(40);
+
+  const subject=`AIS Windows Showroom Audit – ${h.dealer||'Dealer'} – ${h.auditDate||new Date().toLocaleDateString('en-IN')}`;
+
+  let b=`${LINE}\n`;
+  b+=`AIS WINDOWS – SHOWROOM AUDIT REPORT\n`;
+  b+=`Channel Sales Excellence Program\n`;
+  b+=`${LINE}\n\n`;
+
+  b+=`DEALER DETAILS\n${DASH}\n`;
+  b+=`Dealer Name   : ${h.dealer||'—'}\n`;
+  b+=`City          : ${h.city||'—'}\n`;
+  b+=`State         : ${h.state||'—'}\n`;
+  b+=`Region / Zone : ${h.region||'—'}\n`;
+  b+=`Territory     : ${h.territory||'—'}\n`;
+  b+=`ASM / RM Name : ${h.asm||'—'}\n\n`;
+
+  b+=`AUDIT DETAILS\n${DASH}\n`;
+  b+=`CSE / DSE     : ${h.cseDse||'—'}\n`;
+  b+=`Audit Date    : ${h.auditDate||'—'}\n`;
+  b+=`Audit Type    : ${h.auditType||'—'}\n`;
+  b+=`Items Scored  : ${co.s} / ${co.t}\n\n`;
+
+  b+=`${LINE}\n`;
+  b+=`FINAL SCORE : ${sc.toFixed(2)} / 100\n`;
+  b+=`CATEGORY    : ${cat.label}\n`;
+  if(cat.override) b+=`NOTE        : Auto-downgraded – a Critical item received a Poor (1) score.\n`;
+  b+=`${LINE}\n\n`;
+
+  b+=`SECTION-WISE PERFORMANCE\n${DASH}\n`;
+  SECTIONS.forEach(sec=>{
+    const ss=secScore(sec.id);
+    const sCat=CATS.find(c=>ss.pct>=c.min)||CATS[3];
+    b+=`${sec.name}\n`;
+    b+=`  Score : ${ss.actual.toFixed(2)} / ${ss.max.toFixed(2)} pts\n`;
+    b+=`  Pct   : ${ss.pct.toFixed(1)}%  [${sCat.label}]\n\n`;
+  });
+
+  b+=`SCORE DISTRIBUTION\n${DASH}\n`;
+  b+=`Excellent (5) : ${cnt[5]}\n`;
+  b+=`Good      (4) : ${cnt[4]}\n`;
+  b+=`Average   (3) : ${cnt[3]}\n`;
+  b+=`Weak      (2) : ${cnt[2]}\n`;
+  b+=`Poor      (1) : ${cnt[1]}\n`;
+  b+=`Not Scored    : ${cnt[0]}\n\n`;
+
+  if(ci.length){
+    b+=`CRITICAL ISSUES (${ci.length} found)\n${DASH}\n`;
+    ci.forEach((c,i)=>{
+      const is=IS(c.id);
+      b+=`${i+1}. ${c.p}\n`;
+      b+=`   Section    : ${c.secName}\n`;
+      b+=`   Score      : ${c.score} – ${SLBL[c.score]}\n`;
+      if(is.obs) b+=`   Observation: ${is.obs}\n`;
+      if(is.date) b+=`   Target Date: ${is.date}\n`;
+      b+='\n';
+    });
+  }
+
+  b+=`ITEM-WISE DETAILS\n${DASH}\n`;
+  SECTIONS.forEach(sec=>{
+    b+=`\n${sec.name.toUpperCase()}\n`;
+    sec.items.forEach((it,i)=>{
+      const is=IS(it.id);
+      b+=`${i+1}. [${it.cr?'CRITICAL':'        '}] ${it.p}\n`;
+      b+=`   Weight: ${fmtW(it.w)}  |  Score: ${is.score||'—'} (${SLBL[is.score]})`+
+         `  |  Weighted Pts: ${(MULT[is.score]*it.w).toFixed(2)}\n`;
+      if(is.obs)  b+=`   Observation : ${is.obs}\n`;
+      if(is.date) b+=`   Target Date : ${is.date}\n`;
+    });
+  });
+
+  b+=`\n${LINE}\n`;
+  b+=`Generated     : ${new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}\n`;
+  b+=`Application   : AIS Windows Showroom Audit App\n`;
+  b+=`Program       : Channel Sales Excellence\n`;
+  b+=`Confidential  : For internal use only\n`;
+  b+=`${LINE}\n`;
+
+  // mailto — to: ASM/RM is not stored as email so left blank; user fills recipient
+  window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(b)}`;
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
   document.getElementById("fDate").value=S.header.auditDate;
   // Close dealer dropdown on outside click
