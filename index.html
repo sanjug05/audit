@@ -2,14 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AIS Audit">
+<meta name="theme-color" content="#00B5CC">
 <title>AIS Windows – Showroom Audit App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-/* ═══════════════════════════════════════════
-   TOKENS & RESET
-═══════════════════════════════════════════ */
 :root{
   --navy:#0B1F3A;--navy-2:#162D4E;--navy-3:#1E3A60;
   --teal:#00B5CC;--teal-dark:#0097AC;--teal-glow:rgba(0,181,204,.18);
@@ -26,94 +30,42 @@
   --shadow:0 4px 14px rgba(11,31,58,.10);
   --shadow-md:0 8px 24px rgba(11,31,58,.13);
   --shadow-lg:0 16px 48px rgba(11,31,58,.16);
-  --r-xs:6px;--r-sm:10px;--r:14px;--r-lg:18px;--r-xl:24px;
+  --r-xs:6px;--r-sm:10px;--r:14px;--r-lg:18px;
   --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --nav-h:58px;--ssb-h:50px;
-  --cat-platinum-a:#4F46E5;--cat-platinum-b:#7C3AED;
-  --cat-gold-a:#B45309;--cat-gold-b:#D97706;
-  --cat-silver-a:#475569;--cat-silver-b:#64748B;
-  --cat-critical-a:#991B1B;--cat-critical-b:#DC2626;
 }
 body.dark{
-  --bg:#070E1A;--bg-2:#0C1525;
-  --surface:#111C2E;--surface-2:#172034;
-  --border:#1E3050;--border-2:#25395E;
-  --text:#E0EDFB;--text-2:#8CAFC8;--text-muted:#4D6A88;
-  --shadow-xs:0 1px 2px rgba(0,0,0,.3);
-  --shadow-sm:0 2px 6px rgba(0,0,0,.35);
-  --shadow:0 4px 14px rgba(0,0,0,.4);
-  --shadow-md:0 8px 24px rgba(0,0,0,.45);
-  --shadow-lg:0 16px 48px rgba(0,0,0,.55);
-  --gold-light:#1A1200;
-  --success-bg:rgba(14,160,78,.08);
-  --warning-bg:rgba(217,119,6,.08);
-  --danger-bg:rgba(220,38,38,.08);
-  --danger-border:rgba(220,38,38,.25);
+  --bg:#070E1A;--bg-2:#0C1525;--surface:#111C2E;--surface-2:#172034;
+  --border:#1E3050;--border-2:#25395E;--text:#E0EDFB;--text-2:#8CAFC8;--text-muted:#4D6A88;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);--shadow-sm:0 2px 6px rgba(0,0,0,.35);
+  --shadow:0 4px 14px rgba(0,0,0,.4);--shadow-md:0 8px 24px rgba(0,0,0,.45);--shadow-lg:0 16px 48px rgba(0,0,0,.55);
+  --gold-light:#1A1200;--success-bg:rgba(14,160,78,.08);--warning-bg:rgba(217,119,6,.08);
+  --danger-bg:rgba(220,38,38,.08);--danger-border:rgba(220,38,38,.25);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
-body{
-  font-family:var(--font);background:var(--bg);color:var(--text);
-  font-size:14px;line-height:1.55;min-height:100vh;
-  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  transition:background .25s,color .25s;
-}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s;padding-bottom:32px}
 button,input,select,textarea{font-family:var(--font);font-size:14px}
 img{max-width:100%;display:block}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-
-/* ═══════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════ */
-#navbar{
-  position:sticky;top:0;z-index:200;
-  height:var(--nav-h);background:var(--navy);
-  display:flex;align-items:center;padding:0 14px;gap:12px;
-  box-shadow:0 2px 20px rgba(0,0,0,.35);
-}
+/* NAV */
+#navbar{position:sticky;top:0;z-index:200;height:var(--nav-h);background:var(--navy);display:flex;align-items:center;padding:0 14px;gap:10px;box-shadow:0 2px 20px rgba(0,0,0,.35)}
 body.dark #navbar{background:#060E1B;border-bottom:1px solid var(--border)}
 .nav-brand{display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0}
-.nav-brand-icon{
-  width:30px;height:30px;border-radius:8px;
-  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:800;color:#fff;letter-spacing:-.5px;
-}
-.nav-brand-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px}
 .nav-brand-sep{color:rgba(255,255,255,.2);font-size:18px}
-.nav-brand-sub{font-size:12px;color:rgba(255,255,255,.55);font-weight:400}
-.nav-tabs{
-  flex:1;display:flex;gap:3px;
-  overflow-x:auto;scrollbar-width:none;justify-content:center;
-}
+.nav-brand-sub{font-size:12px;color:rgba(255,255,255,.55)}
+.nav-tabs{flex:1;display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;justify-content:center}
 .nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{
-  padding:6px 14px;border:none;border-radius:8px;
-  background:transparent;color:rgba(255,255,255,.5);
-  font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
-  transition:all .2s;letter-spacing:.01em;
-}
+.nav-tab{padding:6px 14px;border:none;border-radius:8px;background:transparent;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s}
 .nav-tab:hover{background:rgba(255,255,255,.1);color:#fff}
 .nav-tab.active{background:var(--teal);color:#fff;box-shadow:0 2px 10px rgba(0,181,204,.35)}
-.nav-actions{display:flex;gap:6px;flex-shrink:0}
-.nav-icon-btn{
-  width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.15);
-  background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);
-  cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;
-}
-.nav-icon-btn:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
-
-/* ═══════════════════════════════════════════
-   STICKY SCORE BAR
-═══════════════════════════════════════════ */
-.ssb{
-  position:sticky;top:var(--nav-h);z-index:150;
-  height:var(--ssb-h);background:var(--surface);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 14px;gap:12px;
-  box-shadow:var(--shadow-xs);transition:opacity .3s;
-}
+.nav-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.nav-icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.nav-icon-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.install-chip{padding:5px 10px;border:1.5px solid rgba(201,162,39,.5);background:rgba(201,162,39,.08);color:var(--gold);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.install-chip:hover{background:rgba(201,162,39,.2);border-color:var(--gold)}
+/* SSB */
+.ssb{position:sticky;top:var(--nav-h);z-index:150;height:var(--ssb-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:12px;box-shadow:var(--shadow-xs);transition:opacity .3s}
 .ssb.hidden{opacity:0;pointer-events:none;height:0;overflow:hidden;border:none}
 .ssb-dealer{font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;flex-shrink:0}
 .ssb-sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
@@ -125,63 +77,27 @@ body.dark #navbar{background:#060E1B;border-bottom:1px solid var(--border)}
 .ssb-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-dark));border-radius:4px;transition:width .5s ease}
 .ssb-cat{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
 .ssb-comp{font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0}
-
-/* ═══════════════════════════════════════════
-   VIEWS
-═══════════════════════════════════════════ */
+/* VIEWS */
 .view{display:none;min-height:calc(100vh - var(--nav-h))}
 .view.active{display:block}
 .vc{max-width:1080px;margin:0 auto;padding:22px 14px 48px}
 .view-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px}
 .view-sub{font-size:13px;color:var(--text-muted);margin-top:3px}
 .vh{margin-bottom:20px}
-
-/* ═══════════════════════════════════════════
-   CARDS
-═══════════════════════════════════════════ */
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);box-shadow:var(--shadow-sm);
-  margin-bottom:14px;overflow:hidden;
-}
-/* Dealer-selection card must let the dropdown overflow the card boundary */
-.card-open{
-  overflow:visible;
-  position:relative;
-  z-index:40;   /* paint above sibling cards so dropdown is never hidden */
-}
-.card-open .card-hd{
-  /* Re-apply top radius since parent no longer clips */
-  border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0;
-}
-.card-hd{
-  padding:14px 18px;border-bottom:1px solid var(--border-2);
-  background:linear-gradient(135deg,var(--surface),var(--surface-2));
-  display:flex;align-items:center;gap:10px;
-}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-sm);margin-bottom:14px;overflow:hidden}
+.card-open{overflow:visible;position:relative;z-index:40}
+.card-open .card-hd{border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0}
+.card-hd{padding:14px 18px;border-bottom:1px solid var(--border-2);background:linear-gradient(135deg,var(--surface),var(--surface-2));display:flex;align-items:center;gap:10px}
 .card-hd-icon{font-size:16px;flex-shrink:0}
 .card-hd-text h3{font-size:13.5px;font-weight:700;color:var(--text)}
 .card-hd-text p{font-size:11.5px;color:var(--text-muted);margin-top:1px}
 .card-bd{padding:18px}
-
-/* ═══════════════════════════════════════════
-   FORM ELEMENTS
-═══════════════════════════════════════════ */
+/* FORMS */
 .fg{display:flex;flex-direction:column;gap:5px}
-.fg label{
-  font-size:11px;font-weight:700;color:var(--text-2);
-  text-transform:uppercase;letter-spacing:.07em;
-}
-.fg input,.fg select,.fg textarea{
-  padding:9px 12px;border:1.5px solid var(--border);
-  border-radius:var(--r-sm);background:var(--surface-2);
-  color:var(--text);transition:border-color .2s,box-shadow .2s,background .2s;
-  outline:none;width:100%;
-}
-.fg input:focus,.fg select:focus,.fg textarea:focus{
-  border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow);
-  background:var(--surface);
-}
+.fg label{font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.07em}
+.fg input,.fg select,.fg textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);transition:border-color .2s,box-shadow .2s,background .2s;outline:none;width:100%}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow);background:var(--surface)}
 .fg input:disabled,.fg select:disabled{opacity:.45;cursor:not-allowed}
 .fg .ro{background:var(--bg);color:var(--text-2);cursor:default;border-color:var(--border-2)}
 body.dark .fg .ro{background:rgba(0,0,0,.2)}
@@ -192,109 +108,44 @@ body.dark .fg .ro{background:rgba(0,0,0,.2)}
 @media(max-width:800px){.grid-4{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.grid-2,.grid-3{grid-template-columns:1fr}}
 @media(max-width:480px){.grid-4{grid-template-columns:1fr}}
-
-/* ═══════════════════════════════════════════
-   SEARCHABLE DEALER DROPDOWN
-═══════════════════════════════════════════ */
+/* DEALER SEARCHABLE DROPDOWN */
 .sd-wrap{position:relative}
-.sd-input-wrap{position:relative}
-.sd-dropdown{
-  position:absolute;top:calc(100% + 5px);left:0;right:0;
-  background:var(--surface);border:1.5px solid var(--teal);
-  border-radius:var(--r-sm);box-shadow:var(--shadow-md);
-  max-height:260px;overflow-y:auto;z-index:9999;
-  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
-}
+.sd-dropdown{position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--surface);border:1.5px solid var(--teal);border-radius:var(--r-sm);box-shadow:var(--shadow-md);max-height:260px;overflow-y:auto;z-index:9999;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .sd-dropdown::-webkit-scrollbar{width:5px}
-.sd-dropdown::-webkit-scrollbar-track{background:transparent}
 .sd-dropdown::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.sd-opt{
-  padding:9px 13px;cursor:pointer;
-  border-bottom:1px solid var(--border-2);
-  transition:background .12s;
-}
+.sd-opt{padding:9px 13px;cursor:pointer;border-bottom:1px solid var(--border-2);transition:background .12s}
 .sd-opt:last-child{border-bottom:none}
-.sd-opt:hover,.sd-opt.highlighted{background:rgba(0,181,204,.07)}
+.sd-opt:hover{background:rgba(0,181,204,.07)}
 .sd-opt-name{font-weight:600;font-size:13px;color:var(--text)}
 .sd-opt-meta{font-size:11px;color:var(--text-muted);margin-top:2px}
 .sd-match{background:rgba(0,181,204,.2);border-radius:2px;font-weight:700;color:var(--teal-dark)}
 .sd-empty{padding:14px;text-align:center;font-size:12px;color:var(--text-muted)}
 .hidden{display:none!important}
-
-/* ═══════════════════════════════════════════
-   BUTTONS
-═══════════════════════════════════════════ */
-.btn{
-  padding:9px 18px;border:none;border-radius:var(--r-sm);
-  font-weight:700;font-size:13px;cursor:pointer;
-  transition:all .2s;display:inline-flex;align-items:center;gap:6px;
-  letter-spacing:.01em;white-space:nowrap;
-}
-.btn-lg{padding:12px 26px;font-size:14px;border-radius:var(--r-sm)}
-.btn-primary{
-  background:var(--teal);color:#fff;
-  box-shadow:0 2px 10px rgba(0,181,204,.3);
-}
+/* BUTTONS */
+.btn{padding:9px 18px;border:none;border-radius:var(--r-sm);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;letter-spacing:.01em;white-space:nowrap}
+.btn-lg{padding:12px 26px;font-size:14px}
+.btn-primary{background:var(--teal);color:#fff;box-shadow:0 2px 10px rgba(0,181,204,.3)}
 .btn-primary:hover{background:var(--teal-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,181,204,.4)}
-.btn-secondary{
-  background:var(--surface-2);color:var(--text-2);
-  border:1.5px solid var(--border);
-}
+.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1.5px solid var(--border)}
 .btn-secondary:hover{background:var(--border);color:var(--text)}
-.btn-ghost{
-  background:transparent;color:var(--teal);
-  border:1.5px solid var(--teal);
-}
+.btn-ghost{background:transparent;color:var(--teal);border:1.5px solid var(--teal)}
 .btn-ghost:hover{background:var(--teal-glow)}
-.btn-danger{
-  background:var(--danger-bg);color:var(--danger);
-  border:1.5px solid var(--danger-border);
-}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger-border)}
 .btn-danger:hover{background:var(--danger-border)}
-.btn-whatsapp{
-  background:#25D366;color:#fff;
-  box-shadow:0 2px 10px rgba(37,211,102,.3);
-}
-.btn-whatsapp:hover{background:#1EB859;transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,211,102,.4)}
-.btn-email{
-  background:#4285F4;color:#fff;
-  box-shadow:0 2px 10px rgba(66,133,244,.3);
-}
-.btn-email:hover{background:#2B6FD4;transform:translateY(-1px);box-shadow:0 4px 14px rgba(66,133,244,.4)}
-.action-bar{
-  display:flex;gap:10px;justify-content:flex-end;
-  margin-top:22px;flex-wrap:wrap;
-}
-
-/* ═══════════════════════════════════════════
-   AUDIT INFO BANNER
-═══════════════════════════════════════════ */
-.aib{
-  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-3) 100%);
-  border-radius:var(--r);padding:14px 18px;
-  display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px;
-}
+.btn-whatsapp{background:#25D366;color:#fff;box-shadow:0 2px 10px rgba(37,211,102,.3)}
+.btn-whatsapp:hover{background:#1EB859;transform:translateY(-1px)}
+.btn-email{background:#4285F4;color:#fff;box-shadow:0 2px 10px rgba(66,133,244,.3)}
+.btn-email:hover{background:#2B6FD4;transform:translateY(-1px)}
+.action-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+/* AUDIT INFO BANNER */
+.aib{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-3) 100%);border-radius:var(--r);padding:14px 18px;display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px}
 body.dark .aib{border:1px solid var(--border)}
 .aib-item{display:flex;flex-direction:column;gap:2px}
 .aib-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);font-weight:700}
 .aib-val{font-size:13px;font-weight:700;color:#fff}
-
-/* ═══════════════════════════════════════════
-   SECTION CARDS
-═══════════════════════════════════════════ */
-.sec-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);box-shadow:var(--shadow-sm);
-  margin-bottom:12px;overflow:hidden;
-}
-.sec-hd{
-  padding:13px 18px;display:flex;align-items:center;
-  justify-content:space-between;cursor:pointer;
-  user-select:none;gap:10px;
-  background:linear-gradient(135deg,var(--surface),var(--surface-2));
-  border-bottom:1px solid var(--border-2);
-  transition:background .18s;
-}
+/* SECTION CARDS */
+.sec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-sm);margin-bottom:12px;overflow:hidden}
+.sec-hd{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;gap:10px;background:linear-gradient(135deg,var(--surface),var(--surface-2));border-bottom:1px solid var(--border-2);transition:background .18s}
 .sec-hd:hover{background:var(--surface-2)}
 .sec-hd-left{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
 .sec-toggle{font-size:16px;color:var(--teal);transition:transform .3s;flex-shrink:0;line-height:1}
@@ -302,170 +153,111 @@ body.dark .aib{border:1px solid var(--border)}
 .sec-name{font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sec-count{font-size:11px;color:var(--text-muted);flex-shrink:0}
 .sec-hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.sec-pts{
-  display:flex;align-items:baseline;gap:2px;
-  font-size:12px;color:var(--text-2);
-}
+.sec-pts{display:flex;align-items:baseline;gap:2px;font-size:12px;color:var(--text-2)}
 .sec-pts-actual{font-weight:800;color:var(--teal);font-size:14px}
 .sec-pts-max{font-size:10px;color:var(--text-muted)}
 .sec-bar{width:70px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
 @media(max-width:480px){.sec-bar{width:45px}.sec-pts-max{display:none}}
 .sec-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-dark));border-radius:3px;transition:width .5s ease}
 .sec-pct{font-size:11.5px;font-weight:700;color:var(--text-2);min-width:32px;text-align:right}
-.sec-body{transition:all .3s}
 .sec-body.coll{display:none}
-
-/* ═══════════════════════════════════════════
-   ITEM ROWS
-═══════════════════════════════════════════ */
-.item-row{
-  padding:13px 18px;border-bottom:1px solid var(--border-2);
-  transition:background .15s;
-}
+/* ITEM ROWS */
+.item-row{padding:13px 18px;border-bottom:1px solid var(--border-2);transition:background .15s}
 .item-row:last-child{border-bottom:none}
 .item-row:hover{background:rgba(0,181,204,.02)}
-.item-row.crit-fail{
-  background:var(--danger-bg);
-  border-left:3px solid var(--danger);
-  padding-left:15px;
-}
-body.dark .item-row.crit-fail{background:rgba(220,38,38,.06)}
+.item-needs-action{border-left:3px solid var(--warning)!important;padding-left:15px!important;background:rgba(245,158,11,.04)!important}
+/* Critical dot — subtle internal indicator */
+.crit-dot{width:7px;height:7px;background:var(--danger);border-radius:50%;display:inline-block;flex-shrink:0;margin-top:6px;margin-right:3px;opacity:.6;cursor:default}
 .item-top{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
-.item-info{flex:1;min-width:180px;display:flex;align-items:flex-start;gap:7px;flex-wrap:wrap}
-.crit-badge{
-  background:#FEE2E2;color:var(--danger);
-  font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:20px;
-  white-space:nowrap;flex-shrink:0;margin-top:2px;text-transform:uppercase;letter-spacing:.04em;
-}
-body.dark .crit-badge{background:rgba(220,38,38,.15)}
+.item-info{flex:1;min-width:180px;display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap}
 .item-param{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
-.wt-badge{
-  background:var(--bg);color:var(--text-muted);
-  font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
-  border:1px solid var(--border);white-space:nowrap;flex-shrink:0;margin-top:2px;
-}
+.wt-badge{background:var(--bg);color:var(--text-muted);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;flex-shrink:0;margin-top:2px}
 .item-score-grp{display:flex;align-items:center;gap:7px;flex-shrink:0}
-.score-sel{
-  padding:7px 10px;border:1.5px solid var(--border);
-  border-radius:var(--r-sm);font-size:12.5px;font-weight:700;
-  cursor:pointer;min-width:148px;transition:all .2s;outline:none;
-}
+.score-sel{padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-weight:700;cursor:pointer;min-width:148px;transition:all .2s;outline:none}
 .score-sel:focus{box-shadow:0 0 0 3px var(--teal-glow)}
 @media(max-width:480px){.score-sel{min-width:120px;font-size:12px}}
 .status-lbl{font-size:12px;font-weight:700;min-width:58px;text-align:center}
-.item-details{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
-.item-obs{flex:1;min-width:180px;display:flex;flex-direction:column;gap:4px}
-.item-obs label,.item-meta-col label{
-  font-size:10px;font-weight:700;color:var(--text-muted);
-  text-transform:uppercase;letter-spacing:.06em;
-}
-.item-obs textarea{
-  padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);
-  background:var(--surface-2);color:var(--text);resize:vertical;
-  min-height:50px;outline:none;transition:border-color .2s;width:100%;
-  font-family:var(--font);font-size:12.5px;line-height:1.45;
-}
-.item-obs textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow)}
-.item-meta{display:flex;gap:10px;flex-wrap:wrap}
-.item-meta-col{display:flex;flex-direction:column;gap:4px}
-.item-meta-col input[type="date"]{
-  padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);
-  background:var(--surface-2);color:var(--text);outline:none;transition:border-color .2s;
-  font-family:var(--font);font-size:12.5px;
-}
-.item-meta-col input[type="date"]:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow)}
-.photo-area{position:relative;display:inline-flex;align-items:center;gap:6px}
-.photo-btn{
-  padding:6px 11px;background:var(--surface-2);
-  border:1.5px dashed var(--border);border-radius:var(--r-sm);
-  font-size:11.5px;color:var(--teal);cursor:pointer;font-weight:600;
-  transition:all .2s;display:flex;align-items:center;gap:4px;white-space:nowrap;
-}
+/* Critical extra fields (date + responsible + photo) */
+.crit-extra-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;padding:14px;background:rgba(220,38,38,.03);border-radius:var(--r-sm);border:1px dashed rgba(220,38,38,.2)}
+@media(max-width:700px){.crit-extra-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.crit-extra-grid{grid-template-columns:1fr}}
+.resp-other-inp{margin-top:6px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;transition:border-color .2s;width:100%}
+.resp-other-inp:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow)}
+.resp-other-inp.hidden{display:none!important}
+/* Photo upload */
+.photo-btn{padding:7px 12px;background:var(--surface-2);border:1.5px dashed var(--border);border-radius:var(--r-sm);font-size:12px;color:var(--teal);cursor:pointer;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .photo-btn:hover{background:var(--teal-glow);border-color:var(--teal);border-style:solid}
 .file-inp{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
-.photo-thumb{
-  width:50px;height:50px;object-fit:cover;
-  border-radius:var(--r-sm);border:1.5px solid var(--border);
-  cursor:pointer;transition:transform .2s;
-}
+.photo-thumb{width:54px;height:54px;object-fit:cover;border-radius:var(--r-sm);border:1.5px solid var(--border);cursor:pointer;transition:transform .2s}
 .photo-thumb:hover{transform:scale(1.06)}
-.photo-del{
-  position:absolute;top:-6px;right:-6px;width:17px;height:17px;
-  background:var(--danger);color:#fff;border:none;border-radius:50%;
-  font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-}
-
-/* ═══════════════════════════════════════════
-   SCORING SCALE LEGEND
-═══════════════════════════════════════════ */
-.scale-card{
-  background:linear-gradient(135deg,var(--navy),var(--navy-3));
-  border-radius:var(--r);padding:14px 18px;
-  margin-bottom:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-}
-.sc-lbl{
-  font-size:10.5px;font-weight:700;color:rgba(255,255,255,.5);
-  text-transform:uppercase;letter-spacing:.08em;margin-right:4px;
-}
-.sc-chip{
-  display:flex;align-items:center;gap:5px;padding:4px 10px;
-  border-radius:20px;font-size:11px;font-weight:700;
-}
-.sc5{background:rgba(5,150,105,.2);color:#34D399}
-.sc4{background:rgba(37,99,235,.2);color:#60A5FA}
-.sc3{background:rgba(217,119,6,.2);color:#FCD34D}
-.sc2{background:rgba(234,88,12,.2);color:#FDBA74}
+.photo-del{position:absolute;top:-6px;right:-6px;width:17px;height:17px;background:var(--danger);color:#fff;border:none;border-radius:50%;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* Evidence photos section */
+.ev-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:500px){.ev-upload-grid{grid-template-columns:1fr}}
+.ev-slot{background:var(--bg);border:2px dashed var(--border);border-radius:var(--r-sm);padding:16px;text-align:center;transition:border-color .2s,background .2s;position:relative}
+.ev-slot-filled{border-style:solid;border-color:var(--teal);background:rgba(0,181,204,.03)}
+.ev-slot-icon{font-size:22px;margin-bottom:6px}
+.ev-slot-label{font-size:11.5px;font-weight:700;color:var(--text-2);margin-bottom:10px;line-height:1.35;display:block}
+.ev-slot-thumb{width:100%;max-height:110px;object-fit:cover;border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;border:1.5px solid var(--border);display:block}
+.ev-replace-btn{font-size:10.5px;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:4px}
+/* Validation blocking modal */
+.val-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px}
+.val-modal{background:var(--surface);border-radius:var(--r-lg);max-width:540px;width:100%;max-height:84vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.val-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#FEF2F2;border-bottom:1px solid #FECACA;font-weight:800;color:var(--danger);font-size:13.5px;flex-shrink:0;gap:10px}
+body.dark .val-modal-hdr{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.2)}
+.val-modal-close{border:none;background:transparent;cursor:pointer;font-size:18px;color:var(--danger);line-height:1;flex-shrink:0}
+.val-modal-body{padding:16px 18px;overflow-y:auto;flex:1}
+.val-modal-footer{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0}
+.val-count{font-size:13px;color:var(--danger);font-weight:600;margin-bottom:10px}
+.val-list{list-style:none;padding:0}
+.val-item{padding:9px 12px;border-radius:var(--r-sm);background:var(--danger-bg);margin-bottom:7px;border-left:3px solid var(--danger)}
+.val-item-field{display:block;font-size:10px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.val-item-param{display:block;font-size:12.5px;font-weight:600;color:var(--text)}
+.val-item-sec{display:block;font-size:11px;color:var(--text-muted);margin-top:1px}
+.val-hint{font-size:11.5px;color:var(--text-muted);margin-top:12px;font-style:italic}
+/* Photo modal */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-box{background:var(--surface);border-radius:var(--r-lg);padding:14px;max-width:90vw;max-height:90vh;position:relative}
+.modal-box img{max-width:100%;max-height:80vh;border-radius:var(--r-sm);display:block}
+.modal-close{position:absolute;top:8px;right:8px;width:28px;height:28px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+/* Scoring scale */
+.scale-card{background:linear-gradient(135deg,var(--navy),var(--navy-3));border-radius:var(--r);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sc-lbl{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-right:4px}
+.sc-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.sc5{background:rgba(5,150,105,.2);color:#34D399}.sc4{background:rgba(37,99,235,.2);color:#60A5FA}
+.sc3{background:rgba(217,119,6,.2);color:#FCD34D}.sc2{background:rgba(234,88,12,.2);color:#FDBA74}
 .sc1{background:rgba(220,38,38,.2);color:#FCA5A5}
-
-/* ═══════════════════════════════════════════
-   SUMMARY VIEW
-═══════════════════════════════════════════ */
+/* Toasts */
+.toast-wrap{position:fixed;bottom:16px;right:16px;z-index:600;display:flex;flex-direction:column;gap:7px;max-width:340px;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;box-shadow:var(--shadow-md);font-size:12.5px;animation:toastIn .25s ease;pointer-events:auto;display:flex;align-items:flex-start;gap:8px}
+.toast-err{border-left:4px solid var(--danger)}.toast-ok{border-left:4px solid var(--success)}.toast-info{border-left:4px solid var(--teal)}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(110%)}}
+/* Summary */
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 @media(max-width:620px){.sum-grid{grid-template-columns:1fr}}
-.score-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:24px;
-  display:flex;flex-direction:column;align-items:center;gap:14px;
-  box-shadow:var(--shadow);
-}
+.score-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:var(--shadow)}
 .donut-wrap{position:relative;width:148px;height:148px}
 .donut-svg{width:148px;height:148px}
-.donut-txt{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-}
+.donut-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .donut-score{font-size:28px;font-weight:800;line-height:1;color:var(--text)}
 .donut-denom{font-size:10px;color:var(--text-muted);margin-top:1px}
-.cat-badge{
-  padding:8px 22px;border-radius:24px;
-  font-size:13px;font-weight:800;letter-spacing:.02em;text-align:center;
-}
-.cat-platinum{background:linear-gradient(135deg,var(--cat-platinum-a),var(--cat-platinum-b));color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.35)}
-.cat-gold{background:linear-gradient(135deg,var(--cat-gold-a),var(--cat-gold-b));color:#fff;box-shadow:0 4px 16px rgba(217,119,6,.35)}
-.cat-silver{background:linear-gradient(135deg,var(--cat-silver-a),var(--cat-silver-b));color:#fff;box-shadow:0 4px 16px rgba(100,116,139,.25)}
-.cat-critical{background:linear-gradient(135deg,var(--cat-critical-a),var(--cat-critical-b));color:#fff;box-shadow:0 4px 16px rgba(220,38,38,.35)}
-.cat-note{font-size:11px;color:var(--text-muted);text-align:center;max-width:200px}
-.sum-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.sum-leg-item{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--text-muted)}
-.sum-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.info-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow-sm);
-}
-.info-card h4{
-  font-size:11px;font-weight:800;color:var(--text-2);
-  text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;
-  padding-bottom:8px;border-bottom:1px solid var(--border-2);
-}
+.cat-badge{padding:8px 22px;border-radius:24px;font-size:13px;font-weight:800;letter-spacing:.02em;text-align:center}
+.cat-platinum{background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.35)}
+.cat-gold{background:linear-gradient(135deg,#B45309,#D97706);color:#fff;box-shadow:0 4px 16px rgba(217,119,6,.35)}
+.cat-silver{background:linear-gradient(135deg,#475569,#64748B);color:#fff;box-shadow:0 4px 16px rgba(100,116,139,.25)}
+.cat-critical{background:linear-gradient(135deg,#991B1B,#DC2626);color:#fff;box-shadow:0 4px 16px rgba(220,38,38,.35)}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow-sm)}
+.info-card h4{font-size:11px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border-2)}
 .info-row{display:flex;gap:8px;margin-bottom:7px}
 .info-row:last-child{margin-bottom:0}
 .info-lbl{font-size:11.5px;color:var(--text-muted);min-width:100px;flex-shrink:0}
 .info-val{font-size:12.5px;font-weight:600;color:var(--text)}
-.sec-perf-item{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:12px 15px;
-  margin-bottom:8px;box-shadow:var(--shadow-xs);
-}
+.sum-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.sum-leg-item{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--text-muted)}
+.sum-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.cat-note{font-size:11px;color:var(--text-muted);text-align:center;max-width:200px}
+.sec-perf-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 15px;margin-bottom:8px;box-shadow:var(--shadow-xs)}
 .sp-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
 .sp-name{font-size:12.5px;font-weight:600;color:var(--text)}
 .sp-pct{font-size:14px;font-weight:800}
@@ -474,11 +266,7 @@ body.dark .crit-badge{background:rgba(220,38,38,.15)}
 .sp-detail{font-size:10.5px;color:var(--text-muted);margin-top:5px}
 .status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
 @media(max-width:400px){.status-grid{grid-template-columns:repeat(2,1fr)}}
-.sc-box{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:13px 10px;text-align:center;
-  box-shadow:var(--shadow-xs);
-}
+.sc-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 10px;text-align:center;box-shadow:var(--shadow-xs)}
 .sc-box-count{font-size:26px;font-weight:800;line-height:1}
 .sc-box-lbl{font-size:10px;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
 .s5b{border-top:3px solid #10B981}.s5b .sc-box-count{color:#10B981}
@@ -487,43 +275,21 @@ body.dark .crit-badge{background:rgba(220,38,38,.15)}
 .s2b{border-top:3px solid #F97316}.s2b .sc-box-count{color:#F97316}
 .s1b{border-top:3px solid #EF4444}.s1b .sc-box-count{color:#EF4444}
 .s0b{border-top:3px solid var(--border)}.s0b .sc-box-count{color:var(--text-muted)}
-.crit-warn-block{
-  background:var(--danger-bg);border:1px solid var(--danger-border);
-  border-radius:var(--r);padding:15px;margin-bottom:14px;
-}
-.cw-hdr{display:flex;align-items:center;gap:7px;color:var(--danger);font-weight:800;font-size:13px;margin-bottom:11px}
-.cw-item{
-  background:var(--surface);border:1px solid var(--danger-border);
-  border-radius:var(--r-sm);padding:9px 12px;margin-bottom:7px;
-}
-.cw-item:last-child{margin-bottom:0}
-.cw-param{font-size:12.5px;font-weight:600;color:var(--text)}
-.cw-meta{display:flex;gap:10px;margin-top:3px;flex-wrap:wrap}
-.cw-sec{font-size:11px;color:var(--text-muted)}
-.cw-score{font-size:11px;font-weight:700;color:var(--danger)}
-.cat-override-note{
-  background:rgba(220,38,38,.07);border:1px solid var(--danger-border);
-  border-radius:var(--r-sm);padding:8px 12px;
-  font-size:11.5px;color:var(--danger);font-weight:600;margin-top:8px;
-}
-
-/* ═══════════════════════════════════════════
-   REPORT VIEW
-═══════════════════════════════════════════ */
-.rep-actions{
-  display:flex;gap:9px;flex-wrap:wrap;
-  padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:20px;
-}
-.report-doc{
-  background:#fff;border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:36px;
-  box-shadow:var(--shadow-md);color:#0B1F3A;
-}
+.action-warn-block{background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--r);padding:15px;margin-bottom:14px}
+.aw-hdr{display:flex;align-items:center;gap:7px;color:var(--danger);font-weight:800;font-size:13px;margin-bottom:11px}
+.aw-item{background:var(--surface);border:1px solid var(--danger-border);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:7px}
+.aw-item:last-child{margin-bottom:0}
+.aw-param{font-size:12.5px;font-weight:600;color:var(--text)}
+.aw-meta{display:flex;gap:10px;margin-top:3px;flex-wrap:wrap}
+.aw-sec{font-size:11px;color:var(--text-muted)}
+.aw-score{font-size:11px;font-weight:700;color:var(--danger)}
+.cat-override-note{background:rgba(220,38,38,.07);border:1px solid var(--danger-border);border-radius:var(--r-sm);padding:8px 12px;font-size:11.5px;color:var(--danger);font-weight:600;margin-top:8px}
+.sec-section-lbl{font-size:10.5px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;padding:8px 0 2px}
+/* Report */
+.rep-actions{display:flex;gap:9px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.report-doc{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:36px;box-shadow:var(--shadow-md);color:#0B1F3A}
 body.dark .report-doc{background:var(--surface);color:var(--text)}
-.rpt-hdr{
-  display:flex;justify-content:space-between;align-items:flex-start;
-  padding-bottom:18px;border-bottom:3px solid #0B1F3A;margin-bottom:22px;
-}
+.rpt-hdr{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid #0B1F3A;margin-bottom:22px}
 body.dark .rpt-hdr{border-bottom-color:var(--teal)}
 .rpt-logo-name{font-size:24px;font-weight:800;color:#0B1F3A;letter-spacing:-.5px}
 body.dark .rpt-logo-name{color:var(--teal)}
@@ -539,107 +305,55 @@ body.dark .rpt-score-num{color:var(--teal)}
 @media(max-width:600px){.rpt-meta-grid{grid-template-columns:1fr}}
 .rpt-meta-box{border:1px solid #D4DFF0;border-radius:10px;padding:13px}
 body.dark .rpt-meta-box{border-color:var(--border)}
-.rpt-meta-box h5{
-  font-size:10px;text-transform:uppercase;letter-spacing:.09em;
-  color:#7A90AA;font-weight:800;margin-bottom:9px;
-  padding-bottom:7px;border-bottom:1px solid #E8EFF9;
-}
+.rpt-meta-box h5{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#7A90AA;font-weight:800;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid #E8EFF9}
 body.dark .rpt-meta-box h5{border-bottom-color:var(--border-2)}
 .rpt-field{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px}
 .rpt-field:last-child{margin-bottom:0}
-.rf-lbl{color:#7A90AA}
-.rf-val{font-weight:700;color:#0B1F3A}
+.rf-lbl{color:#7A90AA}.rf-val{font-weight:700;color:#0B1F3A}
 body.dark .rf-val{color:var(--text)}
 .rpt-sec-block{margin-bottom:20px}
-.rsb-hdr{
-  background:#0B1F3A;color:#fff;padding:7px 13px;
-  border-radius:7px 7px 0 0;font-size:12px;font-weight:700;
-  display:flex;justify-content:space-between;
-}
+.rsb-hdr{background:#0B1F3A;color:#fff;padding:7px 13px;border-radius:7px 7px 0 0;font-size:12px;font-weight:700;display:flex;justify-content:space-between}
 body.dark .rsb-hdr{background:#162D4E}
 .rpt-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
-.rpt-tbl th{
-  background:#F4F8FD;padding:7px 9px;text-align:left;
-  font-weight:700;color:#3D5473;border:1px solid #D4DFF0;
-  font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;
-}
+.rpt-tbl th{background:#F4F8FD;padding:7px 9px;text-align:left;font-weight:700;color:#3D5473;border:1px solid #D4DFF0;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em}
 body.dark .rpt-tbl th{background:var(--surface-2);color:var(--text-2);border-color:var(--border)}
 .rpt-tbl td{padding:7px 9px;border:1px solid #D4DFF0;color:#0B1F3A;vertical-align:top}
 body.dark .rpt-tbl td{border-color:var(--border);color:var(--text)}
 .rpt-tbl tr:nth-child(even) td{background:#FAFCFF}
 body.dark .rpt-tbl tr:nth-child(even) td{background:rgba(255,255,255,.02)}
-.rt-crit td{background:#FEF2F2!important}
-body.dark .rt-crit td{background:rgba(220,38,38,.06)!important}
-.rs-chip{
-  font-weight:700;text-align:center;border-radius:4px;
-  padding:2px 6px;display:inline-block;font-size:11px;
-}
+.rt-action td{background:#FFFBEB!important;border-left:3px solid var(--warning)!important}
+body.dark .rt-action td{background:rgba(245,158,11,.06)!important}
+.rs-chip{font-weight:700;text-align:center;border-radius:4px;padding:2px 6px;display:inline-block;font-size:11px}
 .rs5{color:#059669;background:#ECFDF5}.rs4{color:#2563EB;background:#EFF6FF}
 .rs3{color:#D97706;background:#FFFBEB}.rs2{color:#EA580C;background:#FFF7ED}
 .rs1{color:#DC2626;background:#FEF2F2}.rs0{color:#94A3B8}
 .rpt-sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
-@media(max-width:600px){.rpt-sum-grid{grid-template-columns:1fr}}
-.rpt-sig{
-  margin-top:28px;padding-top:18px;border-top:1px solid #D4DFF0;
-  display:flex;gap:20px;
-}
+@media(max-width:600px){.rpt-sum-grid{grid-template-columns:1fr};.report-doc{padding:20px}}
+/* Report: item evidence photos */
+.item-evidence-block{margin-top:10px;padding:10px 12px;background:#F4F8FD;border-radius:var(--r-sm);border:1px solid #D4DFF0}
+body.dark .item-evidence-block{background:var(--surface-2);border-color:var(--border)}
+.ieb-title{font-size:10px;font-weight:800;color:#3D5473;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.ieb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.ieb-img{width:100%;height:110px;object-fit:cover;border-radius:var(--r-sm);border:1px solid #D4DFF0;display:block}
+.ieb-label{font-size:10px;color:#7A90AA;margin-top:4px;line-height:1.3}
+/* Report: showroom evidence section */
+.rpt-evidence-section{margin-top:22px}
+.rpt-evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+@media(max-width:500px){.rpt-evidence-grid{grid-template-columns:1fr}}
+.rpt-evidence-label{font-size:10.5px;font-weight:700;color:#3D5473;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;padding:4px 8px;background:#F4F8FD;border-radius:4px;display:block}
+body.dark .rpt-evidence-label{color:var(--text-2);background:var(--surface-2)}
+.rpt-evidence-img{width:100%;max-height:190px;object-fit:cover;border-radius:var(--r-sm);border:1px solid #D4DFF0}
+.rpt-evidence-missing{height:90px;display:flex;align-items:center;justify-content:center;background:#F4F8FD;border:1px dashed #D4DFF0;border-radius:var(--r-sm);font-size:12px;color:#7A90AA;font-style:italic}
+body.dark .rpt-evidence-missing{background:var(--surface-2);border-color:var(--border)}
+.rpt-sig{margin-top:28px;padding-top:18px;border-top:1px solid #D4DFF0;display:flex;gap:20px}
 body.dark .rpt-sig{border-top-color:var(--border)}
 .sig-line{flex:1;padding-bottom:36px;border-bottom:1px solid #0B1F3A;font-size:11px;color:#7A90AA;text-align:center}
 body.dark .sig-line{border-bottom-color:var(--border)}
-
-/* ═══════════════════════════════════════════
-   PHOTO MODAL
-═══════════════════════════════════════════ */
-.modal-ov{
-  position:fixed;inset:0;background:rgba(0,0,0,.82);
-  z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;
-}
-.modal-box{
-  background:var(--surface);border-radius:var(--r-lg);
-  padding:14px;max-width:90vw;max-height:90vh;position:relative;
-}
-.modal-box img{max-width:100%;max-height:80vh;border-radius:var(--r-sm);display:block}
-.modal-close{
-  position:absolute;top:8px;right:8px;width:28px;height:28px;
-  background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;
-  cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;
-}
-
-/* ═══════════════════════════════════════════
-   TOASTS
-═══════════════════════════════════════════ */
-.toast-wrap{
-  position:fixed;bottom:16px;right:16px;z-index:600;
-  display:flex;flex-direction:column;gap:7px;max-width:340px;
-  pointer-events:none;
-}
-.toast{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:10px 14px;
-  box-shadow:var(--shadow-md);font-size:12.5px;
-  animation:toastIn .25s ease;pointer-events:auto;
-  display:flex;align-items:flex-start;gap:8px;
-}
-.toast-err{border-left:4px solid var(--danger)}
-.toast-ok{border-left:4px solid var(--success)}
-.toast-info{border-left:4px solid var(--teal)}
-@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(110%)}}
-
-/* ═══════════════════════════════════════════
-   SECTION LABEL
-═══════════════════════════════════════════ */
-.sec-section-lbl{
-  font-size:10.5px;font-weight:800;color:var(--text-muted);
-  text-transform:uppercase;letter-spacing:.08em;
-  margin-bottom:6px;padding:8px 0 2px;
-}
-
-/* ═══════════════════════════════════════════
-   PRINT
-═══════════════════════════════════════════ */
+.app-footer{position:fixed;bottom:0;left:0;right:0;height:28px;background:var(--navy);color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:500;letter-spacing:.07em;z-index:300;border-top:1px solid rgba(255,255,255,.06);user-select:none}
+body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
+/* Print */
 @media print{
-  #navbar,.ssb,.nav-tabs,.no-print,.action-bar,.rep-actions,.nav-actions{display:none!important}
+  #navbar,.ssb,.nav-tabs,.no-print,.action-bar,.rep-actions,.nav-actions,.val-overlay,.modal-ov,.toast-wrap{display:none!important}
   body{background:#fff;color:#000;font-size:10px}
   .view{display:none!important}
   #view-report{display:block!important}
@@ -647,33 +361,16 @@ body.dark .sig-line{border-bottom-color:var(--border)}
   .report-doc{border:none;box-shadow:none;padding:0;border-radius:0}
   .rpt-tbl th{background:#f0f0f0!important}
   .rsb-hdr{background:#333!important}
-  .cat-badge,.rsb-hdr,.cat-platinum,.cat-gold,.cat-silver,.cat-critical{
-    print-color-adjust:exact;-webkit-print-color-adjust:exact
-  }
+  .ieb-img,.rpt-evidence-img,.ev-slot-thumb{break-inside:avoid}
+  .rpt-sec-block{break-inside:avoid}
+  .cat-badge,.rsb-hdr{print-color-adjust:exact;-webkit-print-color-adjust:exact}
   @page{margin:1.5cm}
 }
 </style>
-</head>
 <body>
-
-<!-- ════════════════════ NAVBAR ════════════════════ -->
 <nav id="navbar">
   <div class="nav-brand">
-    <!-- AIS Windows SVG Logo -->
-    <svg xmlns="http://www.w3.org/2000/svg" width="148" height="36" viewBox="0 0 148 36" style="flex-shrink:0;display:block" aria-label="AIS Windows">
-      <!-- 4-pane window icon -->
-      <rect x="1" y="2" width="30" height="30" rx="4" fill="none" stroke="#00B5CC" stroke-width="2"/>
-      <line x1="1" y1="17" x2="31" y2="17" stroke="#00B5CC" stroke-width="1.5"/>
-      <line x1="16" y1="2" x2="16" y2="32" stroke="#00B5CC" stroke-width="1.5"/>
-      <rect x="3.5" y="4.5" width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.22"/>
-      <rect x="18"  y="4.5" width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.55"/>
-      <rect x="3.5" y="19"  width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.12"/>
-      <rect x="18"  y="19"  width="10" height="10" rx="1.5" fill="#00B5CC" fill-opacity="0.35"/>
-      <!-- AIS wordmark -->
-      <text x="38" y="22" font-family="'Plus Jakarta Sans',Arial Black,sans-serif" font-size="19" font-weight="800" fill="#FFFFFF" letter-spacing="-0.6">AIS</text>
-      <!-- WINDOWS subtitle -->
-      <text x="39.5" y="32" font-family="'Plus Jakarta Sans',Arial,sans-serif" font-size="8" font-weight="700" fill="#00B5CC" letter-spacing="3.5">WINDOWS</text>
-    </svg>
+    <img src="logo.png" alt="AIS Windows" style="height:34px;display:block;object-fit:contain;flex-shrink:0;max-width:170px;">
     <span class="nav-brand-sep">|</span>
     <span class="nav-brand-sub">Showroom Audit</span>
   </div>
@@ -684,12 +381,12 @@ body.dark .sig-line{border-bottom-color:var(--border)}
     <button class="nav-tab" onclick="switchView('report')">④ Report</button>
   </div>
   <div class="nav-actions">
+    <button class="install-chip hidden no-print" id="installBtn" onclick="installApp()" title="Install app on this device">⊕ Install</button>
     <button class="nav-icon-btn" onclick="toggleDark()" id="darkBtn" title="Toggle dark mode">🌙</button>
     <button class="nav-icon-btn no-print" onclick="resetConfirm()" title="Reset form">↺</button>
   </div>
 </nav>
 
-<!-- ════════════════════ STICKY SCORE BAR ════════════════════ -->
 <div class="ssb hidden" id="ssb">
   <span class="ssb-dealer" id="ssbDealer">—</span>
   <div class="ssb-sep"></div>
@@ -704,39 +401,42 @@ body.dark .sig-line{border-bottom-color:var(--border)}
   <span class="ssb-comp" id="ssbComp">0 / 21</span>
 </div>
 
-<!-- ════════════════════ VIEW 1: SETUP ════════════════════ -->
+<!-- Blocking validation modal -->
+<div class="val-overlay hidden" id="valOverlay">
+  <div class="val-modal">
+    <div class="val-modal-hdr">
+      <span>⛔ Action Required Before Proceeding</span>
+      <button class="val-modal-close" onclick="closeValModal()">✕</button>
+    </div>
+    <div class="val-modal-body" id="valModalBody"></div>
+    <div class="val-modal-footer">
+      <button class="btn btn-primary" onclick="closeValModal()">← Fix Issues in Checklist</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW 1: SETUP -->
 <div id="view-setup" class="view active">
   <div class="vc">
     <div class="vh">
       <div class="view-title">Audit Setup</div>
       <div class="view-sub">Select dealer using zone → territory filters, then complete audit details</div>
     </div>
-
-    <!-- Dealer Selection -->
     <div class="card card-open">
-      <div class="card-hd">
-        <span class="card-hd-icon">🔍</span>
-        <div class="card-hd-text">
-          <h3>Dealer Selection</h3>
-          <p>Use dependent filters: Zone → Territory → Dealer</p>
-        </div>
+      <div class="card-hd"><span class="card-hd-icon">🔍</span>
+        <div class="card-hd-text"><h3>Dealer Selection</h3><p>Use dependent filters: Zone → Territory → Dealer</p></div>
       </div>
       <div class="card-bd">
         <div class="grid-2" style="margin-bottom:14px">
-          <div class="fg">
-            <label>Zone <span class="req">*</span></label>
+          <div class="fg"><label>Zone <span class="req">*</span></label>
             <select id="zoneSelect" onchange="onZoneChange(this.value)">
               <option value="">— Select Zone —</option>
-              <option value="West">West</option>
-              <option value="East">East</option>
-              <option value="South">South</option>
-              <option value="Delhi NCR">Delhi NCR</option>
-              <option value="RON">RON (Rest of North)</option>
-              <option value="North">North</option>
+              <option value="West">West</option><option value="East">East</option>
+              <option value="South">South</option><option value="Delhi NCR">Delhi NCR</option>
+              <option value="RON">RON (Rest of North)</option><option value="North">North</option>
             </select>
           </div>
-          <div class="fg">
-            <label>Territory / Zone Code <span class="req">*</span></label>
+          <div class="fg"><label>Territory / Zone Code <span class="req">*</span></label>
             <select id="terrSelect" onchange="onTerrChange(this.value)" disabled>
               <option value="">— Select Territory —</option>
             </select>
@@ -745,27 +445,16 @@ body.dark .sig-line{border-bottom-color:var(--border)}
         <div class="fg">
           <label>Dealer Name <span class="req">*</span></label>
           <div class="sd-wrap">
-            <div class="sd-input-wrap">
-              <input type="text" id="dealerSearch"
-                placeholder="Search or select dealer…" disabled autocomplete="off"
-                oninput="onDealerInput(this.value)"
-                onfocus="openSD()"
-                onblur="setTimeout(closeSD,200)">
-            </div>
+            <input type="text" id="dealerSearch" placeholder="Search or select dealer…" disabled autocomplete="off"
+              oninput="onDealerInput(this.value)" onfocus="openSD()" onblur="setTimeout(closeSD,200)">
             <div id="dealerDD" class="sd-dropdown hidden"></div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Dealer Auto-filled Details -->
     <div class="card">
-      <div class="card-hd">
-        <span class="card-hd-icon">📋</span>
-        <div class="card-hd-text">
-          <h3>Dealer Details</h3>
-          <p>Auto-populated from dealer master on selection</p>
-        </div>
+      <div class="card-hd"><span class="card-hd-icon">📋</span>
+        <div class="card-hd-text"><h3>Dealer Details</h3><p>Auto-populated from dealer master on selection</p></div>
       </div>
       <div class="card-bd">
         <div class="grid-4">
@@ -776,42 +465,29 @@ body.dark .sig-line{border-bottom-color:var(--border)}
         </div>
       </div>
     </div>
-
-    <!-- Auditor Details -->
     <div class="card">
-      <div class="card-hd">
-        <span class="card-hd-icon">🧑‍💼</span>
-        <div class="card-hd-text">
-          <h3>Auditor Details</h3>
-          <p>Enter the auditor name and audit parameters</p>
-        </div>
+      <div class="card-hd"><span class="card-hd-icon">🧑‍💼</span>
+        <div class="card-hd-text"><h3>Auditor Details</h3><p>Enter auditor name and audit parameters</p></div>
       </div>
       <div class="card-bd">
         <div class="grid-3">
-          <div class="fg">
-            <label>CSE / DSE Name <span class="req">*</span></label>
+          <div class="fg"><label>CSE / DSE Name <span class="req">*</span></label>
             <input type="text" id="fCSE" placeholder="Enter CSE/DSE name" oninput="S.header.cseDse=this.value">
           </div>
-          <div class="fg">
-            <label>Audit Date <span class="req">*</span></label>
+          <div class="fg"><label>Audit Date <span class="req">*</span></label>
             <input type="date" id="fDate" oninput="S.header.auditDate=this.value">
           </div>
-          <div class="fg">
-            <label>Audit Type <span class="req">*</span></label>
+          <div class="fg"><label>Audit Type <span class="req">*</span></label>
             <select id="fType" onchange="S.header.auditType=this.value">
               <option value="">— Select Type —</option>
-              <option>Monthly Audit</option>
-              <option>Quarterly Audit</option>
-              <option>Annual Audit</option>
-              <option>Surprise / Spot Check</option>
-              <option>Re-audit</option>
-              <option>Joint Audit</option>
+              <option>Monthly Audit</option><option>Quarterly Audit</option>
+              <option>Annual Audit</option><option>Surprise / Spot Check</option>
+              <option>Re-audit</option><option>Joint Audit</option>
             </select>
           </div>
         </div>
       </div>
     </div>
-
     <div class="action-bar">
       <button class="btn btn-secondary no-print" onclick="resetConfirm()">↺ Reset</button>
       <button class="btn btn-primary btn-lg" onclick="goChecklist()">Proceed to Checklist →</button>
@@ -819,7 +495,7 @@ body.dark .sig-line{border-bottom-color:var(--border)}
   </div>
 </div>
 
-<!-- ════════════════════ VIEW 2: CHECKLIST ════════════════════ -->
+<!-- VIEW 2: CHECKLIST -->
 <div id="view-checklist" class="view">
   <div class="vc">
     <div id="checklistRoot"></div>
@@ -830,47 +506,54 @@ body.dark .sig-line{border-bottom-color:var(--border)}
   </div>
 </div>
 
-<!-- ════════════════════ VIEW 3: SUMMARY ════════════════════ -->
+<!-- VIEW 3: SUMMARY -->
 <div id="view-summary" class="view">
   <div class="vc" id="summaryRoot"></div>
 </div>
 
-<!-- ════════════════════ VIEW 4: REPORT ════════════════════ -->
+<!-- VIEW 4: REPORT -->
 <div id="view-report" class="view">
   <div class="vc">
     <div class="rep-actions no-print">
       <button class="btn btn-primary" onclick="window.print()">🖨 Print Report</button>
-      <button class="btn btn-whatsapp" onclick="shareWhatsApp()" title="Share audit summary via WhatsApp">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      <button class="btn btn-whatsapp" onclick="shareWhatsApp()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
         WhatsApp
       </button>
-      <button class="btn btn-email" onclick="shareEmail()" title="Email the full audit report">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+      <button class="btn btn-email" onclick="shareEmail()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
         Email Report
       </button>
-      <button class="btn btn-ghost" onclick="exportJSON()">⬇ Export JSON</button>
-      <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
-      <button class="btn btn-danger" onclick="resetConfirm()">↺ Reset Form</button>
+      <button class="btn btn-ghost" onclick="exportJSON()">⬇ JSON</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">⬇ CSV</button>
+      <button class="btn btn-danger" onclick="resetConfirm()">↺ Reset</button>
     </div>
     <div id="reportRoot"></div>
   </div>
 </div>
 
-<!-- ════════════════════ PHOTO MODAL ════════════════════ -->
+<!-- Photo modal -->
 <div class="modal-ov hidden" id="photoModal" onclick="closeModal()">
   <div class="modal-box" onclick="event.stopPropagation()">
     <button class="modal-close" onclick="closeModal()">✕</button>
     <img id="modalImg" src="" alt="Photo preview">
   </div>
 </div>
-
-<!-- Toast container -->
+<footer class="app-footer no-print" id="appFooter">AIS Windows Channel Initiative &middot; Confidential</footer>
 <div class="toast-wrap" id="toastWrap"></div>
-
 <script>
-// ════════════════════════════════════════════════════════════════
-//  DATA — DEALER MASTER (109 records, verbatim from workbook)
-// ════════════════════════════════════════════════════════════════
+// ── CONFIG ─────────────────────────────────────────────────────
+const REQUIRE_PHOTO_FOR_FAILED_CRITICAL = true; // set false to make photo optional
+const IMG_MAX_DIM = 1280;
+const IMG_QUALITY = 0.75;
+const RESP_ROLES = ['Partner','Sales ASM','Sales RM','Sales ZM','Installation ASE','Installation CSM','Channel Team'];
+const EVIDENCE_SLOTS = [
+  {key:'frontElevation', label:'Main Front Elevation with Signage', icon:'🏪'},
+  {key:'reception',      label:'Reception Area',                    icon:'🛋'},
+  {key:'indoorBranding', label:'Indoor Branding',                   icon:'🖼'},
+  {key:'showroomInside', label:'Showroom Inside',                   icon:'🏠'}
+];
+// ── DEALER MASTER (109 records) ─────────────────────────────────
 const DEALERS=[
 {n:"Ambika Paints",t:"W1",z:"West",s:"Maharashtra",c:"Mumbai",a:"Kishor Sonyabapu Shinde"},
 {n:"Afra Infra",t:"W2",z:"West",s:"Goa",c:"Goa",a:"Kishor Sonyabapu Shinde"},
@@ -982,22 +665,8 @@ const DEALERS=[
 {n:"Cleresta Windows",t:"W3",z:"West",s:"Gujarat",c:"Surat",a:"Rajesh Bhikhabhai Patel"},
 {n:"Star Windows",t:"S3",z:"South",s:"Andhra Pradesh",c:"Nellore",a:"D V Sai Pradhyum"}
 ];
-
-// ════════════════════════════════════════════════════════════════
-//  ZONE → TERRITORY MAP
-// ════════════════════════════════════════════════════════════════
-const ZT={
-  "West":["W1","W2","W3","W4"],
-  "East":["E1","E2","E3","E4"],
-  "South":["S1","S2","S3"],
-  "Delhi NCR":["N3","N5","N6"],
-  "RON":["N1","N2","N4","N7"],
-  "North":["N6"]
-};
-
-// ════════════════════════════════════════════════════════════════
-//  AUDIT SECTIONS & ITEMS (verbatim from workbook rows 15-35)
-// ════════════════════════════════════════════════════════════════
+const ZT={"West":["W1","W2","W3","W4"],"East":["E1","E2","E3","E4"],"South":["S1","S2","S3"],"Delhi NCR":["N3","N5","N6"],"RON":["N1","N2","N4","N7"],"North":["N6"]};
+// ── AUDIT SECTIONS ─────────────────────────────────────────────
 const SECTIONS=[
   {id:"s1",name:"Product Display & Demo Experience",items:[
     {id:"s1_1",p:"Smooth operation of installed doors and windows",w:5,cr:true},
@@ -1031,9 +700,7 @@ const SECTIONS=[
     {id:"s5_3",p:"Showroom Lighting",w:3.33,cr:false}
   ]}
 ];
-
-// Score multipliers — exact from workbook formula
-// 5-Excellent→wt×1, 4-Good→wt×0.8, 3-Average→wt×0.6, 2-Weak→wt×0.4, 1-Poor→0
+// Score multipliers from workbook formula
 const MULT={0:0,1:0,2:0.4,3:0.6,4:0.8,5:1.0};
 const SLBL={0:"—",1:"Poor",2:"Weak",3:"Average",4:"Good",5:"Excellent"};
 const SSTYLE={
@@ -1050,902 +717,706 @@ const CATS=[
   {min:60,label:"Silver",cls:"cat-silver",col:"#64748B"},
   {min:0,label:"Improvement Required / Critical",cls:"cat-critical",col:"#DC2626"}
 ];
-
-// ════════════════════════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════════════════════════
+// ── STATE ──────────────────────────────────────────────────────
 const S={
   view:"setup",dark:false,clRendered:false,
   header:{zone:"",territory:"",dealer:"",city:"",state:"",region:"",asm:"",cseDse:"",auditDate:"",auditType:""},
-  items:{}
+  items:{},
+  showroomEvidence:{frontElevation:"",reception:"",indoorBranding:"",showroomInside:""}
 };
-SECTIONS.forEach(sec=>sec.items.forEach(it=>{S.items[it.id]={score:0,obs:"",date:"",photo:""}}));
+SECTIONS.forEach(sec=>sec.items.forEach(it=>{
+  S.items[it.id]={score:0,obs:"",date:"",responsiblePerson:"",responsiblePersonOther:"",photo:""};
+}));
 S.header.auditDate=new Date().toISOString().split("T")[0];
-
-// ════════════════════════════════════════════════════════════════
-//  COMPUTED
-// ════════════════════════════════════════════════════════════════
-function IS(id){return S.items[id]||{score:0,obs:"",date:"",photo:""}}
-
+// ── COMPUTED ───────────────────────────────────────────────────
+function IS(id){return S.items[id]||{score:0,obs:"",date:"",responsiblePerson:"",responsiblePersonOther:"",photo:""}}
 function secScore(sid){
   const sec=SECTIONS.find(s=>s.id===sid);
   let actual=0,max=0;
-  sec.items.forEach(it=>{
-    const sc=IS(it.id).score;
-    actual+=MULT[sc]*it.w;
-    max+=it.w;
-  });
+  sec.items.forEach(it=>{const sc=IS(it.id).score;actual+=MULT[sc]*it.w;max+=it.w;});
   return{actual,max,pct:max>0?(actual/max)*100:0};
 }
-
 function finalScore(){
-  let t=0;
-  SECTIONS.forEach(sec=>sec.items.forEach(it=>{ t+=MULT[IS(it.id).score]*it.w; }));
-  return t;
+  let t=0;SECTIONS.forEach(sec=>sec.items.forEach(it=>{t+=MULT[IS(it.id).score]*it.w;}));return t;
 }
-
-// Exact workbook category logic:
-// IF any Critical row has score=1(Poor) → "Improvement Required/Critical" (override)
-// Else threshold-based
 function getCategory(score){
   const hasCritPoor=SECTIONS.some(sec=>sec.items.some(it=>it.cr&&IS(it.id).score===1));
-  if(hasCritPoor) return{...CATS[3],override:true};
-  for(const cat of CATS){ if(score>=cat.min) return{...cat,override:false}; }
+  if(hasCritPoor)return{...CATS[3],override:true};
+  for(const cat of CATS){if(score>=cat.min)return{...cat,override:false};}
   return{...CATS[3],override:false};
 }
-
 function statusCounts(){
   const c={5:0,4:0,3:0,2:0,1:0,0:0};
-  SECTIONS.forEach(sec=>sec.items.forEach(it=>c[IS(it.id).score]++));
-  return c;
+  SECTIONS.forEach(sec=>sec.items.forEach(it=>c[IS(it.id).score]++));return c;
 }
-
-function criticalIssues(){
+function itemsRequiringAction(){
   const arr=[];
   SECTIONS.forEach(sec=>sec.items.forEach(it=>{
     const sc=IS(it.id).score;
-    if(it.cr&&sc>0&&sc<=2) arr.push({...it,secName:sec.name,score:sc});
-  }));
-  return arr;
+    if(it.cr&&sc>0&&sc<=2)arr.push({...it,secName:sec.name,score:sc});
+  }));return arr;
 }
-
 function completion(){
   let s=0,t=0;
-  SECTIONS.forEach(sec=>sec.items.forEach(it=>{t++;if(IS(it.id).score>0)s++;}));
-  return{s,t};
+  SECTIONS.forEach(sec=>sec.items.forEach(it=>{t++;if(IS(it.id).score>0)s++;}));return{s,t};
 }
-
 function fmtW(w){return Number.isInteger(w)?w:w.toFixed(2)}
-
-// ════════════════════════════════════════════════════════════════
-//  VIEW SWITCHING
-// ════════════════════════════════════════════════════════════════
+// ── IMAGE COMPRESSION ─────────────────────────────────────────
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      let w=img.naturalWidth,h=img.naturalHeight;
+      if(w>IMG_MAX_DIM||h>IMG_MAX_DIM){const r=Math.min(IMG_MAX_DIM/w,IMG_MAX_DIM/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      resolve(cv.toDataURL('image/jpeg',IMG_QUALITY));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Image load failed'));};
+    img.src=url;
+  });
+}
+// ── PWA ────────────────────────────────────────────────────────
+let deferredInstallPrompt=null;
+function injectManifest(){
+  const manifest={name:"AIS Windows Showroom Audit",short_name:"AIS Audit",
+    description:"AIS Windows Channel Initiative – Showroom Audit App",
+    start_url:".",display:"standalone",background_color:"#0B1F3A",theme_color:"#00B5CC",
+    orientation:"portrait-primary",
+    icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230B1F3A'/%3E%3Crect x='80' y='80' width='352' height='352' rx='20' fill='none' stroke='%2300B5CC' stroke-width='24'/%3E%3Cline x1='80' y1='256' x2='432' y2='256' stroke='%2300B5CC' stroke-width='20'/%3E%3Cline x1='256' y1='80' x2='256' y2='432' stroke='%2300B5CC' stroke-width='20'/%3E%3C/svg%3E",sizes:"any",type:"image/svg+xml",purpose:"any maskable"}]};
+  const el=document.createElement('link');el.rel='manifest';
+  el.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(manifest));
+  document.head.appendChild(el);
+}
+function registerSW(){
+  if(!('serviceWorker' in navigator))return;
+  const code="const V='ais-v1';self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(V).then(c=>c.addAll(['./'])));});self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});";
+  try{
+    const blob=new Blob([code],{type:'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'})
+      .then(()=>console.log('[PWA] SW registered'))
+      .catch(e=>console.log('[PWA] SW scope limited (expected for single-file):',e.message));
+  }catch(e){console.log('[PWA] SW not supported');}
+}
+async function installApp(){
+  if(!deferredInstallPrompt){toast('Open in Chrome/Edge on mobile for install support','info');return;}
+  deferredInstallPrompt.prompt();
+  const{outcome}=await deferredInstallPrompt.userChoice;
+  if(outcome==='accepted')toast('Installing app…','ok');
+  deferredInstallPrompt=null;
+  document.getElementById('installBtn').classList.add('hidden');
+}
+// ── VIEW SWITCHING ─────────────────────────────────────────────
 function switchView(v){
-  document.querySelectorAll(".view").forEach(el=>el.classList.remove("active"));
-  document.querySelectorAll(".nav-tab").forEach(el=>el.classList.remove("active"));
-  document.getElementById("view-"+v).classList.add("active");
-  const idx=["setup","checklist","summary","report"].indexOf(v);
-  document.querySelectorAll(".nav-tab")[idx].classList.add("active");
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  const idx=['setup','checklist','summary','report'].indexOf(v);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
   S.view=v;
-  const ssb=document.getElementById("ssb");
-  if(v==="checklist"){
-    ssb.classList.remove("hidden");
+  const ssb=document.getElementById('ssb');
+  if(v==='checklist'){
+    ssb.classList.remove('hidden');
     if(!S.clRendered){renderChecklist();S.clRendered=true;}
     updateSSB();
-  }else{ssb.classList.add("hidden")}
-  if(v==="summary") renderSummary();
-  if(v==="report") renderReport();
+  }else{ssb.classList.add('hidden');}
+  if(v==='summary')renderSummary();
+  if(v==='report')renderReport();
   window.scrollTo(0,0);
 }
-
-// ════════════════════════════════════════════════════════════════
-//  DARK MODE
-// ════════════════════════════════════════════════════════════════
 function toggleDark(){
-  S.dark=!S.dark;
-  document.body.classList.toggle("dark",S.dark);
-  document.getElementById("darkBtn").textContent=S.dark?"☀️":"🌙";
+  S.dark=!S.dark;document.body.classList.toggle('dark',S.dark);
+  document.getElementById('darkBtn').textContent=S.dark?'☀️':'🌙';
 }
-
-// ════════════════════════════════════════════════════════════════
-//  DEALER DROPDOWN LOGIC
-// ════════════════════════════════════════════════════════════════
+// ── DEALER DROPDOWN ────────────────────────────────────────────
 let curDealers=[];
 function onZoneChange(z){
-  S.header.zone=z;S.header.territory="";S.header.dealer="";
-  clearAuto();
-  const ts=document.getElementById("terrSelect");
+  S.header.zone=z;S.header.territory='';S.header.dealer='';clearAuto();
+  const ts=document.getElementById('terrSelect');
   ts.innerHTML='<option value="">— Select Territory —</option>';
-  if(z&&ZT[z]){
-    ZT[z].forEach(code=>{
-      const o=document.createElement("option");
-      o.value=o.textContent=code;ts.appendChild(o);
-    });
-    ts.disabled=false;
-  }else{ts.disabled=true}
-  const di=document.getElementById("dealerSearch");
-  di.value="";di.disabled=true;di.placeholder="Search or select dealer…";
-  document.getElementById("dealerDD").classList.add("hidden");
+  if(z&&ZT[z]){ZT[z].forEach(code=>{const o=document.createElement('option');o.value=o.textContent=code;ts.appendChild(o);});ts.disabled=false;}
+  else ts.disabled=true;
+  const di=document.getElementById('dealerSearch');di.value='';di.disabled=true;di.placeholder='Search or select dealer…';
+  document.getElementById('dealerDD').classList.add('hidden');
 }
 function onTerrChange(t){
-  S.header.territory=t;S.header.dealer="";clearAuto();
-  const di=document.getElementById("dealerSearch");
-  di.value="";
-  if(t){
-    curDealers=DEALERS.filter(d=>d.t===t).sort((a,b)=>a.n.localeCompare(b.n));
-    di.disabled=false;
-    di.placeholder=`Search among ${curDealers.length} dealer${curDealers.length!==1?"s":""}…`;
-  }else{curDealers=[];di.disabled=true;di.placeholder="Search or select dealer…"}
-  document.getElementById("dealerDD").classList.add("hidden");
+  S.header.territory=t;S.header.dealer='';clearAuto();
+  const di=document.getElementById('dealerSearch');di.value='';
+  if(t){curDealers=DEALERS.filter(d=>d.t===t).sort((a,b)=>a.n.localeCompare(b.n));di.disabled=false;di.placeholder='Search among '+curDealers.length+' dealers…';}
+  else{curDealers=[];di.disabled=true;di.placeholder='Search or select dealer…';}
+  document.getElementById('dealerDD').classList.add('hidden');
 }
-function onDealerInput(q){
-  if(!curDealers.length)return;
-  buildDD(q.trim());
-}
-function openSD(){
-  if(!curDealers.length)return;
-  buildDD(document.getElementById("dealerSearch").value.trim());
-}
-function closeSD(){document.getElementById("dealerDD").classList.add("hidden")}
+function onDealerInput(q){if(curDealers.length)buildDD(q.trim());}
+function openSD(){if(curDealers.length)buildDD(document.getElementById('dealerSearch').value.trim());}
+function closeSD(){document.getElementById('dealerDD').classList.add('hidden');}
 function buildDD(q){
-  const dd=document.getElementById("dealerDD");
+  const dd=document.getElementById('dealerDD');
   const list=q?curDealers.filter(d=>d.n.toLowerCase().includes(q.toLowerCase())||d.c.toLowerCase().includes(q.toLowerCase())):curDealers;
-  if(!list.length){dd.innerHTML='<div class="sd-empty">No dealers found</div>';dd.classList.remove("hidden");return;}
+  if(!list.length){dd.innerHTML='<div class="sd-empty">No dealers found</div>';dd.classList.remove('hidden');return;}
   dd.innerHTML=list.map(d=>{
-    const hl=q?d.n.replace(new RegExp(`(${escRe(q)})`,"gi"),'<span class="sd-match">$1</span>'):escH(d.n);
-    return`<div class="sd-opt" onmousedown="pickDealer('${escH(d.n)}')">`+
-      `<div class="sd-opt-name">${hl}</div>`+
-      `<div class="sd-opt-meta">${escH(d.c)}, ${escH(d.s)} &middot; ${d.t}</div></div>`;
-  }).join("");
-  dd.classList.remove("hidden");
+    const hl=q?d.n.replace(new RegExp('('+escRe(q)+')','gi'),'<span class="sd-match">$1</span>'):escH(d.n);
+    return'<div class="sd-opt" onmousedown="pickDealer(\''+escH(d.n)+'\')"><div class="sd-opt-name">'+hl+'</div><div class="sd-opt-meta">'+escH(d.c)+', '+escH(d.s)+' &middot; '+d.t+'</div></div>';
+  }).join('');
+  dd.classList.remove('hidden');
 }
 function pickDealer(name){
   const d=DEALERS.find(x=>x.n===name);if(!d)return;
   S.header.dealer=d.n;S.header.city=d.c;S.header.state=d.s;S.header.region=d.z;S.header.asm=d.a;
-  document.getElementById("dealerSearch").value=d.n;
-  document.getElementById("fCity").value=d.c;
-  document.getElementById("fState").value=d.s;
-  document.getElementById("fRegion").value=d.z;
-  document.getElementById("fASM").value=d.a;
-  document.getElementById("dealerDD").classList.add("hidden");
-  if(S.clRendered) refreshBanner();
-  toast(`Dealer: ${d.n}`,"ok");
+  document.getElementById('dealerSearch').value=d.n;
+  document.getElementById('fCity').value=d.c;document.getElementById('fState').value=d.s;
+  document.getElementById('fRegion').value=d.z;document.getElementById('fASM').value=d.a;
+  document.getElementById('dealerDD').classList.add('hidden');
+  if(S.clRendered)refreshBanner();
+  toast('Dealer: '+d.n,'ok');
 }
 function clearAuto(){
-  S.header.dealer=S.header.city=S.header.state=S.header.region=S.header.asm="";
-  ["fCity","fState","fRegion","fASM"].forEach(id=>{ const el=document.getElementById(id);if(el)el.value=""; });
+  S.header.dealer=S.header.city=S.header.state=S.header.region=S.header.asm='';
+  ['fCity','fState','fRegion','fASM'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
-function escH(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
-function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}
-
-// ════════════════════════════════════════════════════════════════
-//  VALIDATION
-// ════════════════════════════════════════════════════════════════
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+// ── VALIDATION ─────────────────────────────────────────────────
 function validateSetup(){
-  const errs=[];
-  if(!S.header.dealer) errs.push("Dealer Name is required");
-  if(!S.header.cseDse) errs.push("CSE/DSE Name is required");
-  if(!S.header.auditDate) errs.push("Audit Date is required");
-  if(!S.header.auditType) errs.push("Audit Type is required");
-  return errs;
+  const e=[];
+  if(!S.header.dealer)e.push('Dealer Name is required');
+  if(!S.header.cseDse)e.push('CSE/DSE Name is required');
+  if(!S.header.auditDate)e.push('Audit Date is required');
+  if(!S.header.auditType)e.push('Audit Type is required');
+  return e;
 }
-function validateCritical(){
+function validateForSummary(){
   const errs=[];
   SECTIONS.forEach(sec=>sec.items.forEach(it=>{
-    const is=IS(it.id);
-    if(it.cr&&is.score>0&&is.score<=2){
-      if(!is.obs.trim()) errs.push(`"${it.p.substring(0,55)}…": Observation required`);
-      if(!is.date) errs.push(`"${it.p.substring(0,55)}…": Target date required`);
+    const is=IS(it.id);const cf=it.cr&&is.score>0&&is.score<=2;
+    if(cf){
+      if(!is.obs.trim())errs.push({field:'Observation',item:it.p,sec:sec.name,id:it.id});
+      if(!is.date)errs.push({field:'Target Date',item:it.p,sec:sec.name,id:it.id});
+      if(!is.responsiblePerson)errs.push({field:'Responsible Person',item:it.p,sec:sec.name,id:it.id});
+      if(REQUIRE_PHOTO_FOR_FAILED_CRITICAL&&!is.photo)errs.push({field:'Photo Evidence',item:it.p,sec:sec.name,id:it.id});
     }
   }));
   return errs;
 }
-
+function renderValidationBlocker(errs){
+  const body=document.getElementById('valModalBody');
+  body.innerHTML='<p class="val-count">'+errs.length+' required field'+(errs.length>1?'s':'')+' incomplete on items requiring action:</p>'
+    +'<ul class="val-list">'+errs.map(e=>'<li class="val-item"><span class="val-item-field">'+escH(e.field)+'</span><span class="val-item-param">'+escH(e.item.length>68?e.item.substring(0,65)+'…':e.item)+'</span><span class="val-item-sec">'+escH(e.sec)+'</span></li>').join('')+'</ul>'
+    +'<p class="val-hint">Scroll to each flagged item in the checklist and complete all highlighted fields before proceeding.</p>';
+  document.getElementById('valOverlay').classList.remove('hidden');
+  errs.forEach(e=>{const row=document.getElementById('ir-'+e.id);if(row)row.classList.add('item-needs-action');});
+}
+function closeValModal(){document.getElementById('valOverlay').classList.add('hidden');}
 function goChecklist(){
-  const errs=validateSetup();
-  if(errs.length){toast(errs[0],"err");return;}
-  switchView("checklist");
+  const e=validateSetup();if(e.length){toast(e[0],'err');return;}switchView('checklist');
 }
 function goSummary(){
-  const errs=validateCritical();
-  if(errs.length){
-    if(!confirm(`⚠ ${errs.length} critical item(s) missing observations or target dates:\n\n${errs.slice(0,4).join("\n")}${errs.length>4?"\n…and more":""}\n\nProceed anyway?`))return;
-  }
-  switchView("summary");
+  const errs=validateForSummary();
+  if(errs.length){renderValidationBlocker(errs);return;}
+  switchView('summary');
 }
-
-// ════════════════════════════════════════════════════════════════
-//  CHECKLIST RENDERING  (rendered once, updates are targeted)
-// ════════════════════════════════════════════════════════════════
+// ── CHECKLIST RENDERING ────────────────────────────────────────
 function renderChecklist(){
-  const root=document.getElementById("checklistRoot");
-  root.innerHTML=bannerHTML()+
-    `<div class="scale-card">
-      <span class="sc-lbl">Scoring Scale:</span>
-      <span class="sc-chip sc5">5 – Excellent (100%)</span>
-      <span class="sc-chip sc4">4 – Good (80%)</span>
-      <span class="sc-chip sc3">3 – Average (60%)</span>
-      <span class="sc-chip sc2">2 – Weak (40%)</span>
-      <span class="sc-chip sc1">1 – Poor (0 pts)</span>
-    </div>`+
-    SECTIONS.map(sec=>secHTML(sec)).join("");
+  const root=document.getElementById('checklistRoot');
+  root.innerHTML=bannerHTML()
+    +'<div class="scale-card"><span class="sc-lbl">Scoring Scale:</span>'
+    +'<span class="sc-chip sc5">5 – Excellent (100%)</span><span class="sc-chip sc4">4 – Good (80%)</span>'
+    +'<span class="sc-chip sc3">3 – Average (60%)</span><span class="sc-chip sc2">2 – Weak (40%)</span>'
+    +'<span class="sc-chip sc1">1 – Poor (0 pts)</span></div>'
+    +SECTIONS.map(sec=>secHTML(sec)).join('')
+    +evidenceCardHTML();
 }
-
 function bannerHTML(){
   const h=S.header;
-  return`<div class="aib" id="clBanner">
-    <div class="aib-item"><span class="aib-lbl">Dealer</span><span class="aib-val">${escH(h.dealer)||"—"}</span></div>
-    <div class="aib-item"><span class="aib-lbl">City</span><span class="aib-val">${escH(h.city)||"—"}</span></div>
-    <div class="aib-item"><span class="aib-lbl">Territory</span><span class="aib-val">${escH(h.territory)||"—"}</span></div>
-    <div class="aib-item"><span class="aib-lbl">Date</span><span class="aib-val">${h.auditDate||"—"}</span></div>
-    <div class="aib-item"><span class="aib-lbl">Type</span><span class="aib-val">${escH(h.auditType)||"—"}</span></div>
-    <div class="aib-item"><span class="aib-lbl">Auditor (CSE/DSE)</span><span class="aib-val">${escH(h.cseDse)||"—"}</span></div>
-  </div>`;
+  return'<div class="aib" id="clBanner">'
+    +'<div class="aib-item"><span class="aib-lbl">Dealer</span><span class="aib-val">'+escH(h.dealer||'—')+'</span></div>'
+    +'<div class="aib-item"><span class="aib-lbl">City</span><span class="aib-val">'+escH(h.city||'—')+'</span></div>'
+    +'<div class="aib-item"><span class="aib-lbl">Territory</span><span class="aib-val">'+escH(h.territory||'—')+'</span></div>'
+    +'<div class="aib-item"><span class="aib-lbl">Date</span><span class="aib-val">'+(h.auditDate||'—')+'</span></div>'
+    +'<div class="aib-item"><span class="aib-lbl">Type</span><span class="aib-val">'+escH(h.auditType||'—')+'</span></div>'
+    +'<div class="aib-item"><span class="aib-lbl">CSE/DSE</span><span class="aib-val">'+escH(h.cseDse||'—')+'</span></div>'
+    +'</div>';
 }
-function refreshBanner(){const b=document.getElementById("clBanner");if(b)b.outerHTML=bannerHTML();}
-
+function refreshBanner(){const b=document.getElementById('clBanner');if(b)b.outerHTML=bannerHTML();}
 function secHTML(sec){
   const ss=secScore(sec.id);
-  return`<div class="sec-card" id="sc-${sec.id}">
-    <div class="sec-hd" onclick="toggleSec('${sec.id}')">
-      <div class="sec-hd-left">
-        <span class="sec-toggle" id="stg-${sec.id}">▾</span>
-        <span class="sec-name">${escH(sec.name)}</span>
-        <span class="sec-count">(${sec.items.length} items)</span>
-      </div>
-      <div class="sec-hd-right">
-        <div class="sec-pts">
-          <span class="sec-pts-actual" id="spa-${sec.id}">${ss.actual.toFixed(1)}</span>
-          <span class="sec-pts-max"> / ${ss.max.toFixed(1)}</span>
-        </div>
-        <div class="sec-bar"><div class="sec-bar-fill" id="sbf-${sec.id}" style="width:${ss.pct.toFixed(1)}%"></div></div>
-        <span class="sec-pct" id="spt-${sec.id}">${ss.pct.toFixed(0)}%</span>
-      </div>
-    </div>
-    <div class="sec-body" id="sb-${sec.id}">
-      ${sec.items.map(it=>itemHTML(it,sec.id)).join("")}
-    </div>
-  </div>`;
+  return'<div class="sec-card" id="sc-'+sec.id+'">'
+    +'<div class="sec-hd" onclick="toggleSec(\''+sec.id+'\')">'
+    +'<div class="sec-hd-left"><span class="sec-toggle" id="stg-'+sec.id+'">▾</span>'
+    +'<span class="sec-name">'+escH(sec.name)+'</span><span class="sec-count">('+sec.items.length+' items)</span></div>'
+    +'<div class="sec-hd-right">'
+    +'<div class="sec-pts"><span class="sec-pts-actual" id="spa-'+sec.id+'">'+ss.actual.toFixed(1)+'</span>'
+    +'<span class="sec-pts-max"> / '+ss.max.toFixed(1)+'</span></div>'
+    +'<div class="sec-bar"><div class="sec-bar-fill" id="sbf-'+sec.id+'" style="width:'+ss.pct.toFixed(1)+'%"></div></div>'
+    +'<span class="sec-pct" id="spt-'+sec.id+'">'+ss.pct.toFixed(0)+'%</span></div></div>'
+    +'<div class="sec-body" id="sb-'+sec.id+'">'
+    +sec.items.map(it=>itemHTML(it,sec.id)).join('')
+    +'</div></div>';
 }
-
 function itemHTML(it,sid){
-  const is=IS(it.id);
-  const cf=it.cr&&is.score>0&&is.score<=2;
-  const ss=SSTYLE[is.score];
-  return`<div class="item-row${cf?" crit-fail":""}" id="ir-${it.id}">
-    <div class="item-top">
-      <div class="item-info">
-        ${it.cr?'<span class="crit-badge">⚠ Critical</span>':""}
-        <span class="item-param">${escH(it.p)}</span>
-        <span class="wt-badge">Wt ${fmtW(it.w)}</span>
-      </div>
-      <div class="item-score-grp">
-        <select class="score-sel" id="sel-${it.id}"
-          style="color:${ss.c};background:${ss.bg};border-color:${ss.bc}"
-          onchange="onScore('${it.id}','${sid}',+this.value)">
-          <option value="0"${is.score===0?" selected":""}>— Not Scored —</option>
-          <option value="5"${is.score===5?" selected":""}>5 – Excellent</option>
-          <option value="4"${is.score===4?" selected":""}>4 – Good</option>
-          <option value="3"${is.score===3?" selected":""}>3 – Average</option>
-          <option value="2"${is.score===2?" selected":""}>2 – Weak</option>
-          <option value="1"${is.score===1?" selected":""}>1 – Poor</option>
-        </select>
-        <span class="status-lbl" id="slbl-${it.id}" style="color:${ss.c}">${SLBL[is.score]}</span>
-      </div>
-    </div>
-    <div class="item-details">
-      <div class="item-obs">
-        <label id="obslbl-${it.id}">Observation / Action Required${cf?' <span class="req">*</span>':""}</label>
-        <textarea id="obs-${it.id}" rows="2" placeholder="Enter observation or action required…"
-          onchange="S.items['${it.id}'].obs=this.value">${escH(is.obs)}</textarea>
-      </div>
-      <div class="item-meta">
-        <div class="item-meta-col">
-          <label id="dtlbl-${it.id}">Target Date${cf?' <span class="req">*</span>':""}</label>
-          <input type="date" id="dt-${it.id}" value="${is.date}"
-            onchange="S.items['${it.id}'].date=this.value">
-        </div>
-        <div class="item-meta-col">
-          <label>Photo</label>
-          <div class="photo-area" id="pa-${it.id}">${photoAreaHTML(it.id,is.photo)}</div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+  const is=IS(it.id);const cf=it.cr&&is.score>0&&is.score<=2;const ss=SSTYLE[is.score];
+  return'<div class="item-row" id="ir-'+it.id+'">'
+    +'<div class="item-top"><div class="item-info">'
+    +(it.cr?'<span class="crit-dot" title="Key audit parameter"></span>':'')
+    +'<span class="item-param">'+escH(it.p)+'</span>'
+    +'<span class="wt-badge">Wt '+fmtW(it.w)+'</span></div>'
+    +'<div class="item-score-grp">'
+    +'<select class="score-sel" id="sel-'+it.id+'" style="color:'+ss.c+';background:'+ss.bg+';border-color:'+ss.bc+'" onchange="onScore(\''+it.id+'\',\''+sid+'\',+this.value)">'
+    +'<option value="0"'+(is.score===0?' selected':'')+'>— Not Scored —</option>'
+    +'<option value="5"'+(is.score===5?' selected':'')+'>5 – Excellent</option>'
+    +'<option value="4"'+(is.score===4?' selected':'')+'>4 – Good</option>'
+    +'<option value="3"'+(is.score===3?' selected':'')+'>3 – Average</option>'
+    +'<option value="2"'+(is.score===2?' selected':'')+'>2 – Weak</option>'
+    +'<option value="1"'+(is.score===1?' selected':'')+'>1 – Poor</option>'
+    +'</select>'
+    +'<span class="status-lbl" id="slbl-'+it.id+'" style="color:'+ss.c+'">'+SLBL[is.score]+'</span>'
+    +'</div></div>'
+    +'<div class="fg" style="margin-top:10px">'
+    +'<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Observation / Action Required</label>'
+    +'<textarea id="obs-'+it.id+'" rows="2" placeholder="Enter observation or action required…" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);resize:vertical;min-height:50px;outline:none;width:100%;font-family:var(--font);font-size:12.5px" onchange="S.items[\''+it.id+'\'].obs=this.value">'+escH(is.obs)+'</textarea>'
+    +'</div>'
+    +'<div id="critextra-'+it.id+'"'+(cf?'':' class="hidden"')+'>'+(cf?critExtraHTML(it.id):'')+'</div>'
+    +'</div>';
 }
-
+function critExtraHTML(itemId){
+  const is=IS(itemId);
+  const opts=RESP_ROLES.map(r=>'<option value="'+r+'"'+(is.responsiblePerson===r?' selected':'')+'>'+r+'</option>').join('');
+  return'<div class="crit-extra-grid">'
+    +'<div class="fg"><label>Target Date <span class="req">*</span></label>'
+    +'<input type="date" id="dt-'+itemId+'" value="'+(is.date||'')+'" onchange="S.items[\''+itemId+'\'].date=this.value"></div>'
+    +'<div class="fg"><label>Responsible Person <span class="req">*</span></label>'
+    +'<select id="rps-'+itemId+'" onchange="onRespChange(\''+itemId+'\',this.value)">'
+    +'<option value="">— Select Role —</option>'+opts+'</select>'
+    +'<input type="text" id="rpo-'+itemId+'" class="resp-other-inp'+(is.responsiblePerson==='Other'?'':' hidden')+'" placeholder="Specify responsible person…" value="'+escH(is.responsiblePersonOther||'')+'" onchange="S.items[\''+itemId+'\'].responsiblePersonOther=this.value"></div>'
+    +'<div class="fg"><label>Photo Evidence'+(REQUIRE_PHOTO_FOR_FAILED_CRITICAL?' <span class="req">*</span>':'')+'</label>'
+    +'<div id="pa-'+itemId+'">'+photoAreaHTML(itemId,is.photo)+'</div>'
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:4px">📱 Tap to take photo or choose from gallery</p>'
+    +'</div></div>';
+}
 function photoAreaHTML(id,url){
-  if(url){
-    return`<div style="position:relative;display:inline-flex;">
-      <img src="${url}" class="photo-thumb" onclick="openModal('${id}')" alt="Photo">
-      <button class="photo-del" onclick="removePhoto('${id}')" type="button">✕</button>
-    </div>`;
-  }
-  return`<label class="photo-btn" for="pf-${id}">📷 Add Photo</label>
-    <input type="file" id="pf-${id}" accept="image/*" class="file-inp"
-      onchange="handlePhoto('${id}',this)">`;
+  if(url)return'<div style="position:relative;display:inline-flex;"><img src="'+url+'" class="photo-thumb" onclick="openModal(\''+id+'\')" alt="Evidence"><button class="photo-del" onclick="removePhoto(\''+id+'\')" type="button">✕</button></div>';
+  return'<label class="photo-btn" for="pf-'+id+'">📷 Take / Upload Photo</label><input type="file" id="pf-'+id+'" accept="image/*" class="file-inp" onchange="handlePhoto(\''+id+'\',this)">';
 }
-
+function evidenceCardHTML(){
+  return'<div class="card" style="margin-top:16px">'
+    +'<div class="card-hd"><span class="card-hd-icon">📸</span>'
+    +'<div class="card-hd-text"><h3>Showroom Evidence Photos</h3>'
+    +'<p>Upload 4 mandatory showroom photos for the audit report</p></div></div>'
+    +'<div class="card-bd"><div class="ev-upload-grid">'
+    +EVIDENCE_SLOTS.map(slot=>'<div class="ev-slot'+(S.showroomEvidence[slot.key]?' ev-slot-filled':'')+'" id="evslot-'+slot.key+'">'+evidenceSlotInner(slot)+'</div>').join('')
+    +'</div></div></div>';
+}
+function evidenceSlotInner(slot){
+  const url=S.showroomEvidence[slot.key];
+  return'<div class="ev-slot-icon">'+slot.icon+'</div>'
+    +'<span class="ev-slot-label">'+escH(slot.label)+'</span>'
+    +(url?'<div style="position:relative;display:inline-flex;margin-bottom:8px;"><img src="'+url+'" class="ev-slot-thumb" onclick="openEvidenceModal(\''+slot.key+'\')" alt="'+escH(slot.label)+'"><button class="photo-del" onclick="removeEvidencePhoto(\''+slot.key+'\')" type="button">✕</button></div>':'')
+    +'<br><label class="photo-btn" for="evf-'+slot.key+'">📷 '+(url?'Replace':'Take / Upload')+' Photo</label>'
+    +'<input type="file" id="evf-'+slot.key+'" accept="image/*" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)">';
+}
+// ── SECTION TOGGLE ─────────────────────────────────────────────
 function toggleSec(sid){
-  const b=document.getElementById("sb-"+sid);
-  const t=document.getElementById("stg-"+sid);
-  b.classList.toggle("coll");t.classList.toggle("coll");
+  document.getElementById('sb-'+sid).classList.toggle('coll');
+  document.getElementById('stg-'+sid).classList.toggle('coll');
 }
-
-// ════════════════════════════════════════════════════════════════
-//  SCORE CHANGE  (targeted DOM update — no full re-render)
-// ════════════════════════════════════════════════════════════════
+// ── SCORE CHANGE ───────────────────────────────────────────────
 function onScore(id,sid,score){
   S.items[id].score=score;
   const ss=SSTYLE[score];
-  const sel=document.getElementById("sel-"+id);
+  const sel=document.getElementById('sel-'+id);
   if(sel){sel.style.color=ss.c;sel.style.background=ss.bg;sel.style.borderColor=ss.bc;}
-  const slbl=document.getElementById("slbl-"+id);
+  const slbl=document.getElementById('slbl-'+id);
   if(slbl){slbl.textContent=SLBL[score];slbl.style.color=ss.c;}
-  // Update critical-fail styling
-  const ir=document.getElementById("ir-"+id);
   const it=findItem(id);
-  if(ir&&it){
-    const cf=it.cr&&score>0&&score<=2;
-    ir.classList.toggle("crit-fail",cf);
-    const olbl=document.getElementById("obslbl-"+id);
-    const dlbl=document.getElementById("dtlbl-"+id);
-    if(olbl) olbl.innerHTML=`Observation / Action Required${cf?' <span class="req">*</span>':""}`;
-    if(dlbl) dlbl.innerHTML=`Target Date${cf?' <span class="req">*</span>':""}`;
+  const cf=it&&it.cr&&score>0&&score<=2;
+  const extra=document.getElementById('critextra-'+id);
+  if(extra){
+    if(cf){extra.innerHTML=critExtraHTML(id);extra.classList.remove('hidden');}
+    else extra.classList.add('hidden');
   }
-  updateSecIndicator(sid);
-  updateSSB();
+  // Clear needs-action marker when user updates score
+  const row=document.getElementById('ir-'+id);
+  if(row)row.classList.remove('item-needs-action');
+  updateSecIndicator(sid);updateSSB();
 }
-
 function findItem(id){
-  for(const sec of SECTIONS){const it=sec.items.find(i=>i.id===id);if(it)return it;}
-  return null;
+  for(const sec of SECTIONS){const it=sec.items.find(i=>i.id===id);if(it)return it;}return null;
 }
-function findSecOf(id){
-  for(const sec of SECTIONS){if(sec.items.some(i=>i.id===id))return sec.id;}
-  return null;
-}
-
 function updateSecIndicator(sid){
   const ss=secScore(sid);
-  const a=document.getElementById("spa-"+sid);
-  const b=document.getElementById("sbf-"+sid);
-  const p=document.getElementById("spt-"+sid);
-  if(a)a.textContent=ss.actual.toFixed(1);
-  if(b)b.style.width=Math.min(ss.pct,100).toFixed(1)+"%";
-  if(p)p.textContent=ss.pct.toFixed(0)+"%";
+  const a=document.getElementById('spa-'+sid);const b=document.getElementById('sbf-'+sid);const p=document.getElementById('spt-'+sid);
+  if(a)a.textContent=ss.actual.toFixed(1);if(b)b.style.width=Math.min(ss.pct,100).toFixed(1)+'%';if(p)p.textContent=ss.pct.toFixed(0)+'%';
 }
-
 function updateSSB(){
-  const sc=finalScore();
-  const cat=getCategory(sc);
-  const co=completion();
-  const d=document.getElementById;
-  d("ssbScore").textContent=sc.toFixed(1);
-  d("ssbFill").style.width=Math.min(sc,100).toFixed(1)+"%";
-  const cb=d("ssbCat");
-  cb.textContent=cat.label;
-  cb.className="ssb-cat "+cat.cls;
-  d("ssbComp").textContent=co.s+" / "+co.t;
-  d("ssbDealer").textContent=S.header.dealer||"No dealer selected";
+  const sc=finalScore();const cat=getCategory(sc);const co=completion();
+  document.getElementById('ssbScore').textContent=sc.toFixed(1);
+  document.getElementById('ssbFill').style.width=Math.min(sc,100).toFixed(1)+'%';
+  const cb=document.getElementById('ssbCat');cb.textContent=cat.label;cb.className='ssb-cat '+cat.cls;
+  document.getElementById('ssbComp').textContent=co.s+' / '+co.t;
+  document.getElementById('ssbDealer').textContent=S.header.dealer||'No dealer selected';
 }
-
-// ════════════════════════════════════════════════════════════════
-//  PHOTO HANDLING
-// ════════════════════════════════════════════════════════════════
-function handlePhoto(id,inp){
-  const f=inp.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=e=>{S.items[id].photo=e.target.result;refreshPhotoArea(id);};
-  r.readAsDataURL(f);
+// ── RESPONSIBLE PERSON ─────────────────────────────────────────
+function onRespChange(itemId,val){
+  S.items[itemId].responsiblePerson=val;
+  const other=document.getElementById('rpo-'+itemId);
+  if(other){if(val==='Other')other.classList.remove('hidden');else other.classList.add('hidden');}
+  const row=document.getElementById('ir-'+itemId);if(row)row.classList.remove('item-needs-action');
 }
-function removePhoto(id){S.items[id].photo="";refreshPhotoArea(id);}
+// ── PHOTO HANDLING ─────────────────────────────────────────────
+async function handlePhoto(id,inp){
+  const file=inp.files[0];if(!file)return;
+  try{
+    toast('Compressing image…','info');
+    const compressed=await compressImage(file);
+    S.items[id].photo=compressed;
+    refreshPhotoArea(id);
+    const row=document.getElementById('ir-'+id);if(row)row.classList.remove('item-needs-action');
+  }catch(e){toast('Photo error: '+e.message,'err');}
+}
+function removePhoto(id){S.items[id].photo='';refreshPhotoArea(id);}
 function refreshPhotoArea(id){
-  const el=document.getElementById("pa-"+id);
-  if(el)el.innerHTML=photoAreaHTML(id,S.items[id].photo);
+  const el=document.getElementById('pa-'+id);if(el)el.innerHTML=photoAreaHTML(id,S.items[id].photo);
+}
+async function handleEvidencePhoto(key,inp){
+  const file=inp.files[0];if(!file)return;
+  try{
+    toast('Compressing image…','info');
+    const compressed=await compressImage(file);
+    S.showroomEvidence[key]=compressed;
+    refreshEvidenceSlot(key);
+  }catch(e){toast('Photo error: '+e.message,'err');}
+}
+function removeEvidencePhoto(key){S.showroomEvidence[key]='';refreshEvidenceSlot(key);}
+function refreshEvidenceSlot(key){
+  const slot=EVIDENCE_SLOTS.find(s=>s.key===key);if(!slot)return;
+  const el=document.getElementById('evslot-'+key);if(!el)return;
+  el.innerHTML=evidenceSlotInner(slot);
+  el.classList.toggle('ev-slot-filled',!!S.showroomEvidence[key]);
 }
 function openModal(id){
-  const url=S.items[id].photo;if(!url)return;
-  document.getElementById("modalImg").src=url;
-  document.getElementById("photoModal").classList.remove("hidden");
+  const url=S.items[id].photo;if(!url)return;openModalUrl(url);
 }
-function closeModal(){
-  document.getElementById("photoModal").classList.add("hidden");
-  document.getElementById("modalImg").src="";
+function openEvidenceModal(key){
+  const url=S.showroomEvidence[key];if(!url)return;openModalUrl(url);
 }
-
-// ════════════════════════════════════════════════════════════════
-//  SUMMARY RENDERING
-// ════════════════════════════════════════════════════════════════
+function openModalUrl(url){document.getElementById('modalImg').src=url;document.getElementById('photoModal').classList.remove('hidden');}
+function closeModal(){document.getElementById('photoModal').classList.add('hidden');document.getElementById('modalImg').src='';}
+// ── SUMMARY ────────────────────────────────────────────────────
 function renderSummary(){
-  const sc=finalScore();
-  const cat=getCategory(sc);
-  const cnt=statusCounts();
-  const ci=criticalIssues();
-  const co=completion();
-  const h=S.header;
-  const C=2*Math.PI*60;
-  const off=C*(1-sc/100);
-
-  let html=`<div class="vh">
-    <div class="view-title">Audit Summary</div>
-    <div class="view-sub">${escH(h.dealer)||"No dealer"} · ${h.auditDate||"No date"} · ${escH(h.auditType)||"No type"}</div>
-  </div>
-  <div class="sum-grid">
-    <div class="score-card">
-      <div class="donut-wrap">
-        <svg class="donut-svg" viewBox="0 0 140 140">
-          <circle cx="70" cy="70" r="60" fill="none" stroke="var(--border)" stroke-width="14"/>
-          <circle cx="70" cy="70" r="60" fill="none" stroke="${cat.col}" stroke-width="14"
-            stroke-linecap="round"
-            stroke-dasharray="${C.toFixed(2)}"
-            stroke-dashoffset="${off.toFixed(2)}"
-            transform="rotate(-90 70 70)"
-            style="transition:stroke-dashoffset 1.2s ease"/>
-        </svg>
-        <div class="donut-txt">
-          <span class="donut-score" style="color:${cat.col}">${sc.toFixed(1)}</span>
-          <span class="donut-denom">out of 100</span>
-        </div>
-      </div>
-      <div class="cat-badge ${cat.cls}">${cat.label}</div>
-      ${cat.override?`<div class="cat-override-note">⚠ Auto-downgraded: a critical item scored Poor (1)</div>`:""}
-      <div class="sum-legend">
-        <div class="sum-leg-item"><div class="sum-leg-dot" style="background:#7C3AED"></div>Platinum ≥90</div>
-        <div class="sum-leg-item"><div class="sum-leg-dot" style="background:#D97706"></div>Gold 70–89</div>
-        <div class="sum-leg-item"><div class="sum-leg-dot" style="background:#64748B"></div>Silver 60–69</div>
-        <div class="sum-leg-item"><div class="sum-leg-dot" style="background:#DC2626"></div>Critical &lt;60</div>
-      </div>
-      <div class="cat-note">Completion: ${co.s} / ${co.t} items scored</div>
-    </div>
-    <div class="info-card">
-      <h4>Dealer & Audit Info</h4>
-      <div class="info-row"><span class="info-lbl">Dealer Name</span><span class="info-val">${escH(h.dealer)||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">City</span><span class="info-val">${escH(h.city)||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">State</span><span class="info-val">${escH(h.state)||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">Region / Zone</span><span class="info-val">${escH(h.region)||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">Territory</span><span class="info-val">${h.territory||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">ASM / RM</span><span class="info-val">${escH(h.asm)||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">CSE / DSE</span><span class="info-val">${escH(h.cseDse)||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">Audit Date</span><span class="info-val">${h.auditDate||"—"}</span></div>
-      <div class="info-row"><span class="info-lbl">Audit Type</span><span class="info-val">${escH(h.auditType)||"—"}</span></div>
-    </div>
-  </div>
-
-  <div class="sec-section-lbl">Section-wise Performance</div>`;
-
+  const sc=finalScore();const cat=getCategory(sc);const cnt=statusCounts();
+  const actions=itemsRequiringAction();const co=completion();const h=S.header;
+  const C=2*Math.PI*60;const off=C*(1-sc/100);
+  let html='<div class="vh"><div class="view-title">Audit Summary</div>'
+    +'<div class="view-sub">'+escH(h.dealer||'No dealer')+' · '+(h.auditDate||'No date')+' · '+escH(h.auditType||'No type')+'</div></div>'
+    +'<div class="sum-grid">'
+    +'<div class="score-card">'
+    +'<div class="donut-wrap"><svg class="donut-svg" viewBox="0 0 140 140">'
+    +'<circle cx="70" cy="70" r="60" fill="none" stroke="var(--border)" stroke-width="14"/>'
+    +'<circle cx="70" cy="70" r="60" fill="none" stroke="'+cat.col+'" stroke-width="14" stroke-linecap="round" stroke-dasharray="'+C.toFixed(2)+'" stroke-dashoffset="'+off.toFixed(2)+'" transform="rotate(-90 70 70)" style="transition:stroke-dashoffset 1.2s ease"/>'
+    +'</svg><div class="donut-txt"><span class="donut-score" style="color:'+cat.col+'">'+sc.toFixed(1)+'</span><span class="donut-denom">out of 100</span></div></div>'
+    +'<div class="cat-badge '+cat.cls+'">'+cat.label+'</div>'
+    +(cat.override?'<div class="cat-override-note">⚠ Auto-downgraded: a key parameter scored Poor (1)</div>':'')
+    +'<div class="sum-legend"><div class="sum-leg-item"><div class="sum-leg-dot" style="background:#7C3AED"></div>Platinum ≥90</div><div class="sum-leg-item"><div class="sum-leg-dot" style="background:#D97706"></div>Gold 70–89</div><div class="sum-leg-item"><div class="sum-leg-dot" style="background:#64748B"></div>Silver 60–69</div><div class="sum-leg-item"><div class="sum-leg-dot" style="background:#DC2626"></div>Critical &lt;60</div></div>'
+    +'<div class="cat-note">Completion: '+co.s+' / '+co.t+' items scored</div>'
+    +'</div>'
+    +'<div class="info-card"><h4>Dealer & Audit Info</h4>'
+    +'<div class="info-row"><span class="info-lbl">Dealer Name</span><span class="info-val">'+escH(h.dealer||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">City</span><span class="info-val">'+escH(h.city||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">State</span><span class="info-val">'+escH(h.state||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">Region / Zone</span><span class="info-val">'+escH(h.region||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">Territory</span><span class="info-val">'+escH(h.territory||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">ASM / RM</span><span class="info-val">'+escH(h.asm||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">CSE / DSE</span><span class="info-val">'+escH(h.cseDse||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">Audit Date</span><span class="info-val">'+escH(h.auditDate||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">Audit Type</span><span class="info-val">'+escH(h.auditType||'—')+'</span></div>'
+    +'</div></div>';
+  html+='<div class="sec-section-lbl">Section-wise Performance</div>';
   SECTIONS.forEach(sec=>{
-    const ss=secScore(sec.id);
-    const scat=getCategory((ss.pct/100)*100);
-    // section % uses pct directly
-    const sCat2=CATS.find(c=>(ss.pct)>=c.min)||CATS[3];
-    html+=`<div class="sec-perf-item">
-      <div class="sp-hdr">
-        <span class="sp-name">${escH(sec.name)}</span>
-        <span class="sp-pct" style="color:${sCat2.col}">${ss.pct.toFixed(1)}%</span>
-      </div>
-      <div class="sp-bar-bg">
-        <div class="sp-bar-fill" style="width:${Math.min(ss.pct,100).toFixed(1)}%;background:${sCat2.col}"></div>
-      </div>
-      <div class="sp-detail">${ss.actual.toFixed(2)} pts earned of ${ss.max.toFixed(2)} max &middot; ${sCat2.label}</div>
-    </div>`;
+    const ss=secScore(sec.id);const sCat=CATS.find(c=>ss.pct>=c.min)||CATS[3];
+    html+='<div class="sec-perf-item"><div class="sp-hdr"><span class="sp-name">'+escH(sec.name)+'</span><span class="sp-pct" style="color:'+sCat.col+'">'+ss.pct.toFixed(1)+'%</span></div><div class="sp-bar-bg"><div class="sp-bar-fill" style="width:'+Math.min(ss.pct,100).toFixed(1)+'%;background:'+sCat.col+'"></div></div><div class="sp-detail">'+ss.actual.toFixed(2)+' pts earned of '+ss.max.toFixed(2)+' max &middot; '+sCat.label+'</div></div>';
   });
-
-  html+=`<div class="sec-section-lbl" style="margin-top:8px">Score Distribution</div>
-  <div class="status-grid">
-    <div class="sc-box s5b"><div class="sc-box-count">${cnt[5]}</div><div class="sc-box-lbl" style="color:#10B981">Excellent</div></div>
-    <div class="sc-box s4b"><div class="sc-box-count">${cnt[4]}</div><div class="sc-box-lbl" style="color:#3B82F6">Good</div></div>
-    <div class="sc-box s3b"><div class="sc-box-count">${cnt[3]}</div><div class="sc-box-lbl" style="color:#F59E0B">Average</div></div>
-    <div class="sc-box s2b"><div class="sc-box-count">${cnt[2]}</div><div class="sc-box-lbl" style="color:#F97316">Weak</div></div>
-    <div class="sc-box s1b"><div class="sc-box-count">${cnt[1]}</div><div class="sc-box-lbl" style="color:#EF4444">Poor</div></div>
-    <div class="sc-box s0b"><div class="sc-box-count">${cnt[0]}</div><div class="sc-box-lbl" style="color:var(--text-muted)">Not Scored</div></div>
-  </div>`;
-
-  if(ci.length){
-    html+=`<div class="crit-warn-block">
-      <div class="cw-hdr">⚠ ${ci.length} Critical Issue${ci.length>1?"s":""} Found — Immediate Attention Required</div>
-      ${ci.map(c=>`<div class="cw-item">
-        <div class="cw-param">${escH(c.p)}</div>
-        <div class="cw-meta">
-          <span class="cw-sec">${escH(c.secName)}</span>
-          <span class="cw-score">Score: ${c.score} – ${SLBL[c.score]}</span>
-          ${IS(c.id).obs?`<span class="cw-sec" style="color:var(--text-2)">Obs: ${escH(IS(c.id).obs.substring(0,70))}${IS(c.id).obs.length>70?"…":""}</span>`:""}
-        </div>
-      </div>`).join("")}
-    </div>`;
+  const cnt2=statusCounts();
+  html+='<div class="sec-section-lbl" style="margin-top:8px">Score Distribution</div>'
+    +'<div class="status-grid">'
+    +'<div class="sc-box s5b"><div class="sc-box-count">'+cnt2[5]+'</div><div class="sc-box-lbl" style="color:#10B981">Excellent</div></div>'
+    +'<div class="sc-box s4b"><div class="sc-box-count">'+cnt2[4]+'</div><div class="sc-box-lbl" style="color:#3B82F6">Good</div></div>'
+    +'<div class="sc-box s3b"><div class="sc-box-count">'+cnt2[3]+'</div><div class="sc-box-lbl" style="color:#F59E0B">Average</div></div>'
+    +'<div class="sc-box s2b"><div class="sc-box-count">'+cnt2[2]+'</div><div class="sc-box-lbl" style="color:#F97316">Weak</div></div>'
+    +'<div class="sc-box s1b"><div class="sc-box-count">'+cnt2[1]+'</div><div class="sc-box-lbl" style="color:#EF4444">Poor</div></div>'
+    +'<div class="sc-box s0b"><div class="sc-box-count">'+cnt2[0]+'</div><div class="sc-box-lbl" style="color:var(--text-muted)">Not Scored</div></div>'
+    +'</div>';
+  if(actions.length){
+    html+='<div class="action-warn-block"><div class="aw-hdr">⚠ '+actions.length+' Item'+(actions.length>1?'s':'')+' Requiring Immediate Action</div>'
+      +actions.map(c=>{const is=IS(c.id);return'<div class="aw-item"><div class="aw-param">'+escH(c.p)+'</div><div class="aw-meta"><span class="aw-sec">'+escH(c.secName)+'</span><span class="aw-score">Score: '+c.score+' – '+SLBL[c.score]+'</span>'+(is.responsiblePerson?'<span class="aw-sec">Responsible: '+escH(is.responsiblePerson+(is.responsiblePersonOther?' ('+is.responsiblePersonOther+')':''))+'</span>':'')+(is.date?'<span class="aw-sec">Target: '+is.date+'</span>':'')+'</div></div>';}).join('')
+      +'</div>';
   }
-
-  html+=`<div class="action-bar">
-    <button class="btn btn-secondary" onclick="switchView('checklist')">← Back to Checklist</button>
-    <button class="btn btn-primary" onclick="switchView('report')">Generate Report →</button>
-  </div>`;
-
-  document.getElementById("summaryRoot").innerHTML=html;
+  const evCount=EVIDENCE_SLOTS.filter(s=>S.showroomEvidence[s.key]).length;
+  html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 15px;margin-bottom:14px">'
+    +'<div style="font-size:12.5px;font-weight:700;color:var(--text)">📸 Showroom Evidence Photos: <span style="color:'+(evCount===4?'var(--success)':'var(--warning)')+'">'+evCount+' / 4 uploaded</span></div></div>';
+  html+='<div class="action-bar"><button class="btn btn-secondary" onclick="switchView(\'checklist\')">← Back to Checklist</button><button class="btn btn-primary" onclick="switchView(\'report\')">Generate Report →</button></div>';
+  document.getElementById('summaryRoot').innerHTML=html;
 }
-
-// ════════════════════════════════════════════════════════════════
-//  REPORT RENDERING
-// ════════════════════════════════════════════════════════════════
+// ── REPORT ─────────────────────────────────────────────────────
 function renderReport(){
-  const sc=finalScore();
-  const cat=getCategory(sc);
-  const cnt=statusCounts();
-  const ci=criticalIssues();
-  const h=S.header;
-
-  let html=`<div class="report-doc">
-    <div class="rpt-hdr">
-      <div>
-        <div class="rpt-logo-name">AIS <span>Windows</span></div>
-        <div class="rpt-title">Showroom Audit Report</div>
-        <div class="rpt-sub">Channel Sales Excellence Program · AIS Windows</div>
-      </div>
-      <div class="rpt-score-block">
-        <div class="rpt-score-num">${sc.toFixed(1)}</div>
-        <div class="rpt-score-denom">out of 100</div>
-        <div class="cat-badge ${cat.cls}" style="margin-top:8px;font-size:12px;">${cat.label}</div>
-      </div>
-    </div>
-    <div class="rpt-meta-grid">
-      <div class="rpt-meta-box">
-        <h5>Dealer Details</h5>
-        <div class="rpt-field"><span class="rf-lbl">Dealer Name</span><span class="rf-val">${escH(h.dealer)||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">City</span><span class="rf-val">${escH(h.city)||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">State</span><span class="rf-val">${escH(h.state)||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">Region / Zone</span><span class="rf-val">${escH(h.region)||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">Territory</span><span class="rf-val">${h.territory||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">ASM / RM Name</span><span class="rf-val">${escH(h.asm)||"—"}</span></div>
-      </div>
-      <div class="rpt-meta-box">
-        <h5>Audit Details</h5>
-        <div class="rpt-field"><span class="rf-lbl">CSE / DSE Name</span><span class="rf-val">${escH(h.cseDse)||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">Audit Date</span><span class="rf-val">${h.auditDate||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">Audit Type</span><span class="rf-val">${escH(h.auditType)||"—"}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">Final Score</span><span class="rf-val" style="color:${cat.col}">${sc.toFixed(2)}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">Category</span><span class="rf-val">${cat.label}</span></div>
-        <div class="rpt-field"><span class="rf-lbl">Critical Issues</span><span class="rf-val" style="color:${ci.length?"#DC2626":"#059669"}">${ci.length}</span></div>
-      </div>
-    </div>`;
-
+  const sc=finalScore();const cat=getCategory(sc);const cnt=statusCounts();
+  const actions=itemsRequiringAction();const h=S.header;
+  let html='<div class="report-doc">'
+    +'<div class="rpt-hdr"><div><div class="rpt-logo-name">AIS <span>Windows</span></div><div class="rpt-title">Showroom Audit Report</div><div class="rpt-sub">Channel Initiative Program</div></div>'
+    +'<div class="rpt-score-block"><div class="rpt-score-num">'+sc.toFixed(1)+'</div><div class="rpt-score-denom">out of 100</div><div class="cat-badge '+cat.cls+'" style="margin-top:8px;font-size:12px">'+cat.label+'</div></div></div>'
+    +'<div class="rpt-meta-grid">'
+    +'<div class="rpt-meta-box"><h5>Dealer Details</h5>'
+    +'<div class="rpt-field"><span class="rf-lbl">Dealer Name</span><span class="rf-val">'+escH(h.dealer||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">City</span><span class="rf-val">'+escH(h.city||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">State</span><span class="rf-val">'+escH(h.state||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Region / Zone</span><span class="rf-val">'+escH(h.region||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Territory</span><span class="rf-val">'+escH(h.territory||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">ASM / RM</span><span class="rf-val">'+escH(h.asm||'—')+'</span></div></div>'
+    +'<div class="rpt-meta-box"><h5>Audit Details</h5>'
+    +'<div class="rpt-field"><span class="rf-lbl">CSE / DSE</span><span class="rf-val">'+escH(h.cseDse||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Audit Date</span><span class="rf-val">'+escH(h.auditDate||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Audit Type</span><span class="rf-val">'+escH(h.auditType||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Final Score</span><span class="rf-val" style="color:'+cat.col+'">'+sc.toFixed(2)+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Category</span><span class="rf-val">'+cat.label+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Items Requiring Action</span><span class="rf-val" style="color:'+(actions.length?'#DC2626':'#059669')+'">'+actions.length+'</span></div></div></div>';
+  // Section tables
   SECTIONS.forEach(sec=>{
     const ss=secScore(sec.id);
-    html+=`<div class="rpt-sec-block">
-      <div class="rsb-hdr">
-        <span>${escH(sec.name)}</span>
-        <span>${ss.actual.toFixed(2)} / ${ss.max.toFixed(2)} pts (${ss.pct.toFixed(1)}%)</span>
-      </div>
-      <table class="rpt-tbl">
-        <thead>
-          <tr>
-            <th>#</th><th>Audit Parameter</th>
-            <th style="text-align:center;width:42px">Wt</th>
-            <th style="text-align:center;width:60px">Critical</th>
-            <th style="text-align:center;width:52px">Score</th>
-            <th style="text-align:center;width:70px">Status</th>
-            <th style="width:28%">Observation / Action</th>
-            <th style="width:90px">Target Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sec.items.map((it,i)=>{
-            const is=IS(it.id);
-            const cf=it.cr&&is.score>0&&is.score<=2;
-            const sc2=is.score>0?`rs${is.score}`:"rs0";
-            return`<tr${cf?' class="rt-crit"':""}>
-              <td>${i+1}</td>
-              <td>${escH(it.p)}</td>
-              <td style="text-align:center">${fmtW(it.w)}</td>
-              <td style="text-align:center">${it.cr?"⚠ Yes":"No"}</td>
-              <td style="text-align:center"><span class="rs-chip ${sc2}">${is.score||"—"}</span></td>
-              <td style="text-align:center">${SLBL[is.score]}</td>
-              <td>${escH(is.obs)||"—"}</td>
-              <td>${is.date||"—"}</td>
-            </tr>`;
-          }).join("")}
-        </tbody>
-      </table>
-    </div>`;
+    const failedPhotos=sec.items.filter(it=>it.cr&&IS(it.id).score>0&&IS(it.id).score<=2&&IS(it.id).photo);
+    html+='<div class="rpt-sec-block"><div class="rsb-hdr"><span>'+escH(sec.name)+'</span><span>'+ss.actual.toFixed(2)+' / '+ss.max.toFixed(2)+' pts ('+ss.pct.toFixed(1)+'%)</span></div>'
+      +'<table class="rpt-tbl"><thead><tr>'
+      +'<th>#</th><th>Audit Parameter</th><th style="text-align:center;width:36px">Wt</th>'
+      +'<th style="text-align:center;width:52px">Score</th><th style="text-align:center;width:68px">Status</th>'
+      +'<th style="width:25%">Observation / Action</th><th style="width:15%">Responsible</th><th style="width:88px">Target Date</th>'
+      +'</tr></thead><tbody>'
+      +sec.items.map((it,i)=>{
+        const is=IS(it.id);const isAction=it.cr&&is.score>0&&is.score<=2;
+        const sc2=is.score>0?'rs'+is.score:'rs0';
+        const resp=is.responsiblePerson?is.responsiblePerson+(is.responsiblePersonOther&&is.responsiblePerson==='Other'?' ('+escH(is.responsiblePersonOther)+')':''):'—';
+        return'<tr'+(isAction?' class="rt-action"':'')+'>'
+          +'<td>'+(i+1)+'</td><td>'+escH(it.p)+'</td>'
+          +'<td style="text-align:center">'+fmtW(it.w)+'</td>'
+          +'<td style="text-align:center"><span class="rs-chip '+sc2+'">'+(is.score||'—')+'</span></td>'
+          +'<td style="text-align:center">'+SLBL[is.score]+'</td>'
+          +'<td>'+escH(is.obs||'—')+'</td>'
+          +'<td>'+escH(resp)+'</td>'
+          +'<td>'+(is.date||'—')+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table>'
+      +(failedPhotos.length?'<div class="item-evidence-block"><div class="ieb-title">Evidence Photos – Items Requiring Action</div><div class="ieb-grid">'+failedPhotos.map(it=>'<div><img src="'+IS(it.id).photo+'" class="ieb-img"><div class="ieb-label">'+escH(it.p.length>60?it.p.substring(0,57)+'…':it.p)+'</div></div>').join('')+'</div></div>':'')
+      +'</div>';
   });
-
-  html+=`<div class="rpt-sum-grid">
-    <div class="rpt-meta-box">
-      <h5>Section Performance (Operational Compliance)</h5>
-      ${SECTIONS.map(sec=>{
-        const ss=secScore(sec.id);
-        const sCat=CATS.find(c=>ss.pct>=c.min)||CATS[3];
-        return`<div class="rpt-field">
-          <span class="rf-lbl" style="font-size:10.5px">${escH(sec.name)}</span>
-          <span class="rf-val" style="color:${sCat.col}">${ss.pct.toFixed(1)}%</span>
-        </div>`;
-      }).join("")}
-    </div>
-    <div class="rpt-meta-box">
-      <h5>Score Distribution</h5>
-      <div class="rpt-field"><span class="rf-lbl">Excellent (5)</span><span class="rf-val" style="color:#059669">${cnt[5]}</span></div>
-      <div class="rpt-field"><span class="rf-lbl">Good (4)</span><span class="rf-val" style="color:#2563EB">${cnt[4]}</span></div>
-      <div class="rpt-field"><span class="rf-lbl">Average (3)</span><span class="rf-val" style="color:#D97706">${cnt[3]}</span></div>
-      <div class="rpt-field"><span class="rf-lbl">Weak (2)</span><span class="rf-val" style="color:#EA580C">${cnt[2]}</span></div>
-      <div class="rpt-field"><span class="rf-lbl">Poor (1)</span><span class="rf-val" style="color:#DC2626">${cnt[1]}</span></div>
-      <div class="rpt-field"><span class="rf-lbl">Not Scored</span><span class="rf-val" style="color:#94A3B8">${cnt[0]}</span></div>
-    </div>
-  </div>`;
-
-  if(ci.length){
-    html+=`<div style="margin-top:16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:14px">
-      <div style="font-weight:800;color:#DC2626;font-size:13px;margin-bottom:10px">⚠ Critical Issues Summary (${ci.length})</div>
-      ${ci.map(c=>`<div style="margin-bottom:7px;font-size:12px">
-        <span style="font-weight:600">${escH(c.p)}</span>
-        <span style="color:#7A90AA;margin-left:8px">${escH(c.secName)}</span>
-        <span style="color:#DC2626;font-weight:700;margin-left:8px">Score: ${c.score} – ${SLBL[c.score]}</span>
-        ${IS(c.id).date?`<span style="color:#3D5473;margin-left:8px">Target: ${IS(c.id).date}</span>`:""}
-      </div>`).join("")}
-    </div>`;
-  }
-
-  html+=`<div class="rpt-sig">
-    <div class="sig-line">Auditor Signature (CSE/DSE)<br><br>${escH(h.cseDse)||""}</div>
-    <div class="sig-line">Dealer Representative Signature</div>
-    <div class="sig-line">ASM / RM Signature<br><br>${escH(h.asm)||""}</div>
-  </div>
-  <div style="margin-top:16px;font-size:10px;color:#94A3B8;text-align:center">
-    Report generated on ${new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})} · AIS Windows Channel Sales Excellence · Confidential
-  </div>
-  </div>`;
-
-  document.getElementById("reportRoot").innerHTML=html;
+  // Score summary grid
+  html+='<div class="rpt-sum-grid">'
+    +'<div class="rpt-meta-box"><h5>Section Performance</h5>'
+    +SECTIONS.map(sec=>{const ss=secScore(sec.id);const sCat=CATS.find(c=>ss.pct>=c.min)||CATS[3];return'<div class="rpt-field"><span class="rf-lbl" style="font-size:10.5px">'+escH(sec.name)+'</span><span class="rf-val" style="color:'+sCat.col+'">'+ss.pct.toFixed(1)+'%</span></div>';}).join('')
+    +'</div>'
+    +'<div class="rpt-meta-box"><h5>Score Distribution</h5>'
+    +'<div class="rpt-field"><span class="rf-lbl">Excellent (5)</span><span class="rf-val" style="color:#059669">'+cnt[5]+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Good (4)</span><span class="rf-val" style="color:#2563EB">'+cnt[4]+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Average (3)</span><span class="rf-val" style="color:#D97706">'+cnt[3]+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Weak (2)</span><span class="rf-val" style="color:#EA580C">'+cnt[2]+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Poor (1)</span><span class="rf-val" style="color:#DC2626">'+cnt[1]+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Not Scored</span><span class="rf-val" style="color:#94A3B8">'+cnt[0]+'</span></div>'
+    +'</div></div>';
+  // Showroom evidence photos
+  const evCount=EVIDENCE_SLOTS.filter(sl=>S.showroomEvidence[sl.key]).length;
+  html+='<div class="rpt-evidence-section"><div class="rsb-hdr" style="border-radius:7px;margin-bottom:12px"><span>📸 Showroom Evidence Photos</span><span>'+evCount+' / 4 uploaded</span></div>'
+    +'<div class="rpt-evidence-grid">'
+    +EVIDENCE_SLOTS.map(slot=>{const url=S.showroomEvidence[slot.key];return'<div><span class="rpt-evidence-label">'+slot.icon+' '+escH(slot.label)+'</span>'+(url?'<img src="'+url+'" class="rpt-evidence-img">':'<div class="rpt-evidence-missing">No photo uploaded</div>')+'</div>';}).join('')
+    +'</div></div>';
+  // Signature
+  html+='<div class="rpt-sig">'
+    +'<div class="sig-line">Auditor Signature (CSE/DSE)<br><br>'+escH(h.cseDse||'')+'</div>'
+    +'<div class="sig-line">Dealer Representative Signature</div>'
+    +'<div class="sig-line">ASM / RM Signature<br><br>'+escH(h.asm||'')+'</div>'
+    +'</div>'
+    +'<div style="margin-top:16px;font-size:10px;color:#94A3B8;text-align:center">Generated: '+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' &middot; AIS Windows Channel Initiative &middot; Confidential</div>'
+    +'</div>';
+  document.getElementById('reportRoot').innerHTML=html;
 }
-
-// ════════════════════════════════════════════════════════════════
-//  EXPORT
-// ════════════════════════════════════════════════════════════════
+// ── EXPORT ─────────────────────────────────────────────────────
 function exportJSON(){
-  const sc=finalScore();
-  const cat=getCategory(sc);
-  const data={
-    exportedAt:new Date().toISOString(),
+  const sc=finalScore();const cat=getCategory(sc);
+  const data={exportedAt:new Date().toISOString(),
     auditInfo:{...S.header,finalScore:+sc.toFixed(2),category:cat.label},
-    sections:SECTIONS.map(sec=>{
-      const ss=secScore(sec.id);
-      return{
-        name:sec.name,
-        score:{actual:+ss.actual.toFixed(2),max:+ss.max.toFixed(2),pct:+ss.pct.toFixed(2)},
-        items:sec.items.map(it=>{
-          const is=IS(it.id);
-          return{
-            parameter:it.p,weight:it.w,critical:it.cr,
-            score:is.score,status:SLBL[is.score],
-            weightedScore:+(MULT[is.score]*it.w).toFixed(3),
-            observation:is.obs,targetDate:is.date,hasPhoto:!!is.photo
-          };
-        })
-      };
-    }),
-    statusCounts:statusCounts(),
-    criticalIssueCount:criticalIssues().length
-  };
-  dlFile(JSON.stringify(data,null,2),`audit-${S.header.dealer||"report"}-${S.header.auditDate}.json`,"application/json");
-  toast("JSON exported","ok");
+    sections:SECTIONS.map(sec=>{const ss=secScore(sec.id);return{name:sec.name,score:{actual:+ss.actual.toFixed(2),max:+ss.max.toFixed(2),pct:+ss.pct.toFixed(2)},
+      items:sec.items.map(it=>{const is=IS(it.id);const resp=is.responsiblePerson==='Other'?is.responsiblePersonOther:is.responsiblePerson;return{parameter:it.p,weight:it.w,critical:it.cr,score:is.score,status:SLBL[is.score],weightedScore:+(MULT[is.score]*it.w).toFixed(3),observation:is.obs,targetDate:is.date,responsiblePerson:resp||'',photo:is.photo||null};})};}),
+    showroomEvidence:Object.fromEntries(EVIDENCE_SLOTS.map(sl=>[sl.key,{label:sl.label,photo:S.showroomEvidence[sl.key]||null}])),
+    statusCounts:statusCounts(),itemsRequiringActionCount:itemsRequiringAction().length};
+  dlFile(JSON.stringify(data,null,2),'audit-'+(S.header.dealer||'report')+'-'+S.header.auditDate+'.json','application/json');
+  toast('JSON exported','ok');
 }
-
 function exportCSV(){
-  const rows=[["Section","Audit Parameter","Weight","Critical","Score","Status","Weighted Score","Observation","Target Date"]];
-  SECTIONS.forEach(sec=>{
-    sec.items.forEach(it=>{
-      const is=IS(it.id);
-      rows.push([
-        `"${sec.name}"`,`"${it.p.replace(/"/g,'""')}"`,fmtW(it.w),
-        it.cr?"Yes":"No",is.score||"",SLBL[is.score],
-        +(MULT[is.score]*it.w).toFixed(3),
-        `"${is.obs.replace(/"/g,'""')}"`,is.date||""
-      ]);
-    });
-  });
-  const sc=finalScore();
-  const cat=getCategory(sc);
+  const rows=[['Section','Audit Parameter','Weight','Score','Status','Weighted Score','Observation','Responsible Person','Target Date','Has Photo']];
+  SECTIONS.forEach(sec=>sec.items.forEach(it=>{
+    const is=IS(it.id);const resp=is.responsiblePerson==='Other'?is.responsiblePersonOther:is.responsiblePerson;
+    rows.push(['"'+sec.name+'"','"'+it.p.replace(/"/g,'""')+'"',fmtW(it.w),is.score||'',SLBL[is.score],+(MULT[is.score]*it.w).toFixed(3),'"'+is.obs.replace(/"/g,'""')+'"','"'+(resp||'').replace(/"/g,'""')+'"',is.date||'',is.photo?'Yes':'No']);
+  }));
+  const sc=finalScore();const cat=getCategory(sc);
   rows.push([]);
-  rows.push(["FINAL SCORE",sc.toFixed(2),"","","","","CATEGORY",cat.label]);
-  dlFile(rows.map(r=>r.join(",")).join("\n"),`audit-${S.header.dealer||"report"}-${S.header.auditDate}.csv`,"text/csv");
-  toast("CSV exported","ok");
+  rows.push(['FINAL SCORE',sc.toFixed(2),'','','','CATEGORY',cat.label]);
+  rows.push(['SHOWROOM EVIDENCE','Front Elevation','Reception','Indoor Branding','Showroom Inside']);
+  rows.push(['',S.showroomEvidence.frontElevation?'Uploaded':'Missing',S.showroomEvidence.reception?'Uploaded':'Missing',S.showroomEvidence.indoorBranding?'Uploaded':'Missing',S.showroomEvidence.showroomInside?'Uploaded':'Missing']);
+  dlFile(rows.map(r=>r.join(',')).join('\n'),'audit-'+(S.header.dealer||'report')+'-'+S.header.auditDate+'.csv','text/csv');
+  toast('CSV exported','ok');
 }
-
 function dlFile(content,name,type){
   const url=URL.createObjectURL(new Blob([content],{type}));
-  const a=Object.assign(document.createElement("a"),{href:url,download:name});
-  document.body.appendChild(a);a.click();
-  document.body.removeChild(a);URL.revokeObjectURL(url);
+  const a=Object.assign(document.createElement('a'),{href:url,download:name});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
-
-// ════════════════════════════════════════════════════════════════
-//  RESET
-// ════════════════════════════════════════════════════════════════
+// ── SHARE ──────────────────────────────────────────────────────
+function buildWAText(){
+  const sc=finalScore();const cat=getCategory(sc);const h=S.header;
+  const actions=itemsRequiringAction();const co=completion();
+  const SEP='\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b\u254b';
+  const icon=p=>p>=90?'\ud83d\udfe2':p>=70?'\ud83d\udfe1':p>=60?'\ud83d\udfe0':'\ud83d\udd34';
+  let t='\ud83c\udfe0 *AIS WINDOWS \u2013 SHOWROOM AUDIT REPORT*\n'+SEP+'\n\n';
+  t+='\ud83d\udccd *Dealer:* '+h.dealer+'\n\ud83c\udfd9 *Location:* '+h.city+', '+h.state+'\n';
+  t+='\ud83d\udccc *Territory:* '+h.territory+'  |  *Zone:* '+h.region+'\n\ud83d\udc54 *ASM/RM:* '+h.asm+'\n\n';
+  t+='\ud83d\udcc5 *Date:* '+h.auditDate+'\n\ud83d\udccb *Type:* '+h.auditType+'\n\ud83d\udc64 *CSE/DSE:* '+h.cseDse+'\n\n';
+  t+=SEP+'\n\ud83d\udcca *FINAL SCORE: '+sc.toFixed(1)+' / 100*\n\ud83c\udfc6 *CATEGORY: '+cat.label+'*\n';
+  t+='\u2705 *Items Scored: '+co.s+' / '+co.t+'*\n'+SEP+'\n\n';
+  t+='*Section-wise Performance:*\n';
+  SECTIONS.forEach(sec=>{const ss=secScore(sec.id);t+=icon(ss.pct)+' '+sec.name+': *'+ss.pct.toFixed(1)+'%*\n';});
+  if(actions.length){
+    t+='\n'+SEP+'\n\u26a0 *'+actions.length+' ITEM'+(actions.length>1?'S':'')+' REQUIRING ACTION:*\n';
+    actions.forEach(c=>{const is=IS(c.id);t+='\u2022 '+c.p+'\n  Score: '+SLBL[c.score]+(is.responsiblePerson?' | Resp: '+is.responsiblePerson:'')+(is.date?' | Target: '+is.date:'')+'\n';});
+  }
+  t+='\n'+SEP+'\n_AIS Windows \u2013 Channel Initiative Program_';
+  return t;
+}
+function buildEmailBody(){
+  const sc=finalScore();const cat=getCategory(sc);const h=S.header;
+  const actions=itemsRequiringAction();const cnt=statusCounts();const co=completion();
+  const LINE='='.repeat(56);const DASH='-'.repeat(40);
+  let b=LINE+'\nAIS WINDOWS \u2013 SHOWROOM AUDIT REPORT\nChannel Initiative Program\n'+LINE+'\n\n';
+  b+='DEALER DETAILS\n'+DASH+'\n';
+  b+='Dealer Name   : '+(h.dealer||'\u2014')+'\nCity          : '+(h.city||'\u2014')+'\nState         : '+(h.state||'\u2014')+'\n';
+  b+='Region / Zone : '+(h.region||'\u2014')+'\nTerritory     : '+(h.territory||'\u2014')+'\nASM / RM      : '+(h.asm||'\u2014')+'\n\n';
+  b+='AUDIT DETAILS\n'+DASH+'\n';
+  b+='CSE / DSE     : '+(h.cseDse||'\u2014')+'\nAudit Date    : '+(h.auditDate||'\u2014')+'\nAudit Type    : '+(h.auditType||'\u2014')+'\nItems Scored  : '+co.s+' / '+co.t+'\n\n';
+  b+=LINE+'\nFINAL SCORE : '+sc.toFixed(2)+' / 100\nCATEGORY    : '+cat.label+'\n'+LINE+'\n\n';
+  b+='SECTION-WISE PERFORMANCE\n'+DASH+'\n';
+  SECTIONS.forEach(sec=>{const ss=secScore(sec.id);const sCat=CATS.find(c=>ss.pct>=c.min)||CATS[3];b+=sec.name+'\n  Score: '+ss.actual.toFixed(2)+' / '+ss.max.toFixed(2)+' pts  |  '+ss.pct.toFixed(1)+'%  ['+sCat.label+']\n\n';});
+  b+='SCORE DISTRIBUTION\n'+DASH+'\n';
+  b+='Excellent (5):'+cnt[5]+'  Good (4):'+cnt[4]+'  Average (3):'+cnt[3]+'  Weak (2):'+cnt[2]+'  Poor (1):'+cnt[1]+'\n\n';
+  if(actions.length){
+    b+='ITEMS REQUIRING ACTION ('+actions.length+')\n'+DASH+'\n';
+    actions.forEach((c,i)=>{const is=IS(c.id);const resp=is.responsiblePerson==='Other'?is.responsiblePersonOther:is.responsiblePerson;b+=(i+1)+'. '+c.p+'\n   Section    : '+c.secName+'\n   Score      : '+c.score+' \u2013 '+SLBL[c.score]+'\n'+(is.obs?'   Observation: '+is.obs+'\n':'')+(resp?'   Responsible: '+resp+'\n':'')+(is.date?'   Target Date: '+is.date+'\n':'')+'\n';});
+  }
+  b+='ITEM-WISE DETAILS\n'+DASH+'\n';
+  SECTIONS.forEach(sec=>{b+='\n'+sec.name.toUpperCase()+'\n';sec.items.forEach((it,i)=>{const is=IS(it.id);const resp=is.responsiblePerson==='Other'?is.responsiblePersonOther:is.responsiblePerson;b+=(i+1)+'. '+it.p+'\n   Score: '+(is.score||'\u2014')+' ('+SLBL[is.score]+')  |  Weighted: '+(MULT[is.score]*it.w).toFixed(2)+(is.obs?'\n   Obs: '+is.obs:'')+(resp?'\n   Responsible: '+resp:'')+(is.date?'\n   Target: '+is.date:'')+'\n';});});
+  b+='\nSHOWROOM EVIDENCE PHOTOS\n'+DASH+'\n';
+  EVIDENCE_SLOTS.forEach(sl=>{b+=sl.label+': '+(S.showroomEvidence[sl.key]?'Uploaded':'Not uploaded')+'\n';});
+  b+='\n'+LINE+'\nGenerated: '+new Date().toLocaleString('en-IN')+'\nAIS Windows \u2013 Channel Initiative\n'+LINE+'\n';
+  return b;
+}
+async function buildReportPDF(){
+  const root=document.getElementById('reportRoot');
+  if(!root.innerHTML.includes('report-doc'))renderReport();
+  const el=root.querySelector('.report-doc');
+  if(!el)return null;
+  const rv=document.getElementById('view-report');
+  const hidden=!rv.classList.contains('active');
+  if(hidden){rv.style.cssText='display:block;position:absolute;left:-9999px;top:0;width:'+document.documentElement.clientWidth+'px';}
+  try{
+    const canvas=await html2canvas(el,{scale:2,useCORS:false,logging:false,backgroundColor:'#ffffff',allowTaint:true});
+    if(hidden)rv.style.cssText='';
+    const imgData=canvas.toDataURL('image/jpeg',0.88);
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pw=pdf.internal.pageSize.getWidth();
+    const ph=pdf.internal.pageSize.getHeight();
+    const ih=(canvas.height*pw)/canvas.width;
+    let y=0;
+    while(y<ih){if(y>0)pdf.addPage();pdf.addImage(imgData,'JPEG',0,-y,pw,ih);y+=ph;}
+    return pdf;
+  }catch(e){if(hidden)rv.style.cssText='';throw e;}
+}
+async function shareWhatsApp(){
+  const txt=buildWAText();
+  if(typeof html2canvas!=='undefined'&&typeof window.jspdf!=='undefined'){
+    try{
+      toast('Generating PDF report\u2026','info');
+      const pdf=await buildReportPDF();
+      if(pdf){
+        const fn='AIS-Audit-'+(S.header.dealer||'report').replace(/[^a-zA-Z0-9\-]/g,'_')+'-'+S.header.auditDate+'.pdf';
+        const blob=pdf.output('blob');
+        const file=new File([blob],fn,{type:'application/pdf'});
+        if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+          try{await navigator.share({files:[file],title:'AIS Windows Showroom Audit',text:'Audit Report \u2013 '+(S.header.dealer||'')});return;}catch(e){/*fall through*/}
+        }
+        pdf.save(fn);
+        toast('PDF saved! Now open WhatsApp to attach and send it.','ok');
+        setTimeout(()=>window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener'),1200);
+        return;
+      }
+    }catch(e){console.warn('PDF generation failed:',e);toast('PDF failed \u2013 sharing text summary instead.','info');}
+  }
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener');
+}
+async function shareEmail(){
+  const h=S.header;
+  const subject='AIS Windows Showroom Audit \u2013 '+(h.dealer||'Dealer')+' \u2013 '+(h.auditDate||new Date().toLocaleDateString('en-IN'));
+  const body=buildEmailBody();
+  if(typeof html2canvas!=='undefined'&&typeof window.jspdf!=='undefined'){
+    try{
+      toast('Generating PDF report\u2026','info');
+      const pdf=await buildReportPDF();
+      if(pdf){
+        const fn='AIS-Audit-'+(h.dealer||'report').replace(/[^a-zA-Z0-9\-]/g,'_')+'-'+h.auditDate+'.pdf';
+        pdf.save(fn);
+        toast('PDF downloaded! Please attach it to your email.','ok');
+        setTimeout(()=>{window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);},1200);
+        return;
+      }
+    }catch(e){console.warn('PDF email failed:',e);toast('PDF failed \u2013 opening text email instead.','info');}
+  }
+  window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+// ── RESET ──────────────────────────────────────────────────────
 function resetConfirm(){
-  if(!confirm("Reset the entire audit form? All entered data (scores, observations, photos) will be cleared.")) return;
-  // Reset state
-  SECTIONS.forEach(sec=>sec.items.forEach(it=>{S.items[it.id]={score:0,obs:"",date:"",photo:""}}));
-  S.header={zone:"",territory:"",dealer:"",city:"",state:"",region:"",asm:"",cseDse:"",auditDate:new Date().toISOString().split("T")[0],auditType:""};
+  if(!confirm('Reset the entire audit form? All scores, observations, photos, and data will be cleared.'))return;
+  SECTIONS.forEach(sec=>sec.items.forEach(it=>{S.items[it.id]={score:0,obs:'',date:'',responsiblePerson:'',responsiblePersonOther:'',photo:''};}));
+  S.showroomEvidence={frontElevation:'',reception:'',indoorBranding:'',showroomInside:''};
+  S.header={zone:'',territory:'',dealer:'',city:'',state:'',region:'',asm:'',cseDse:'',auditDate:new Date().toISOString().split('T')[0],auditType:''};
   S.clRendered=false;
-  // Reset form fields
-  ["zoneSelect","terrSelect"].forEach(id=>{const e=document.getElementById(id);if(e){e.value="";if(id==="terrSelect")e.disabled=true;}});
-  const ds=document.getElementById("dealerSearch");if(ds){ds.value="";ds.disabled=true;}
-  ["fCity","fState","fRegion","fASM","fCSE","fType"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
-  const fd=document.getElementById("fDate");if(fd)fd.value=S.header.auditDate;
-  curDealers=[];
-  switchView("setup");
-  toast("Form reset","info");
+  ['zoneSelect','terrSelect'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';if(id==='terrSelect')e.disabled=true;}});
+  const ds=document.getElementById('dealerSearch');if(ds){ds.value='';ds.disabled=true;}
+  ['fCity','fState','fRegion','fASM','fCSE','fType'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const fd=document.getElementById('fDate');if(fd)fd.value=S.header.auditDate;
+  curDealers=[];switchView('setup');toast('Form reset','info');
 }
-
-// ════════════════════════════════════════════════════════════════
-//  TOAST
-// ════════════════════════════════════════════════════════════════
-function toast(msg,type="info"){
-  const wrap=document.getElementById("toastWrap");
-  const t=document.createElement("div");
-  t.className=`toast toast-${type==="ok"?"ok":type==="err"?"err":"info"}`;
-  t.innerHTML=`<span>${type==="ok"?"✓":type==="err"?"⚠":"ℹ"}</span><span>${escH(msg)}</span>`;
+// ── TOAST ──────────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const wrap=document.getElementById('toastWrap');
+  const t=document.createElement('div');
+  t.className='toast toast-'+(type==='ok'?'ok':type==='err'?'err':'info');
+  t.innerHTML='<span>'+(type==='ok'?'✓':type==='err'?'⚠':'ℹ')+'</span><span>'+escH(msg)+'</span>';
   wrap.appendChild(t);
-  setTimeout(()=>{t.style.animation="toastOut .25s ease forwards";setTimeout(()=>t.remove(),260)},3200);
+  setTimeout(()=>{t.style.animation='toastOut .25s ease forwards';setTimeout(()=>t.remove(),260);},3200);
 }
-
-// ════════════════════════════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════════════
-//  SHARE — WHATSAPP
-// ════════════════════════════════════════════════════════════════
-function shareWhatsApp(){
-  const sc=finalScore();
-  const cat=getCategory(sc);
-  const h=S.header;
-  const ci=criticalIssues();
-  const co=completion();
-  const SEP='━━━━━━━━━━━━━━━━━━';
-
-  const icon=p=>p>=90?'🟢':p>=70?'🟡':p>=60?'🟠':'🔴';
-
-  let t=`🏠 *AIS WINDOWS – SHOWROOM AUDIT REPORT*\n${SEP}\n\n`;
-  t+=`📍 *Dealer:* ${h.dealer||'—'}\n`;
-  t+=`🏙 *City / State:* ${h.city||'—'}, ${h.state||'—'}\n`;
-  t+=`📌 *Territory:* ${h.territory||'—'}  |  *Zone:* ${h.region||'—'}\n`;
-  t+=`👔 *ASM / RM:* ${h.asm||'—'}\n\n`;
-  t+=`📅 *Audit Date:* ${h.auditDate||'—'}\n`;
-  t+=`📋 *Audit Type:* ${h.auditType||'—'}\n`;
-  t+=`👤 *Audited by (CSE/DSE):* ${h.cseDse||'—'}\n\n`;
-  t+=`${SEP}\n`;
-  t+=`📊 *FINAL SCORE: ${sc.toFixed(1)} / 100*\n`;
-  t+=`🏆 *CATEGORY: ${cat.label}*\n`;
-  t+=`✅ *Items Scored: ${co.s} / ${co.t}*\n`;
-  if(cat.override) t+=`⚠ _Downgraded: critical item scored Poor_\n`;
-  t+=`${SEP}\n\n`;
-  t+=`*Section-wise Performance:*\n`;
-  SECTIONS.forEach(sec=>{
-    const ss=secScore(sec.id);
-    t+=`${icon(ss.pct)} ${sec.name}\n    ${ss.actual.toFixed(1)} / ${ss.max.toFixed(1)} pts  (${ss.pct.toFixed(1)}%)\n`;
-  });
-  const cnt=statusCounts();
-  t+=`\n*Score Distribution:*\n`;
-  t+=`🟢 Excellent: ${cnt[5]}  🔵 Good: ${cnt[4]}  🟡 Average: ${cnt[3]}  🟠 Weak: ${cnt[2]}  🔴 Poor: ${cnt[1]}\n`;
-  if(ci.length){
-    t+=`\n${SEP}\n⚠ *${ci.length} CRITICAL ISSUE${ci.length>1?'S':''} FOUND:*\n`;
-    ci.forEach(c=>{
-      const is=IS(c.id);
-      t+=`• ${c.p}\n  Score: ${c.score} – ${SLBL[c.score]}`;
-      if(is.date) t+=`  |  Target: ${is.date}`;
-      t+='\n';
-    });
-  }
-  t+=`\n${SEP}\n_AIS Windows – Channel Sales Excellence Program_\n`;
-  t+=`_Report generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}_`;
-
-  const url='https://wa.me/?text='+encodeURIComponent(t);
-  window.open(url,'_blank','noopener');
-}
-
-// ════════════════════════════════════════════════════════════════
-//  SHARE — EMAIL
-// ════════════════════════════════════════════════════════════════
-function shareEmail(){
-  const sc=finalScore();
-  const cat=getCategory(sc);
-  const h=S.header;
-  const ci=criticalIssues();
-  const cnt=statusCounts();
-  const co=completion();
-  const LINE='='.repeat(56);
-  const DASH='-'.repeat(40);
-
-  const subject=`AIS Windows Showroom Audit – ${h.dealer||'Dealer'} – ${h.auditDate||new Date().toLocaleDateString('en-IN')}`;
-
-  let b=`${LINE}\n`;
-  b+=`AIS WINDOWS – SHOWROOM AUDIT REPORT\n`;
-  b+=`Channel Sales Excellence Program\n`;
-  b+=`${LINE}\n\n`;
-
-  b+=`DEALER DETAILS\n${DASH}\n`;
-  b+=`Dealer Name   : ${h.dealer||'—'}\n`;
-  b+=`City          : ${h.city||'—'}\n`;
-  b+=`State         : ${h.state||'—'}\n`;
-  b+=`Region / Zone : ${h.region||'—'}\n`;
-  b+=`Territory     : ${h.territory||'—'}\n`;
-  b+=`ASM / RM Name : ${h.asm||'—'}\n\n`;
-
-  b+=`AUDIT DETAILS\n${DASH}\n`;
-  b+=`CSE / DSE     : ${h.cseDse||'—'}\n`;
-  b+=`Audit Date    : ${h.auditDate||'—'}\n`;
-  b+=`Audit Type    : ${h.auditType||'—'}\n`;
-  b+=`Items Scored  : ${co.s} / ${co.t}\n\n`;
-
-  b+=`${LINE}\n`;
-  b+=`FINAL SCORE : ${sc.toFixed(2)} / 100\n`;
-  b+=`CATEGORY    : ${cat.label}\n`;
-  if(cat.override) b+=`NOTE        : Auto-downgraded – a Critical item received a Poor (1) score.\n`;
-  b+=`${LINE}\n\n`;
-
-  b+=`SECTION-WISE PERFORMANCE\n${DASH}\n`;
-  SECTIONS.forEach(sec=>{
-    const ss=secScore(sec.id);
-    const sCat=CATS.find(c=>ss.pct>=c.min)||CATS[3];
-    b+=`${sec.name}\n`;
-    b+=`  Score : ${ss.actual.toFixed(2)} / ${ss.max.toFixed(2)} pts\n`;
-    b+=`  Pct   : ${ss.pct.toFixed(1)}%  [${sCat.label}]\n\n`;
-  });
-
-  b+=`SCORE DISTRIBUTION\n${DASH}\n`;
-  b+=`Excellent (5) : ${cnt[5]}\n`;
-  b+=`Good      (4) : ${cnt[4]}\n`;
-  b+=`Average   (3) : ${cnt[3]}\n`;
-  b+=`Weak      (2) : ${cnt[2]}\n`;
-  b+=`Poor      (1) : ${cnt[1]}\n`;
-  b+=`Not Scored    : ${cnt[0]}\n\n`;
-
-  if(ci.length){
-    b+=`CRITICAL ISSUES (${ci.length} found)\n${DASH}\n`;
-    ci.forEach((c,i)=>{
-      const is=IS(c.id);
-      b+=`${i+1}. ${c.p}\n`;
-      b+=`   Section    : ${c.secName}\n`;
-      b+=`   Score      : ${c.score} – ${SLBL[c.score]}\n`;
-      if(is.obs) b+=`   Observation: ${is.obs}\n`;
-      if(is.date) b+=`   Target Date: ${is.date}\n`;
-      b+='\n';
-    });
-  }
-
-  b+=`ITEM-WISE DETAILS\n${DASH}\n`;
-  SECTIONS.forEach(sec=>{
-    b+=`\n${sec.name.toUpperCase()}\n`;
-    sec.items.forEach((it,i)=>{
-      const is=IS(it.id);
-      b+=`${i+1}. [${it.cr?'CRITICAL':'        '}] ${it.p}\n`;
-      b+=`   Weight: ${fmtW(it.w)}  |  Score: ${is.score||'—'} (${SLBL[is.score]})`+
-         `  |  Weighted Pts: ${(MULT[is.score]*it.w).toFixed(2)}\n`;
-      if(is.obs)  b+=`   Observation : ${is.obs}\n`;
-      if(is.date) b+=`   Target Date : ${is.date}\n`;
-    });
-  });
-
-  b+=`\n${LINE}\n`;
-  b+=`Generated     : ${new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}\n`;
-  b+=`Application   : AIS Windows Showroom Audit App\n`;
-  b+=`Program       : Channel Sales Excellence\n`;
-  b+=`Confidential  : For internal use only\n`;
-  b+=`${LINE}\n`;
-
-  // mailto — to: ASM/RM is not stored as email so left blank; user fills recipient
-  window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(b)}`;
-}
-
-document.addEventListener("DOMContentLoaded",()=>{
-  document.getElementById("fDate").value=S.header.auditDate;
-  // Close dealer dropdown on outside click
-  document.addEventListener("click",e=>{
-    if(!e.target.closest(".sd-wrap")){
-      document.getElementById("dealerDD").classList.add("hidden");
-    }
-  });
-  // Sync manual text fields on blur
-  document.getElementById("fCSE").addEventListener("change",function(){S.header.cseDse=this.value;});
-  document.getElementById("fDate").addEventListener("change",function(){S.header.auditDate=this.value;});
-  document.getElementById("fType").addEventListener("change",function(){S.header.auditType=this.value;});
+// ── INIT ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('fDate').value=S.header.auditDate;
+  document.addEventListener('click',e=>{if(!e.target.closest('.sd-wrap'))document.getElementById('dealerDD').classList.add('hidden');});
+  document.getElementById('fCSE').addEventListener('change',function(){S.header.cseDse=this.value;});
+  document.getElementById('fDate').addEventListener('change',function(){S.header.auditDate=this.value;});
+  document.getElementById('fType').addEventListener('change',function(){S.header.auditType=this.value;});
+  injectManifest();
+  registerSW();
+});
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredInstallPrompt=e;
+  const btn=document.getElementById('installBtn');if(btn)btn.classList.remove('hidden');
+});
+window.addEventListener('appinstalled',()=>{
+  toast('App installed successfully!','ok');
+  const btn=document.getElementById('installBtn');if(btn)btn.classList.add('hidden');
+  deferredInstallPrompt=null;
 });
 </script>
 </body>
