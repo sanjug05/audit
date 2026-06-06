@@ -59,6 +59,9 @@ body.dark #navbar{background:#060E1B;border-bottom:1px solid var(--border)}
 .nav-tab{padding:6px 14px;border:none;border-radius:8px;background:transparent;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s}
 .nav-tab:hover{background:rgba(255,255,255,.1);color:#fff}
 .nav-tab.active{background:var(--teal);color:#fff;box-shadow:0 2px 10px rgba(0,181,204,.35)}
+.nav-tab.frozen-tab{opacity:.35;cursor:not-allowed;pointer-events:none;}
+.frozen-banner{background:linear-gradient(135deg,var(--navy),var(--navy-3));border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12.5px;color:rgba(255,255,255,.85);font-weight:600;border:1px solid rgba(0,181,204,.3);}
+.frozen-banner-icon{font-size:16px;flex-shrink:0;}
 .nav-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
 .nav-icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .nav-icon-btn:hover{background:rgba(255,255,255,.15);color:#fff}
@@ -423,32 +426,39 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
   <div class="vc">
     <div class="vh">
       <div class="view-title">Audit Setup</div>
-      <div class="view-sub">Select dealer using zone → territory filters, then complete audit details</div>
+      <div class="view-sub">Select Territory / Zone Code first — Zone auto-populates, then pick your dealer</div>
     </div>
     <div class="card card-open">
       <div class="card-hd"><span class="card-hd-icon">🔍</span>
-        <div class="card-hd-text"><h3>Dealer Selection</h3><p>Use dependent filters: Zone → Territory → Dealer</p></div>
+        <div class="card-hd-text"><h3>Dealer Selection</h3><p>Select Territory / Zone Code first — Zone and Dealer will follow</p></div>
       </div>
       <div class="card-bd">
         <div class="grid-2" style="margin-bottom:14px">
-          <div class="fg"><label>Zone <span class="req">*</span></label>
-            <select id="zoneSelect" onchange="onZoneChange(this.value)">
-              <option value="">— Select Zone —</option>
-              <option value="West">West</option><option value="East">East</option>
-              <option value="South">South</option><option value="Delhi NCR">Delhi NCR</option>
-              <option value="RON">RON (Rest of North)</option><option value="North">North</option>
+          <div class="fg">
+            <label>Territory / Zone Code <span class="req">*</span></label>
+            <select id="terrSelect" onchange="onTerrChange(this.value)">
+              <option value="">&#8212; Select Territory / Zone Code &#8212;</option>
+              <option value="W1">W1 &mdash; West</option><option value="W2">W2 &mdash; West</option>
+              <option value="W3">W3 &mdash; West</option><option value="W4">W4 &mdash; West</option>
+              <option value="E1">E1 &mdash; East</option><option value="E2">E2 &mdash; East</option>
+              <option value="E3">E3 &mdash; East</option><option value="E4">E4 &mdash; East</option>
+              <option value="S1">S1 &mdash; South</option><option value="S2">S2 &mdash; South</option>
+              <option value="S3">S3 &mdash; South</option>
+              <option value="N1">N1 &mdash; RON</option><option value="N2">N2 &mdash; RON</option>
+              <option value="N3">N3 &mdash; Delhi NCR</option><option value="N4">N4 &mdash; RON</option>
+              <option value="N5">N5 &mdash; Delhi NCR</option><option value="N6">N6 &mdash; Delhi NCR</option>
+              <option value="N7">N7 &mdash; RON</option>
             </select>
           </div>
-          <div class="fg"><label>Territory / Zone Code <span class="req">*</span></label>
-            <select id="terrSelect" onchange="onTerrChange(this.value)" disabled>
-              <option value="">— Select Territory —</option>
-            </select>
+          <div class="fg">
+            <label>Zone <span style="font-size:10px;color:var(--text-muted);font-weight:400;text-transform:none">(auto-derived)</span></label>
+            <input type="text" id="zoneDisplay" readonly class="ro" placeholder="Auto-populated from territory code">
           </div>
         </div>
         <div class="fg">
           <label>Dealer Name <span class="req">*</span></label>
           <div class="sd-wrap">
-            <input type="text" id="dealerSearch" placeholder="Search or select dealer…" disabled autocomplete="off"
+            <input type="text" id="dealerSearch" placeholder="Select Territory / Zone Code first…" disabled autocomplete="off"
               oninput="onDealerInput(this.value)" onfocus="openSD()" onblur="setTimeout(closeSD,200)">
             <div id="dealerDD" class="sd-dropdown hidden"></div>
           </div>
@@ -503,7 +513,7 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
   <div class="vc">
     <div id="checklistRoot"></div>
     <div class="action-bar">
-      <button class="btn btn-secondary" onclick="switchView('setup')">← Back to Setup</button>
+      <button class="btn btn-secondary" id="clBackBtn" onclick="switchView('setup')">← Back to Setup</button>
       <button class="btn btn-primary" onclick="goSummary()">View Summary →</button>
     </div>
   </div>
@@ -678,6 +688,7 @@ const DEALERS=[
 {n:"Star Windows",t:"S3",z:"South",s:"Andhra Pradesh",c:"Nellore",a:"D V Sai Pradhyum"}
 ];
 const ZT={"West":["W1","W2","W3","W4"],"East":["E1","E2","E3","E4"],"South":["S1","S2","S3"],"Delhi NCR":["N3","N5","N6"],"RON":["N1","N2","N4","N7"],"North":["N6"]};
+const TZ={W1:"West",W2:"West",W3:"West",W4:"West",E1:"East",E2:"East",E3:"East",E4:"East",S1:"South",S2:"South",S3:"South",N1:"RON",N2:"RON",N4:"RON",N7:"RON",N3:"Delhi NCR",N5:"Delhi NCR",N6:"Delhi NCR"};
 // ── AUDIT SECTIONS ─────────────────────────────────────────────
 const SECTIONS=[
   {id:"s1",name:"Product Display & Demo Experience",items:[
@@ -731,7 +742,7 @@ const CATS=[
 ];
 // ── STATE ──────────────────────────────────────────────────────
 const S={
-  view:"setup",dark:false,clRendered:false,
+  view:"setup",dark:false,clRendered:false,frozen:false,
   header:{zone:"",territory:"",dealer:"",city:"",state:"",region:"",asm:"",cseDse:"",auditDate:"",auditType:""},
   items:{},
   showroomEvidence:{frontElevation:"",reception:"",indoorBranding:"",showroomInside:""}
@@ -822,21 +833,50 @@ async function installApp(){
 }
 // ── VIEW SWITCHING ─────────────────────────────────────────────
 function switchView(v){
+  if(S.frozen&&(v==='setup'||v==='checklist')){
+    toast('🔒 Audit is locked — the report is final and cannot be edited.','info');
+    return;
+  }
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   const idx=['setup','checklist','summary','report'].indexOf(v);
   document.querySelectorAll('.nav-tab')[idx].classList.add('active');
   S.view=v;
+  document.querySelectorAll('.nav-tab').forEach((tab,i)=>{
+    if(S.frozen&&(i===0||i===1))tab.classList.add('frozen-tab');
+    else tab.classList.remove('frozen-tab');
+  });
   const ssb=document.getElementById('ssb');
   if(v==='checklist'){
     ssb.classList.remove('hidden');
     if(!S.clRendered){renderChecklist();S.clRendered=true;}
     updateSSB();
+    if(S.frozen)applyFreezeUI();
   }else{ssb.classList.add('hidden');}
   if(v==='summary')renderSummary();
   if(v==='report')renderReport();
   window.scrollTo(0,0);
+}
+
+function applyFreezeUI(){
+  if(!S.frozen)return;
+  const bb=document.getElementById('clBackBtn');
+  if(bb)bb.style.display='none';
+  const root=document.getElementById('checklistRoot');
+  if(root&&!document.getElementById('frozenBannerCL')){
+    const banner=document.createElement('div');
+    banner.id='frozenBannerCL';
+    banner.className='frozen-banner';
+    banner.innerHTML='<span class="frozen-banner-icon">🔒</span><span>This audit is <strong>locked and final</strong>. All fields are read-only. Use the Report tab to view, print, or share.</span>';
+    root.insertBefore(banner,root.firstChild);
+  }
+  document.querySelectorAll('#view-checklist select, #view-checklist textarea, #view-checklist input[type="date"], #view-checklist input[type="text"]:not([readonly]), #view-checklist input[type="file"]').forEach(el=>{
+    el.disabled=true;el.style.opacity='0.5';el.style.pointerEvents='none';el.style.cursor='not-allowed';
+  });
+  document.querySelectorAll('#view-checklist .photo-btn, #view-checklist .photo-del, #view-checklist .ev-replace-btn').forEach(el=>{
+    el.style.display='none';
+  });
 }
 function toggleDark(){
   S.dark=!S.dark;document.body.classList.toggle('dark',S.dark);
@@ -844,20 +884,20 @@ function toggleDark(){
 }
 // ── DEALER DROPDOWN ────────────────────────────────────────────
 let curDealers=[];
-function onZoneChange(z){
-  S.header.zone=z;S.header.territory='';S.header.dealer='';clearAuto();
-  const ts=document.getElementById('terrSelect');
-  ts.innerHTML='<option value="">— Select Territory —</option>';
-  if(z&&ZT[z]){ZT[z].forEach(code=>{const o=document.createElement('option');o.value=o.textContent=code;ts.appendChild(o);});ts.disabled=false;}
-  else ts.disabled=true;
-  const di=document.getElementById('dealerSearch');di.value='';di.disabled=true;di.placeholder='Search or select dealer…';
-  document.getElementById('dealerDD').classList.add('hidden');
-}
 function onTerrChange(t){
-  S.header.territory=t;S.header.dealer='';clearAuto();
+  S.header.territory=t;
+  S.header.zone=TZ[t]||'';
+  S.header.dealer='';clearAuto();
+  const zd=document.getElementById('zoneDisplay');
+  if(zd)zd.value=S.header.zone||'';
   const di=document.getElementById('dealerSearch');di.value='';
-  if(t){curDealers=DEALERS.filter(d=>d.t===t).sort((a,b)=>a.n.localeCompare(b.n));di.disabled=false;di.placeholder='Search among '+curDealers.length+' dealers…';}
-  else{curDealers=[];di.disabled=true;di.placeholder='Search or select dealer…';}
+  if(t){
+    curDealers=DEALERS.filter(d=>d.t===t).sort((a,b)=>a.n.localeCompare(b.n));
+    di.disabled=false;
+    di.placeholder='Search among '+curDealers.length+' dealers…';
+  }else{
+    curDealers=[];di.disabled=true;di.placeholder='Select Territory / Zone Code first…';
+  }
   document.getElementById('dealerDD').classList.add('hidden');
 }
 function onDealerInput(q){if(curDealers.length)buildDD(q.trim());}
@@ -892,6 +932,7 @@ function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 // ── VALIDATION ─────────────────────────────────────────────────
 function validateSetup(){
   const e=[];
+  if(!S.header.territory)e.push('Territory / Zone Code is required');
   if(!S.header.dealer)e.push('Dealer Name is required');
   if(!S.header.cseDse)e.push('CSE/DSE Name is required');
   if(!S.header.auditDate)e.push('Audit Date is required');
@@ -926,6 +967,7 @@ function goChecklist(){
 function goSummary(){
   const errs=validateForSummary();
   if(errs.length){renderValidationBlocker(errs);return;}
+  S.frozen=true;
   switchView('summary');
 }
 // ── CHECKLIST RENDERING ────────────────────────────────────────
@@ -944,7 +986,7 @@ function bannerHTML(){
   return'<div class="aib" id="clBanner">'
     +'<div class="aib-item"><span class="aib-lbl">Dealer</span><span class="aib-val">'+escH(h.dealer||'—')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">City</span><span class="aib-val">'+escH(h.city||'—')+'</span></div>'
-    +'<div class="aib-item"><span class="aib-lbl">Territory</span><span class="aib-val">'+escH(h.territory||'—')+'</span></div>'
+    +'<div class="aib-item"><span class="aib-lbl">Territory / Zone Code</span><span class="aib-val">'+escH(h.territory||'—')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">Date</span><span class="aib-val">'+(h.auditDate||'—')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">Type</span><span class="aib-val">'+escH(h.auditType||'—')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">CSE/DSE</span><span class="aib-val">'+escH(h.cseDse||'—')+'</span></div>'
@@ -1119,7 +1161,7 @@ function renderSummary(){
   const sc=finalScore();const cat=getCategory(sc);const cnt=statusCounts();
   const actions=itemsRequiringAction();const co=completion();const h=S.header;
   const C=2*Math.PI*60;const off=C*(1-sc/100);
-  let html='<div class="vh"><div class="view-title">Audit Summary</div>'
+  let html=(S.frozen?'<div class="frozen-banner"><span class="frozen-banner-icon">🔒</span><span>This audit is <strong>locked and final</strong>. Setup and checklist fields cannot be edited.</span></div>':'')+'<div class="vh"><div class="view-title">Audit Summary</div>'
     +'<div class="view-sub">'+escH(h.dealer||'No dealer')+' · '+(h.auditDate||'No date')+' · '+escH(h.auditType||'No type')+'</div></div>'
     +'<div class="sum-grid">'
     +'<div class="score-card">'
@@ -1137,7 +1179,7 @@ function renderSummary(){
     +'<div class="info-row"><span class="info-lbl">City</span><span class="info-val">'+escH(h.city||'—')+'</span></div>'
     +'<div class="info-row"><span class="info-lbl">State</span><span class="info-val">'+escH(h.state||'—')+'</span></div>'
     +'<div class="info-row"><span class="info-lbl">Region / Zone</span><span class="info-val">'+escH(h.region||'—')+'</span></div>'
-    +'<div class="info-row"><span class="info-lbl">Territory</span><span class="info-val">'+escH(h.territory||'—')+'</span></div>'
+    +'<div class="info-row"><span class="info-lbl">Territory / Zone Code</span><span class="info-val">'+escH(h.territory||'—')+'</span></div>'
     +'<div class="info-row"><span class="info-lbl">ASM / RM</span><span class="info-val">'+escH(h.asm||'—')+'</span></div>'
     +'<div class="info-row"><span class="info-lbl">CSE / DSE</span><span class="info-val">'+escH(h.cseDse||'—')+'</span></div>'
     +'<div class="info-row"><span class="info-lbl">Audit Date</span><span class="info-val">'+escH(h.auditDate||'—')+'</span></div>'
@@ -1166,7 +1208,7 @@ function renderSummary(){
   const evCount=EVIDENCE_SLOTS.filter(s=>S.showroomEvidence[s.key]).length;
   html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 15px;margin-bottom:14px">'
     +'<div style="font-size:12.5px;font-weight:700;color:var(--text)">📸 Showroom Evidence Photos: <span style="color:'+(evCount===4?'var(--success)':'var(--warning)')+'">'+evCount+' / 4 uploaded</span></div></div>';
-  html+='<div class="action-bar"><button class="btn btn-secondary" onclick="switchView(\'checklist\')">← Back to Checklist</button><button class="btn btn-primary" onclick="switchView(\'report\')">Generate Report →</button></div>';
+  html+=(S.frozen?'<div class="action-bar"><button class="btn btn-primary" onclick="switchView(\'report\')">Generate Report →</button></div>':'<div class="action-bar"><button class="btn btn-secondary" onclick="switchView(\'checklist\')">← Back to Checklist</button><button class="btn btn-primary" onclick="switchView(\'report\')">Generate Report →</button></div>');
   document.getElementById('summaryRoot').innerHTML=html;
 }
 // ── REPORT ─────────────────────────────────────────────────────
@@ -1182,7 +1224,7 @@ function renderReport(){
     +'<div class="rpt-field"><span class="rf-lbl">City</span><span class="rf-val">'+escH(h.city||'—')+'</span></div>'
     +'<div class="rpt-field"><span class="rf-lbl">State</span><span class="rf-val">'+escH(h.state||'—')+'</span></div>'
     +'<div class="rpt-field"><span class="rf-lbl">Region / Zone</span><span class="rf-val">'+escH(h.region||'—')+'</span></div>'
-    +'<div class="rpt-field"><span class="rf-lbl">Territory</span><span class="rf-val">'+escH(h.territory||'—')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Territory / Zone Code</span><span class="rf-val">'+escH(h.territory||'—')+'</span></div>'
     +'<div class="rpt-field"><span class="rf-lbl">ASM / RM</span><span class="rf-val">'+escH(h.asm||'—')+'</span></div></div>'
     +'<div class="rpt-meta-box"><h5>Audit Details</h5>'
     +'<div class="rpt-field"><span class="rf-lbl">CSE / DSE</span><span class="rf-val">'+escH(h.cseDse||'—')+'</span></div>'
@@ -1436,15 +1478,19 @@ async function submitToSheets(){
 // ── RESET ──────────────────────────────────────────────────────
 function resetConfirm(){
   if(!confirm('Reset the entire audit form? All scores, observations, photos, and data will be cleared.'))return;
-  SECTIONS.forEach(sec=>sec.items.forEach(it=>{S.items[it.id]={score:0,obs:'',date:'',responsiblePerson:'',responsiblePersonOther:'',photo:''};}));
+  SECTIONS.forEach(sec=>sec.items.forEach(it=>{S.items[it.id]={score:0,obs:'',date:'',responsiblePerson:'',responsiblePersonOther:'',photo:''}}));
   S.showroomEvidence={frontElevation:'',reception:'',indoorBranding:'',showroomInside:''};
   S.header={zone:'',territory:'',dealer:'',city:'',state:'',region:'',asm:'',cseDse:'',auditDate:new Date().toISOString().split('T')[0],auditType:''};
-  S.clRendered=false;
-  ['zoneSelect','terrSelect'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';if(id==='terrSelect')e.disabled=true;}});
-  const ds=document.getElementById('dealerSearch');if(ds){ds.value='';ds.disabled=true;}
+  S.clRendered=false;S.frozen=false;
+  const ts=document.getElementById('terrSelect');if(ts)ts.value='';
+  const zd=document.getElementById('zoneDisplay');if(zd)zd.value='';
+  const ds=document.getElementById('dealerSearch');if(ds){ds.value='';ds.disabled=true;ds.placeholder='Select Territory / Zone Code first…';}
   ['fCity','fState','fRegion','fASM','fCSE','fType'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const fd=document.getElementById('fDate');if(fd)fd.value=S.header.auditDate;
-  curDealers=[];switchView('setup');toast('Form reset','info');
+  curDealers=[];
+  const fb=document.getElementById('frozenBannerCL');if(fb)fb.remove();
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('frozen-tab'));
+  switchView('setup');toast('Form reset','info');
 }
 // ── TOAST ──────────────────────────────────────────────────────
 function toast(msg,type='info'){
