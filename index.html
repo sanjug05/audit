@@ -329,7 +329,7 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
   </div>
   <div class="nav-actions">
     <button class="nav-icon-btn" id="adminLoginBtn" onclick="showAdminLogin()" title="Admin Login">&#128272;</button>
-    <button class="install-chip hidden no-print" id="installBtn" onclick="installApp()" title="Install app on this device">&#8853; Install</button>
+    <button class="install-chip hidden no-print" id="installBtn" onclick="enhancedInstallApp()" title="Install app on this device">&#8853; Install</button>
     <button class="nav-icon-btn" onclick="toggleDark()" id="darkBtn" title="Toggle dark mode">&#127769;</button>
     <button class="nav-icon-btn no-print" onclick="resetConfirm()" title="Reset form">&#8634;</button>
   </div>
@@ -352,7 +352,8 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
 <div id="view-setup" class="view active">
   <div class="vc">
     <div class="vh"><div class="view-title">Audit Setup</div><div class="view-sub">Select Territory / Zone Code &#8212; Zone and Dealer list auto-populate</div></div>
-    <div class="card card-open">
+    <div id="installCard" class="hidden" style="background:linear-gradient(135deg,var(--navy),var(--navy-3));border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;border:1.5px solid rgba(0,181,204,.3)"><div style="font-size:28px">&#128241;</div><div style="flex:1;min-width:180px"><div style="font-weight:800;color:#fff;font-size:13px">Install AIS Audit App</div><div style="color:rgba(255,255,255,.6);font-size:11.5px;margin-top:3px">Works offline &middot; Fast &middot; Automatic updates</div></div><button id="installCardBtn" onclick="enhancedInstallApp()" class="btn btn-primary">&#8853; Install App</button><button onclick="document.getElementById('installCard').classList.add('hidden')" style="background:transparent;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:18px">&#10005;</button></div>
+<div class="card card-open">
       <div class="card-hd"><span class="card-hd-icon">&#128269;</span><div class="card-hd-text"><h3>Dealer Selection</h3><p>Select Territory / Zone Code &#8212; Zone and Dealer list auto-populate</p></div></div>
       <div class="card-bd">
         <div class="grid-2" style="margin-bottom:14px">
@@ -460,6 +461,22 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
     </div>
   </div>
 </div>
+<!-- iOS Install Modal -->
+<div class="modal-ov hidden" id="iosInstallModal" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="modal-box" style="max-width:360px;width:100%" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="document.getElementById('iosInstallModal').classList.add('hidden')">&#10005;</button>
+    <div style="padding:10px 4px 4px">
+      <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px">&#128241; Install on iPhone / iPad</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px">Safari does not support auto-install. Follow these steps:</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:12px;align-items:center"><div style="width:30px;height:30px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0">1</div><div style="font-size:13px;color:var(--text)">Tap the <b>Share</b> button &#9083; at the bottom of Safari</div></div>
+        <div style="display:flex;gap:12px;align-items:center"><div style="width:30px;height:30px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0">2</div><div style="font-size:13px;color:var(--text)">Scroll down and tap <b>&#8220;Add to Home Screen&#8221;</b></div></div>
+        <div style="display:flex;gap:12px;align-items:center"><div style="width:30px;height:30px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0">3</div><div style="font-size:13px;color:var(--text)">Tap <b>Add</b> in the top-right corner</div></div>
+      </div>
+      <div style="margin-top:18px;padding:12px;background:var(--teal-glow);border-radius:var(--r-sm);font-size:12px;color:var(--teal);font-weight:600">&#9432; Once installed, the app works fully offline and updates automatically.</div>
+    </div>
+  </div>
+</div>
 <!-- VIEW 5: DASHBOARD -->
 <div id="view-dashboard" class="view">
   <div class="vc" id="dashRoot">
@@ -477,6 +494,8 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
     <img id="modalImg" src="" alt="Photo preview">
   </div>
 </div>
+
+<div id="updateBanner" class="hidden" style="position:fixed;bottom:38px;left:0;right:0;z-index:400;display:flex;justify-content:center;padding:0 14px;pointer-events:none"><div style="background:linear-gradient(90deg,#0B8043,#0F9D58);color:#fff;border-radius:12px;padding:11px 18px;box-shadow:0 4px 24px rgba(0,0,0,.35);display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;max-width:460px;width:100%;pointer-events:auto"><span style="flex:1">&#128260; App update available</span><button id="updateNowBtn" onclick="doAppUpdate()" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.5);color:#fff;border-radius:7px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">&#8635; Update Now</button><button onclick="document.getElementById('updateBanner').classList.add('hidden')" style="background:transparent;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:18px;line-height:1;padding:0 2px">&#10005;</button></div></div>
 <footer class="app-footer no-print">AIS Windows Channel Initiative &middot; Confidential</footer>
 <div class="toast-wrap" id="toastWrap"></div>
 <script>
@@ -756,7 +775,7 @@ function pickDealer(name){
   document.getElementById('fCity').value=d.c;document.getElementById('fState').value=d.s;
   document.getElementById('fRegion').value=d.z;document.getElementById('fASM').value=d.a;
   document.getElementById('dealerDD').classList.add('hidden');
-  if(S.clRendered)refreshBanner();toast('Dealer: '+d.n,'ok');
+  if(S.clRendered)refreshBanner();fetchLastAudit(d.n);toast('Dealer: '+d.n,'ok');
 }
 function clearAuto(){
   S.header.dealer=S.header.city=S.header.state=S.header.region=S.header.asm='';
@@ -799,7 +818,7 @@ function goChecklist(){const e=validateSetup();if(e.length){toast(e[0],'err');re
 // CHANGE 2: freeze on first successful summary navigation
 function goSummary(){
   const errs=validateForSummary();if(errs.length){renderValidationBlocker(errs);return;}
-  if(!S.frozen){S.frozen=true;lockNavSetup();}
+  if(!S.frozen){S.frozen=true;lockNavSetup();captureGPS();}
   switchView('summary');
 }
 function renderChecklist(){
@@ -820,7 +839,7 @@ function bannerHTML(){
     +'<div class="aib-item"><span class="aib-lbl">Zone</span><span class="aib-val">'+escH(h.zone||'\u2014')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">Date</span><span class="aib-val">'+(h.auditDate||'\u2014')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">Type</span><span class="aib-val">'+escH(h.auditType||'\u2014')+'</span></div>'
-    +'<div class="aib-item"><span class="aib-lbl">CSE/DSE</span><span class="aib-val">'+escH(h.cseDse||'\u2014')+'</span></div>'
+    +'<div class="aib-item"><span class="aib-lbl">CSE/DSE</span><span class="aib-val">'+escH(h.cseDse||'\u2014')+'</span></div>'+(h.gps?'<div class="aib-item"><span class="aib-lbl">GPS</span><span class="aib-val"><a href="https://maps.google.com/?q='+h.gps.lat+','+h.gps.lng+'" target="_blank" style="color:#5EEAD4;text-decoration:none">\uD83D\uDCCD '+h.gps.lat+', '+h.gps.lng+'</a></span></div>':'')
     +'</div>';
 }
 function refreshBanner(){const b=document.getElementById('clBanner');if(b)b.outerHTML=bannerHTML();}
@@ -854,7 +873,7 @@ function itemHTML(it,sid){
     +'</div></div>'
     +'<div class="fg" style="margin-top:10px">'
     +'<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Observation / Action Required</label>'
-    +'<textarea id="obs-'+it.id+'" rows="2" placeholder="Enter observation or action required\u2026" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);resize:vertical;min-height:50px;outline:none;width:100%;font-family:var(--font);font-size:12.5px" onchange="S.items[\''+it.id+'\'].obs=this.value">'+escH(is.obs)+'</textarea>'
+    +'<textarea id="obs-'+it.id+'" rows="2" placeholder="Enter observation or action required\u2026" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);resize:vertical;min-height:50px;outline:none;width:100%;font-family:var(--font);font-size:12.5px" onchange="saveDraft();S.items[\''+it.id+'\'].obs=this.value">'+escH(is.obs)+'</textarea>'
     +'</div>'
     +'<div id="critextra-'+it.id+'"'+(cf?'':' class="hidden"')+'>'+(cf?critExtraHTML(it.id):'')+'</div>'
     +'</div>';
@@ -902,7 +921,7 @@ function onScore(id,sid,score){
   const extra=document.getElementById('critextra-'+id);
   if(extra){if(cf){extra.innerHTML=critExtraHTML(id);extra.classList.remove('hidden');}else extra.classList.add('hidden');}
   const row=document.getElementById('ir-'+id);if(row)row.classList.remove('item-needs-action');
-  updateSecIndicator(sid);updateSSB();
+  updateSecIndicator(sid);updateSSB();saveDraft();
 }
 function findItem(id){for(const sec of SECTIONS){const it=sec.items.find(i=>i.id===id);if(it)return it;}return null;}
 function updateSecIndicator(sid){
@@ -1026,7 +1045,7 @@ function renderReport(){
     +'<div class="rpt-meta-box"><h5>Audit Details</h5>'
     +'<div class="rpt-field"><span class="rf-lbl">CSE / DSE</span><span class="rf-val">'+escH(h.cseDse||'\u2014')+'</span></div>'
     +'<div class="rpt-field"><span class="rf-lbl">Audit Date</span><span class="rf-val">'+escH(h.auditDate||'\u2014')+'</span></div>'
-    +'<div class="rpt-field"><span class="rf-lbl">Audit Type</span><span class="rf-val">'+escH(h.auditType||'\u2014')+'</span></div>'
+    +'<div class="rpt-field"><span class="rf-lbl">Audit Type</span><span class="rf-val">'+escH(h.auditType||'\u2014')+'</span></div>'+(h.gps?'<div class="rpt-field"><span class="rf-lbl">GPS Location</span><span class="rf-val"><a href="https://maps.google.com/?q='+h.gps.lat+','+h.gps.lng+'" target="_blank" style="color:var(--teal);font-weight:700">\uD83D\uDCCD View on Map</a> <span style="font-size:10px;color:#94A3B8">(\u00b1'+h.gps.accuracy+'m)</span></span></div>':'')
     +'<div class="rpt-field"><span class="rf-lbl">Final Score</span><span class="rf-val" style="color:'+cat.col+'">'+sc.toFixed(2)+'</span></div>'
     +'<div class="rpt-field"><span class="rf-lbl">Category</span><span class="rf-val">'+cat.label+'</span></div>'
     +'<div class="rpt-field"><span class="rf-lbl">Items Requiring Action</span><span class="rf-val" style="color:'+(actions.length?'#DC2626':'#059669')+'">'+actions.length+'</span></div></div></div>';
@@ -1207,6 +1226,7 @@ async function submitToSheets(){
     territory:h.territory,asm:h.asm,cseDse:h.cseDse,auditDate:h.auditDate,auditType:h.auditType,
     finalScore:+sc.toFixed(2),category:cat.label,excellent:cnt[5],good:cnt[4],average:cnt[3],weak:cnt[2],poor:cnt[1],notScored:cnt[0],
     itemsRequiringAction:actions.length,evidencePhotos:evCount,
+    gpsLat:h.gps?h.gps.lat:'',gpsLng:h.gps?h.gps.lng:'',gpsAccuracy:h.gps?h.gps.accuracy:'',gpsLink:h.gps?'https://maps.google.com/?q='+h.gps.lat+','+h.gps.lng:'',
     sections:SECTIONS.map(sec=>{const ss=secScore(sec.id);return{name:sec.name,pct:+ss.pct.toFixed(1),actual:+ss.actual.toFixed(2),max:+ss.max.toFixed(2)};}),
     items:SECTIONS.flatMap(sec=>sec.items.map(it=>{
       const is=IS(it.id);const resp=is.responsiblePerson==='Other'?(is.responsiblePersonOther||'Other'):is.responsiblePerson;
@@ -1254,7 +1274,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('fCSE').addEventListener('change',function(){S.header.cseDse=this.value;});
   document.getElementById('fDate').addEventListener('change',function(){S.header.auditDate=this.value;});
   document.getElementById('fType').addEventListener('change',function(){S.header.auditType=this.value;});
-  injectManifest();registerSW();initFirebase();
+  injectManifest();registerSW();initFirebase();checkAppVersion();checkDraft();
 });
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();deferredInstallPrompt=e;
@@ -1269,12 +1289,12 @@ window.addEventListener('appinstalled',()=>{
 // ── FIREBASE CONFIG ────────────────────────────────────────────
 // TODO: Replace with your Firebase project config values
 const FB_CONFIG = {
-  apiKey:            "AIzaSyDav3rI7fTr8KrXYxvnz5LB82CgjRq4v20",
-  authDomain:        "ais-showroom-dashboard.firebaseapp.com",
-  projectId:         "ais-showroom-dashboard",
-  storageBucket:     "ais-showroom-dashboard.firebasestorage.app",
-  messagingSenderId: "175667492150",
-  appId:             "1:175667492150:web:cb124eb267b4689e6a2f97"
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
 };
 let fbDb = null, fbAuth = null, currentAdmin = null;
 const DA = { all:[], filtered:[], charts:{} };
@@ -1656,6 +1676,354 @@ function renderTables(){
       tbl(['Audit Parameter','Times Scored Poor / Weak'],
         fRows.map(r=>tr('<span style="font-size:11.5px">'+escH(r[0])+'</span>',
           '<span style="font-weight:800;color:var(--danger)">'+r[1]+'</span>')))) : '');
+  renderReauditTable();
+}
+
+
+// ── APP VERSION & UPDATE ──────────────────────────────────────
+const APP_VERSION='2.2.0';
+
+function checkAppVersion(){
+  const prev=localStorage.getItem('ais_app_version');
+  localStorage.setItem('ais_app_version',APP_VERSION);
+  if(prev&&prev!==APP_VERSION){
+    setTimeout(()=>toast('\u2705 App updated to v'+APP_VERSION,'ok'),800);
+  }
+}
+
+let _updateReg=null;
+function showUpdateBanner(reg){
+  _updateReg=reg;
+  const b=document.getElementById('updateBanner');
+  if(b)b.classList.remove('hidden');
+}
+function doAppUpdate(){
+  if(_updateReg&&_updateReg.waiting){
+    _updateReg.waiting.postMessage('SKIP_WAITING');
+  }else{
+    // Force reload clearing cache
+    if('caches' in window){
+      caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k))))
+        .then(()=>window.location.reload(true));
+    }else{
+      window.location.reload(true);
+    }
+  }
+}
+
+// ── IMPROVED SERVICE WORKER ───────────────────────────────────
+// Overrides the registerSW defined earlier; called from DOMContentLoaded
+(function overrideSW(){
+  const _orig=window.registerSW;
+  window.registerSW=function(){
+    if(!('serviceWorker' in navigator))return;
+    const CACHE='ais-audit-v'+APP_VERSION;
+    const swCode=`
+const C='${CACHE}';
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(C).then(c=>c.addAll(['./index.html','./']).catch(()=>{})));
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(
+    caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==C).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+  );
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  if(e.request.mode==='navigate'){
+    e.respondWith(
+      fetch(e.request).then(r=>{
+        const cl=r.clone();
+        caches.open(C).then(c=>c.put(e.request,cl));
+        return r;
+      }).catch(()=>caches.match(e.request))
+    );
+    return;
+  }
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>r)));
+});
+self.addEventListener('message',e=>{
+  if(e&&e.data==='SKIP_WAITING')self.skipWaiting();
+});`.replace('${CACHE}',CACHE);
+    try{
+      const blob=new Blob([swCode],{type:'application/javascript'});
+      let refreshing=false;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(!refreshing){refreshing=true;window.location.reload();}
+      });
+      navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'})
+        .then(reg=>{
+          if(reg.waiting&&navigator.serviceWorker.controller)showUpdateBanner(reg);
+          reg.addEventListener('updatefound',()=>{
+            const sw=reg.installing;
+            if(!sw)return;
+            sw.addEventListener('statechange',()=>{
+              if(sw.state==='installed'&&navigator.serviceWorker.controller)
+                showUpdateBanner(reg);
+            });
+          });
+          // Periodic update check every 30 min
+          setInterval(()=>reg.update(),30*60*1000);
+        }).catch(e=>console.log('[SW]',e.message));
+    }catch(e){console.log('[SW]',e);}
+  };
+})();
+
+// Show install card when PWA is installable
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  const btn=document.getElementById('installBtn');
+  if(btn)btn.classList.remove('hidden');
+  const card=document.getElementById('installCard');
+  if(card)card.classList.remove('hidden');
+});
+window.addEventListener('appinstalled',()=>{
+  toast('App installed successfully!','ok');
+  const btn=document.getElementById('installBtn');if(btn)btn.classList.add('hidden');
+  const card=document.getElementById('installCard');if(card)card.classList.add('hidden');
+  deferredInstallPrompt=null;
+});
+
+// iOS: show install card in Safari even without beforeinstallprompt
+document.addEventListener('DOMContentLoaded',()=>{
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.navigator.standalone;
+  if(isIOS){
+    const card=document.getElementById('installCard');
+    if(card)card.classList.remove('hidden');
+    const btn=document.getElementById('installCardBtn');
+    if(btn)btn.textContent='\u2295 Add to Home Screen';
+  }
+});
+
+function enhancedInstallApp(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(r=>{
+      if(r.outcome==='accepted')toast('Installing app\u2026','ok');
+      deferredInstallPrompt=null;
+      const card=document.getElementById('installCard');if(card)card.classList.add('hidden');
+    });
+  }else if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
+    showIOSInstall();
+  }else{
+    toast('Use Chrome or Edge on Android for one-tap install','info');
+  }
+}
+function showIOSInstall(){
+  document.getElementById('iosInstallModal').classList.remove('hidden');
+}
+
+// ── DRAFT & RESUME ────────────────────────────────────────────
+const DRAFT_KEY='ais_audit_draft_v2';
+
+function saveDraft(){
+  if(S.frozen)return;
+  try{
+    const draft={
+      header:S.header,
+      items:S.items,
+      savedAt:new Date().toISOString(),
+      _v:APP_VERSION
+    };
+    localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+  }catch(e){console.warn('[Draft] Save failed:',e.message);}
+}
+
+function clearDraft(){localStorage.removeItem(DRAFT_KEY);}
+
+function checkDraft(){
+  try{
+    const raw=localStorage.getItem(DRAFT_KEY);
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    if(!d.header||!d.header.dealer)return;
+    showDraftBanner(d);
+  }catch(e){}
+}
+
+function showDraftBanner(draft){
+  const existing=document.getElementById('draftBanner');
+  if(existing)existing.remove();
+  const root=document.querySelector('#view-setup .vc');
+  if(!root)return;
+  const ago=formatTimeAgo(draft.savedAt);
+  const scored=Object.values(draft.items||{}).filter(i=>i.score>0).length;
+  const el=document.createElement('div');
+  el.id='draftBanner';
+  el.style.cssText='background:linear-gradient(135deg,var(--navy),var(--navy-3));border-radius:var(--r);'
+    +'padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;'
+    +'margin-bottom:14px;flex-wrap:wrap;border:1.5px solid rgba(0,181,204,.35)';
+  el.innerHTML='<div style="flex:1;min-width:180px">'
+    +'<div style="font-weight:800;color:#fff;font-size:13px">&#128203; Unsaved Draft Found</div>'
+    +'<div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:3px">'
+    +escH(draft.header.dealer)+' &middot; '+scored+' items scored &middot; '+ago+'</div></div>'
+    +'<div style="display:flex;gap:8px;flex-shrink:0">'
+    +'<button class="btn btn-primary" onclick="restoreDraft()">Continue Draft</button>'
+    +'<button class="btn btn-secondary" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6)" '
+    +'onclick="discardDraft()">Discard</button></div>';
+  // Insert as first child after any installCard
+  const installCard=document.getElementById('installCard');
+  if(installCard&&installCard.parentNode===root){
+    installCard.after(el);
+  }else{
+    root.insertBefore(el,root.firstChild);
+  }
+}
+
+function restoreDraft(){
+  try{
+    const raw=localStorage.getItem(DRAFT_KEY);
+    if(!raw)return;
+    const draft=JSON.parse(raw);
+    // Restore header
+    Object.assign(S.header,draft.header);
+    // Restore items
+    if(draft.items) Object.assign(S.items,draft.items);
+    // Update setup UI
+    const ts=document.getElementById('terrSelect');
+    if(ts){
+      ts.value=S.header.territory||'';
+      if(S.header.territory){
+        curDealers=DEALERS.filter(d=>d.t===S.header.territory).sort((a,b)=>a.n.localeCompare(b.n));
+        const di=document.getElementById('dealerSearch');
+        if(di){di.disabled=false;di.value=S.header.dealer||'';}
+        const zd=document.getElementById('zoneDisplay');
+        if(zd)zd.value=S.header.zone||'';
+      }
+    }
+    const el=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val||'';};
+    el('fCity',S.header.city);el('fState',S.header.state);
+    el('fRegion',S.header.region);el('fASM',S.header.asm);
+    el('fCSE',S.header.cseDse);el('fDate',S.header.auditDate);
+    const ft=document.getElementById('fType');if(ft)ft.value=S.header.auditType||'';
+    // Force checklist re-render with restored scores
+    S.clRendered=false;
+    const db=document.getElementById('draftBanner');if(db)db.remove();
+    toast('Draft restored \u2013 '+Object.values(S.items).filter(i=>i.score>0).length+' items scored','ok');
+    goChecklist();
+  }catch(e){toast('Could not restore draft: '+e.message,'err');}
+}
+
+function discardDraft(){
+  clearDraft();
+  const db=document.getElementById('draftBanner');if(db)db.remove();
+  toast('Draft discarded','info');
+}
+
+function formatTimeAgo(iso){
+  if(!iso)return '';
+  const d=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+  if(d<60)return 'just now';
+  if(d<3600)return Math.floor(d/60)+'m ago';
+  if(d<86400)return Math.floor(d/3600)+'h ago';
+  return Math.floor(d/86400)+'d ago';
+}
+
+// Clear draft when audit is successfully submitted
+const _origSubmit=window.submitToSheets;
+// Hook clearDraft on successful sheet save (toast check)
+(function(){
+  const orig=window.toast;
+  window.toast=function(msg,type){
+    orig(msg,type);
+    if(type==='ok'&&msg.includes('Google Sheets'))clearDraft();
+  };
+})();
+
+// ── GPS STAMP ─────────────────────────────────────────────────
+function captureGPS(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      S.header.gps={
+        lat:+pos.coords.latitude.toFixed(6),
+        lng:+pos.coords.longitude.toFixed(6),
+        accuracy:Math.round(pos.coords.accuracy)
+      };
+      console.log('[GPS]',S.header.gps);
+    },
+    err=>console.warn('[GPS]',err.message),
+    {timeout:8000,enableHighAccuracy:true,maximumAge:0}
+  );
+}
+
+// ── PREVIOUS AUDIT BADGE ──────────────────────────────────────
+function fetchLastAudit(dealerName){
+  if(!fbDb)return;
+  fbDb.collection('audits')
+    .where('dealer','==',dealerName)
+    .orderBy('auditDate','desc')
+    .limit(1)
+    .get()
+    .then(snap=>{
+      if(snap.empty)return;
+      showLastAuditBadge(snap.docs[0].data());
+    })
+    .catch(()=>{});
+}
+
+function showLastAuditBadge(a){
+  const old=document.getElementById('lastAuditBadge');if(old)old.remove();
+  const sc=a.finalScore||0;
+  const col=sc>=90?'#7C3AED':sc>=70?'#D97706':sc>=60?'#64748B':'#DC2626';
+  const el=document.createElement('div');
+  el.id='lastAuditBadge';
+  el.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);'
+    +'padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;'
+    +'flex-wrap:wrap;box-shadow:var(--shadow-xs)';
+  el.innerHTML='<span style="font-size:10.5px;font-weight:700;color:var(--text-muted);'
+    +'text-transform:uppercase;letter-spacing:.07em">Last Audit</span>'
+    +'<span style="font-size:22px;font-weight:800;color:'+col+'">'+sc.toFixed(1)+'</span>'
+    +'<span style="font-size:12px;font-weight:700;color:'+col+'">'+escH(a.category||'\u2014')+'</span>'
+    +'<span style="font-size:12px;color:var(--text-muted)">'+escH(a.auditDate||'')+'</span>'
+    +'<span style="font-size:11.5px;color:var(--text-muted)">by '+escH(a.cseDse||'\u2014')+'</span>'
+    +(a.auditType?'<span style="font-size:11px;color:var(--text-muted)">\u00b7 '+escH(a.auditType)+'</span>':'');
+  const dealerCard=document.querySelector('.card-open');
+  if(dealerCard)dealerCard.after(el);
+}
+
+// ── RE-AUDIT TABLE (added to dashboard) ──────────────────────
+function renderReauditTable(){
+  const el=document.getElementById('dashTables');if(!el)return;
+  const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString().split('T')[0];
+  const latestMap={};
+  DA.all.forEach(a=>{
+    if(!a.dealer)return;
+    if(!latestMap[a.dealer]||a.auditDate>latestMap[a.dealer].date)
+      latestMap[a.dealer]={date:a.auditDate,score:a.finalScore||0,
+        region:a.region||'',territory:a.territory||'',cseDse:a.cseDse||''};
+  });
+  const overdue=Object.entries(latestMap)
+    .filter(([,v])=>v.date<cutoff)
+    .sort((a,b)=>a[1].date.localeCompare(b[1].date))
+    .slice(0,25);
+  if(!overdue.length)return;
+  const today=new Date().toISOString().split('T')[0];
+  const daysSince=d=>{
+    const ms=new Date(today).getTime()-new Date(d).getTime();
+    return Math.floor(ms/86400000);
+  };
+  const th=(...cols)=>'<tr>'+cols.map(c=>'<th style="padding:7px 10px;background:var(--surface-2);'
+    +'border-bottom:2px solid var(--border);font-size:10.5px;font-weight:700;color:var(--text-2);'
+    +'text-transform:uppercase;letter-spacing:.05em;text-align:left">'+c+'</th>').join('')+'</tr>';
+  const tr2=(...cells)=>'<tr style="border-bottom:1px solid var(--border-2)">'+cells.map(c=>
+    '<td style="padding:7px 10px;font-size:12px;color:var(--text)">'+c+'</td>').join('')+'</tr>';
+  const rows=overdue.map(([name,v])=>{
+    const days=daysSince(v.date);
+    const urgency=days>60?'color:#DC2626;font-weight:700':days>45?'color:#D97706;font-weight:700':'color:var(--text-muted)';
+    return tr2(escH(name),escH(v.region),escH(v.territory),
+      v.date,'<span style="'+urgency+'">'+days+' days ago</span>',
+      v.score?v.score.toFixed(1):'\u2014');
+  });
+  el.innerHTML+='<div style="background:var(--surface);border:1px solid var(--danger-border);'
+    +'border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-xs)">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--danger);margin-bottom:12px">'
+    +'\uD83D\uDCC5 Re-audit Due (\u226530 days &middot; '+overdue.length+' dealers)</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead>'
+    +th('Dealer','Zone','Territory','Last Audit Date','Days Since','Last Score')
+    +'</thead><tbody>'+rows.join('')+'</tbody></table></div></div>';
 }
 
 </script>
