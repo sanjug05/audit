@@ -488,6 +488,16 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
     </div>
   </div>
 </div>
+
+<!-- Dealer Scorecard Modal -->
+<div class="modal-ov hidden" id="dealerModal" onclick="if(event.target===this)closeDealerModal()">
+  <div class="modal-box" style="max-width:660px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;padding:0" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 18px;background:var(--navy);flex-shrink:0"><span style="font-weight:800;color:#fff;font-size:14px">&#128202; Dealer Scorecard</span><button onclick="closeDealerModal()" style="background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:20px;line-height:1">&#10005;</button></div>
+    <div id="dealerModalContent" style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch"></div>
+  </div>
+</div>
+<!-- Monthly Report Capture Div (hidden, used for PDF) -->
+<div id="monthlyReportDiv" style="display:none"></div>
 <div class="modal-ov hidden" id="photoModal" onclick="closeModal()">
   <div class="modal-box" onclick="event.stopPropagation()">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
@@ -513,12 +523,12 @@ const DEALERS=[
 {n:"Dakshita enterprises",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Mathura",a:"Awadhesh Shukla"},
 {n:"AMG Design Solutions",t:"S1",z:"South",s:"Karnataka",c:"Bangalore",a:"Hussain"},
 {n:"Eleven Gallery",t:"N1",z:"RON",s:"Uttar Pradesh",c:"Bareilly",a:"Upmanyu Singh"},
-{n:"Estella Living",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Anantnag",a:"Ajay Rampal"},
+{n:"Estella Living",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Anantnag",a:"Deepu Ranotra"},
 {n:"FURNISH AND SHADE",t:"N6",z:"Delhi NCR",s:"Delhi",c:"West Delhi",a:"Kunal Arora"},
-{n:"Gupta Glass House",t:"N4",z:"RON",s:"Punjab",c:"Bathinda",a:"Ajay Rampal"},
+{n:"Gupta Glass House",t:"N4",z:"RON",s:"Punjab",c:"Bathinda",a:"Deepu Ranotra"},
 {n:"Ho-om Diseno Pvt Ltd",t:"N3",z:"Delhi NCR",s:"Haryana",c:"Gurgaon",a:"Aman Chhabra"},
 {n:"Wisteria Home Interio",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Agra",a:"Awadhesh Shukla"},
-{n:"ACE ENTERPRISES",t:"N4",z:"RON",s:"Himachal Pradesh",c:"Shimla",a:"Ajay Rampal"},
+{n:"ACE ENTERPRISES",t:"N4",z:"RON",s:"Himachal Pradesh",c:"Shimla",a:"Deepu Ranotra"},
 {n:"Alliance Innovators",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Aligarh",a:"Awadhesh Shukla"},
 {n:"Anezka Interiors Llp",t:"W3",z:"West",s:"Gujarat",c:"Vadhodra",a:"Rajesh Bhikhabhai Patel"},
 {n:"Ankur Timber",t:"N5",z:"Delhi NCR",s:"Uttar Pradesh",c:"Noida",a:"Vacant"},
@@ -557,13 +567,13 @@ const DEALERS=[
 {n:"Inxterior Solution LLP",t:"S1",z:"South",s:"Karnataka",c:"Bangalore",a:"Hussain"},
 {n:"Arqline Studio",t:"N5",z:"Delhi NCR",s:"Haryana",c:"Panipath",a:"Vacant"},
 {n:"Jai Durga Hardware And Sanitary",t:"N3",z:"Delhi NCR",s:"Haryana",c:"Gurgaon",a:"Aman Chhabra"},
-{n:"Jeelani Engineering Works",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Srinagar",a:"Ajay Rampal"},
-{n:"Johnsun Homes",t:"N4",z:"RON",s:"Punjab",c:"Mohali",a:"Ajay Rampal"},
+{n:"Jeelani Engineering Works",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Srinagar",a:"Deepu Ranotra"},
+{n:"Johnsun Homes",t:"N4",z:"RON",s:"Punjab",c:"Mohali",a:"Deepu Ranotra"},
 {n:"Krishna Traders",t:"N1",z:"RON",s:"Uttar Pradesh",c:"Muzaffarnagar",a:"Upmanyu Singh"},
 {n:"KETOS ELEVEN",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Lucknow",a:"Awadhesh Shukla"},
-{n:"M/S Arzee",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Baramulla",a:"Ajay Rampal"},
+{n:"M/S Arzee",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Baramulla",a:"Deepu Ranotra"},
 {n:"M/S SHREE SIDDHIVINAYAK GLASS WORLD",t:"E1",z:"East",s:"Chhattisgarh",c:"Bilaspur",a:"Nabhanil Banerjee"},
-{n:"KWALITY GLASS AND PLYWOOD STORE",t:"N4",z:"RON",s:"Punjab",c:"Jalandhar",a:"Ajay Rampal"},
+{n:"KWALITY GLASS AND PLYWOOD STORE",t:"N4",z:"RON",s:"Punjab",c:"Jalandhar",a:"Deepu Ranotra"},
 {n:"Modern Building Enterprise",t:"E2",z:"East",s:"Bhutan",c:"Thimphu",a:"Nabhanil Banerjee"},
 {n:"My Home Interiors",t:"S3",z:"South",s:"Andhra Pradesh",c:"Vishakhapatnam",a:"D V Sai Pradhyum"},
 {n:"Parquet Decor",t:"N2",z:"RON",s:"Rajasthan",c:"Jaipur",a:"Nitesh Gupta"},
@@ -571,25 +581,25 @@ const DEALERS=[
 {n:"REFLECTOR VENTURE BUILDING AND INTERIOR SOLUTION",t:"S1",z:"South",s:"Karnataka",c:"Bangalore",a:"Hussain"},
 {n:"Rai And Company",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Allahabad",a:"Awadhesh Shukla"},
 {n:"REFLECTOR VENTURE BUILDING AND INTERIOR SOLUTION - HUBLI",t:"S1",z:"South",s:"Karnataka",c:"Hubli",a:"Hussain"},
-{n:"Rudra Enterprises",t:"N4",z:"RON",s:"Himachal Pradesh",c:"Palampur",a:"Ajay Rampal"},
+{n:"Rudra Enterprises",t:"N4",z:"RON",s:"Himachal Pradesh",c:"Palampur",a:"Deepu Ranotra"},
 {n:"SAFELINES",t:"E3",z:"East",s:"Mizoram",c:"Aizawal",a:"Lakhyajit Borah"},
 {n:"M/S Hornbill Interior & Exterior",t:"E3",z:"East",s:"Arunachal Pradesh",c:"Itanagar Capital Complex",a:"Lakhyajit Borah"},
-{n:"Shri Balaji Corporation",t:"N4",z:"RON",s:"Punjab",c:"Amritsar",a:"Ajay Rampal"},
+{n:"Shri Balaji Corporation",t:"N4",z:"RON",s:"Punjab",c:"Amritsar",a:"Deepu Ranotra"},
 {n:"Samudhra Enterprises",t:"S3",z:"South",s:"Telangana",c:"Hyderabad",a:"D V Sai Pradhyum"},
 {n:"SHRI DEVSHAR ASSOCIATES",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Gorakhpur",a:"Awadhesh Shukla"},
 {n:"SHRIADITI ENTERPRISE OPC PRIVATE LIMITED",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Varanasi",a:"Awadhesh Shukla"},
 {n:"SP Dream M Homes",t:"N3",z:"Delhi NCR",s:"Haryana",c:"Rewari",a:"Aman Chhabra"},
 {n:"THE HOME HUB",t:"E3",z:"East",s:"Meghalaya",c:"Shilong",a:"Lakhyajit Borah"},
-{n:"The Woodstock",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Jammu",a:"Ajay Rampal"},
+{n:"The Woodstock",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Jammu",a:"Deepu Ranotra"},
 {n:"Urbanos Elementos",t:"N6",z:"Delhi NCR",s:"Delhi",c:"Delhi",a:"Kunal Arora"},
 {n:"Verleez Decors",t:"S2",z:"South",s:"Tamil Nadu",c:"Chennai",a:"Mahendira Raja"},
 {n:"VNIRMAN INDUSTRIES PRIVATE LIMITED",t:"N2",z:"RON",s:"Rajasthan",c:"Jaipur",a:"Nitesh Gupta"},
-{n:"Vertex Interio",t:"N4",z:"RON",s:"Punjab",c:"Ludhiana",a:"Ajay Rampal"},
+{n:"Vertex Interio",t:"N4",z:"RON",s:"Punjab",c:"Ludhiana",a:"Deepu Ranotra"},
 {n:"Window Wala",t:"E1",z:"East",s:"Bihar",c:"Sasaram",a:"Nabhanil Banerjee"},
 {n:"Bharmal Glass House",t:"W1",z:"West",s:"Maharashtra",c:"Mumbai",a:"Kishor Sonyabapu Shinde"},
 {n:"Adinath Ceramics",t:"N2",z:"RON",s:"Rajasthan",c:"Udaipur",a:"Nitesh Gupta"},
 {n:"Conquer Building Solutions - East Hyderabad",t:"S3",z:"South",s:"Andhra Pradesh",c:"Hyderabad",a:"D V Sai Pradhyum"},
-{n:"The Grid",t:"N4",z:"RON",s:"Punjab",c:"Mohali",a:"Ajay Rampal"},
+{n:"The Grid",t:"N4",z:"RON",s:"Punjab",c:"Mohali",a:"Deepu Ranotra"},
 {n:"Nest Building and Interior Solution",t:"S1",z:"South",s:"Karnataka",c:"Davanagere",a:"Hussain"},
 {n:"ADS Home Decor Private Limited",t:"E1",z:"East",s:"Bihar",c:"Patna",a:"Nabhanil Banerjee"},
 {n:"SAI WINDOWS GLASS SOLUTIONS",t:"W2",z:"West",s:"Maharashtra",c:"Pune",a:"Kishor Sonyabapu Shinde"},
@@ -598,7 +608,7 @@ const DEALERS=[
 {n:"Windows Gallery",t:"N7",z:"RON",s:"Uttar Pradesh",c:"Kanpur",a:"Awadhesh Shukla"},
 {n:"Radhika Enterprises",t:"W1",z:"West",s:"Maharashtra",c:"Thane",a:"Kishor Sonyabapu Shinde"},
 {n:"Inxterior Solutions LLP Patna",t:"E1",z:"East",s:"Bihar",c:"Patna",a:"Nabhanil Banerjee"},
-{n:"Estella Living - Srinagar",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Srinagar",a:"Ajay Rampal"},
+{n:"Estella Living - Srinagar",t:"N4",z:"RON",s:"Jammu and Kashmir",c:"Srinagar",a:"Deepu Ranotra"},
 {n:"Anaya Homes Solutions",t:"N1",z:"RON",s:"Uttarakhand",c:"Dehradun",a:"Upmanyu Singh"},
 {n:"Marudwaar",t:"N2",z:"RON",s:"Rajasthan",c:"Jodhpur",a:"Nitesh Gupta"},
 {n:"Bhavin Associates",t:"N3",z:"Delhi NCR",s:"Haryana",c:"Gurgaon",a:"Aman Chhabra"},
@@ -667,7 +677,7 @@ const CATS=[
 const S={
   view:"setup",dark:false,clRendered:false,frozen:false,
   header:{zone:"",territory:"",dealer:"",city:"",state:"",region:"",asm:"",cseDse:"",auditDate:"",auditType:""},
-  items:{},showroomEvidence:{frontElevation:"",reception:"",indoorBranding:"",showroomInside:""}
+  items:{},signatures:{auditor:"",dealerRep:"",asm:""},showroomEvidence:{frontElevation:"",reception:"",indoorBranding:"",showroomInside:""}
 };
 SECTIONS.forEach(sec=>sec.items.forEach(it=>{
   S.items[it.id]={score:0,obs:"",date:"",responsiblePerson:"",responsiblePersonOther:"",photo:""};
@@ -1088,14 +1098,11 @@ function renderReport(){
     +'<div class="rpt-evidence-grid">'
     +EVIDENCE_SLOTS.map(slot=>{const url=S.showroomEvidence[slot.key];return'<div><span class="rpt-evidence-label">'+slot.icon+' '+escH(slot.label)+'</span>'+(url?'<img src="'+url+'" class="rpt-evidence-img">':'<div class="rpt-evidence-missing">No photo uploaded</div>')+'</div>';}).join('')
     +'</div></div>';
-  html+='<div class="rpt-sig">'
-    +'<div class="sig-line">Auditor Signature (CSE/DSE)<br><br>'+escH(h.cseDse||'')+'</div>'
-    +'<div class="sig-line">Dealer Representative Signature</div>'
-    +'<div class="sig-line">ASM / RM Signature<br><br>'+escH(h.asm||'')+'</div></div>'
-    +'<div style="margin-top:16px;font-size:10px;color:#94A3B8;text-align:center">Generated: '
+  html+=buildSigRow(h.cseDse||'',h.asm||'')+'<div style="margin-top:16px;font-size:10px;color:#94A3B8;text-align:center">Generated: '
     +new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
     +' \u00b7 AIS Windows Channel Initiative \u00b7 Confidential</div></div>';
   document.getElementById('reportRoot').innerHTML=html;
+  setTimeout(initSignaturePads,80);
 }
 function exportJSON(){
   const sc=finalScore();const cat=getCategory(sc);
@@ -1235,6 +1242,7 @@ async function submitToSheets(){
   };
   try{
     saveToFirestore(payload); // parallel non-blocking Firestore save
+  saveActionItemsToFirestore(payload); // track critical failures as action items
   toast('Saving audit to Google Sheets\u2026','info');
     await fetch(SHEETS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
     toast('\u2705 Audit record saved to Google Sheets!','ok');
@@ -1289,12 +1297,12 @@ window.addEventListener('appinstalled',()=>{
 // ── FIREBASE CONFIG ────────────────────────────────────────────
 // TODO: Replace with your Firebase project config values
 const FB_CONFIG = {
-  apiKey:            "AIzaSyDav3rI7fTr8KrXYxvnz5LB82CgjRq4v20",
-  authDomain:        "ais-showroom-dashboard.firebaseapp.com",
-  projectId:         "ais-showroom-dashboard",
-  storageBucket:     "ais-showroom-dashboard.firebasestorage.app",
-  messagingSenderId: "175667492150",
-  appId:             "1:175667492150:web:cb124eb267b4689e6a2f97"
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
 };
 let fbDb = null, fbAuth = null, currentAdmin = null;
 const DA = { all:[], filtered:[], charts:{} };
@@ -1394,13 +1402,13 @@ function renderDashShell(){
     +'<div class="view-sub" id="dashSubLbl">Loading audits\u2026</div></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
     +'<button class="btn btn-secondary" onclick="loadAudits()">&#8635; Refresh</button>'
-    +'<button class="btn btn-danger" onclick="doAdminLogout()">Logout</button></div></div>'
+    +'<button class="btn btn-ghost" onclick="generateMonthlyPDF()">&#128196; Monthly PDF</button><button class="btn btn-danger" onclick="doAdminLogout()">Logout</button></div></div>'
     +'<div id="dashFilterBar" style="background:var(--surface);border:1px solid var(--border);'
     +'border-radius:var(--r);padding:14px 16px;margin-bottom:14px"></div>'
     +'<div id="dashKPIs" style="margin-bottom:14px">'
     +'<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">'
     +'\u23F3 Fetching audit records\u2026</div></div>'
-    +'<div id="dashCharts" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px"></div>'
+    +'<div id="actionItemsSection" style="margin-bottom:14px"></div>'+'<div id="dashCharts" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px"></div>'
     +'<div id="dashTables"></div>';
 }
 
@@ -1468,7 +1476,7 @@ function applyDashFilters(){
   });
   const sub=document.getElementById('dashSubLbl');
   if(sub) sub.textContent=DA.filtered.length+' of '+DA.all.length+' audits';
-  renderKPIs(); renderDashCharts(); renderTables();
+  renderKPIs(); renderDashCharts(); renderTables(); loadActionItems();
 }
 
 function clearDashFilters(){
@@ -1661,10 +1669,10 @@ function renderTables(){
   el.innerHTML=
     card('\uD83C\uDFC6','Top 5 Dealers',
       tbl(['Dealer','Zone','Territory','Audits','Avg Score','Category'],
-        dRows.slice(0,5).map(r=>tr(escH(r.name),escH(r.region),escH(r.territory),r.count,scoreCell(r.avg),catBadge(r.avg)))))
+        dRows.slice(0,5).map(r=>tr(dlnk(r.name),escH(r.region),escH(r.territory),r.count,scoreCell(r.avg),catBadge(r.avg)))))
     +card('\uD83D\uDCC9','Bottom 5 Dealers',
       tbl(['Dealer','Zone','Territory','Audits','Avg Score','Category'],
-        dRows.slice(-5).reverse().map(r=>tr(escH(r.name),escH(r.region),escH(r.territory),r.count,
+        dRows.slice(-5).reverse().map(r=>tr(dlnk(r.name),escH(r.region),escH(r.territory),r.count,
           '<span style="font-weight:800;font-size:13px;color:var(--danger)">'+r.avg+'</span>',catBadge(r.avg)))))
     +card('\uD83C\uDF0E','Zone Performance',
       tbl(['Zone','Audits','Territories','Avg Score','Category'],
@@ -1681,7 +1689,7 @@ function renderTables(){
 
 
 // ── APP VERSION & UPDATE ──────────────────────────────────────
-const APP_VERSION='2.2.0';
+const APP_VERSION='2.3.0';
 
 function checkAppVersion(){
   const prev=localStorage.getItem('ais_app_version');
@@ -2024,6 +2032,392 @@ function renderReauditTable(){
     +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead>'
     +th('Dealer','Zone','Territory','Last Audit Date','Days Since','Last Score')
     +'</thead><tbody>'+rows.join('')+'</tbody></table></div></div>';
+}
+
+
+// ── SIGNATURE PAD HELPERS ─────────────────────────────────────
+function buildSigRow(cseDse, asm) {
+  const pad = (id, key, label, name) =>
+    '<div style="flex:1;text-align:center;min-width:140px">'
+    + '<canvas id="' + id + '" data-key="' + key + '" width="220" height="72"'
+    + ' style="border-bottom:1.5px solid #0B1F3A;width:100%;max-width:220px;'
+    + 'cursor:crosshair;display:block;margin:0 auto;touch-action:none"></canvas>'
+    + '<button onclick="clearSignature(\'' + key + '\')" style="font-size:9px;'
+    + 'color:#94A3B8;background:none;border:none;cursor:pointer;margin-top:3px">'
+    + 'Clear</button>'
+    + '<div style="font-size:10px;color:#7A90AA;margin-top:3px">' + label
+    + (name ? '<br><b style="font-size:11px;color:#0B1F3A">' + escH(name) + '</b>' : '')
+    + '</div></div>';
+  return '<div class="rpt-sig">'
+    + pad('sigAuditor','auditor','Auditor Signature (CSE/DSE)', cseDse)
+    + pad('sigDealer','dealerRep','Dealer Representative Signature', '')
+    + pad('sigASM','asm','ASM / RM Signature', asm)
+    + '</div>';
+}
+
+function initSignaturePads() {
+  ['sigAuditor','sigDealer','sigASM'].forEach(id => {
+    const cv = document.getElementById(id);
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    ctx.strokeStyle = '#0B1F3A'; ctx.lineWidth = 2;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    let drawing = false, lx = 0, ly = 0;
+    const pos = e => {
+      const r = cv.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      const scaleX = cv.width / r.width;
+      const scaleY = cv.height / r.height;
+      return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+    };
+    const start = e => { e.preventDefault(); drawing = true; const p = pos(e); lx = p.x; ly = p.y; ctx.beginPath(); ctx.arc(lx,ly,1,0,Math.PI*2); ctx.fillStyle='#0B1F3A'; ctx.fill(); };
+    const draw  = e => {
+      if (!drawing) return; e.preventDefault();
+      const p = pos(e);
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(p.x, p.y); ctx.stroke();
+      lx = p.x; ly = p.y;
+      const k = cv.dataset.key;
+      if (k) S.signatures[k] = cv.toDataURL();
+    };
+    const stop = () => { drawing = false; };
+    cv.addEventListener('mousedown', start);
+    cv.addEventListener('mousemove', draw);
+    cv.addEventListener('mouseup',   stop);
+    cv.addEventListener('mouseleave',stop);
+    cv.addEventListener('touchstart',start, {passive:false});
+    cv.addEventListener('touchmove', draw,  {passive:false});
+    cv.addEventListener('touchend',  stop);
+    // Restore saved sig
+    const k = cv.dataset.key;
+    if (k && S.signatures[k]) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = S.signatures[k];
+    }
+  });
+}
+
+function clearSignature(key) {
+  const ids = { auditor:'sigAuditor', dealerRep:'sigDealer', asm:'sigASM' };
+  const cv = document.getElementById(ids[key]);
+  if (cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  S.signatures[key] = '';
+}
+
+// ── ACTION ITEM TRACKER ───────────────────────────────────────
+function saveActionItemsToFirestore(payload) {
+  if (!fbDb) return;
+  const failed = (payload.items || []).filter(it => it.score === 1 || it.score === 2);
+  if (!failed.length) return;
+  const batch = fbDb.batch();
+  failed.forEach(item => {
+    const ref = fbDb.collection('actionItems').doc();
+    batch.set(ref, {
+      dealer:          payload.dealer    || '',
+      zone:            payload.region    || '',
+      territory:       payload.territory || '',
+      city:            payload.city      || '',
+      state:           payload.state     || '',
+      asm:             payload.asm       || '',
+      cseDse:          payload.cseDse    || '',
+      auditDate:       payload.auditDate || '',
+      section:         item.section      || '',
+      parameter:       item.parameter    || '',
+      score:           item.score        || 0,
+      observation:     item.observation  || '',
+      responsiblePerson: item.responsiblePerson || '',
+      targetDate:      item.targetDate   || '',
+      status:          'Open',
+      createdAt:       firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+  batch.commit()
+    .then(()  => console.log('[FB] Action items saved:', failed.length))
+    .catch(e  => console.warn('[FB] Action items failed:', e.message));
+}
+
+async function loadActionItems() {
+  if (!fbDb || !currentAdmin) return;
+  const el = document.getElementById('actionItemsSection');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:10px">Loading action items\u2026</div>';
+  try {
+    const snap = await fbDb.collection('actionItems')
+      .orderBy('createdAt','desc').limit(300).get();
+    renderActionItems(snap.docs.map(d => ({id:d.id,...d.data()})));
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--danger);font-size:12px;padding:10px">Action items failed: ' + escH(e.message) + '</div>';
+  }
+}
+
+function renderActionItems(items) {
+  const el = document.getElementById('actionItemsSection'); if (!el) return;
+  const today = new Date().toISOString().split('T')[0];
+  const open  = items.filter(i=>i.status==='Open').length;
+  const inProg= items.filter(i=>i.status==='In Progress').length;
+  const closed= items.filter(i=>i.status==='Closed').length;
+  const overdue= items.filter(i=>i.status!=='Closed'&&i.targetDate&&i.targetDate<today).length;
+
+  const mini=(l,v,c)=>'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 10px;text-align:center;box-shadow:var(--shadow-xs)">'
+    +'<div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div>'
+    +'<div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-top:3px">'+l+'</div></div>';
+
+  const statusBtns = (id, cur) => {
+    const opts = ['Open','In Progress','Closed'];
+    return opts.filter(o=>o!==cur).map(o=>
+      '<button onclick="updateActionItemStatus(\''+id+'\',\''+o+'\')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);cursor:pointer;margin-right:4px;white-space:nowrap">'+o+'</button>'
+    ).join('');
+  };
+
+  let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-xs)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text)">&#9889; Action Item Tracker</div>'
+    +'<button onclick="loadActionItems()" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--text-2);cursor:pointer">&#8635; Refresh</button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
+    +mini('Open',open,'#DC2626')+mini('In Progress',inProg,'#D97706')
+    +mini('Closed',closed,'#059669')+mini('Overdue',overdue,'#DC2626')
+    +'</div>';
+
+  if (!items.length) {
+    html += '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">\u2705 No action items found.</div>';
+  } else {
+    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px">'
+      +'<thead><tr>'+['Date','Dealer','Zone','Section','Parameter','Score','Responsible','Target','Status','Change'].map(h=>
+        '<th style="padding:6px 10px;background:var(--surface-2);border-bottom:2px solid var(--border);'
+        +'font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;text-align:left;'
+        +'white-space:nowrap">'+h+'</th>').join('')+'</tr></thead><tbody>'
+      +items.map(it=>{
+        const overdue2 = it.status!=='Closed'&&it.targetDate&&it.targetDate<today;
+        const sc=it.score===1?'<span style="color:#DC2626;font-weight:700">1-Poor</span>':'<span style="color:#EA580C;font-weight:700">2-Weak</span>';
+        const stBg=it.status==='Closed'?'#ECFDF5':it.status==='In Progress'?'#FFFBEB':'#FEF2F2';
+        const stC =it.status==='Closed'?'#059669':it.status==='In Progress'?'#D97706':'#DC2626';
+        const rowBg=overdue2?'background:rgba(220,38,38,.04)':'';
+        return '<tr style="border-bottom:1px solid var(--border-2);'+rowBg+'">'
+          +'<td style="padding:6px 10px;white-space:nowrap">'+escH(it.auditDate||'')+'</td>'
+          +'<td style="padding:6px 10px;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escH(it.dealer||'')+'">'+escH((it.dealer||'').substring(0,18)+(it.dealer&&it.dealer.length>18?'\u2026':''))+'</td>'
+          +'<td style="padding:6px 10px;white-space:nowrap">'+escH(it.zone||'')+'</td>'
+          +'<td style="padding:6px 10px;font-size:10.5px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH((it.section||'').replace(' & ',' & '))+'</td>'
+          +'<td style="padding:6px 10px;font-size:10.5px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escH(it.parameter||'')+'">'+escH((it.parameter||'').substring(0,30)+(it.parameter&&it.parameter.length>30?'\u2026':''))+'</td>'
+          +sc.replace('<span','<td style="padding:6px 10px"><span')+'</span></td>'
+          +'<td style="padding:6px 10px;font-size:10.5px">'+escH(it.responsiblePerson||'\u2014')+'</td>'
+          +'<td style="padding:6px 10px;white-space:nowrap;'+(overdue2?'color:#DC2626;font-weight:700':'')+'">'+escH(it.targetDate||'\u2014')+'</td>'
+          +'<td style="padding:6px 10px"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+stBg+';color:'+stC+'">'+escH(it.status)+'</span></td>'
+          +'<td style="padding:6px 10px;white-space:nowrap">'+statusBtns(it.id, it.status)+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function updateActionItemStatus(docId, newStatus) {
+  if (!fbDb) return;
+  try {
+    const upd = { status: newStatus, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (newStatus === 'Closed') upd.closedAt = firebase.firestore.FieldValue.serverTimestamp();
+    await fbDb.collection('actionItems').doc(docId).update(upd);
+    toast('Status updated \u2192 ' + newStatus, 'ok');
+    loadActionItems();
+  } catch(e) { toast('Update failed: ' + e.message, 'err'); }
+}
+
+// ── DEALER SCORECARD ──────────────────────────────────────────
+function dlnk(name) {
+  const safe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return '<span style="cursor:pointer;color:var(--teal);font-weight:700;'
+    +'text-decoration:underline;text-decoration-style:dotted" '
+    +'onclick="openDealerScorecard(\'' + safe + '\')" title="View scorecard">'
+    + escH(name) + '</span>';
+}
+
+function closeDealerModal() {
+  document.getElementById('dealerModal').classList.add('hidden');
+  // Destroy dealer chart to free memory
+  if (DA.charts['dealerTrend']) { try{DA.charts['dealerTrend'].destroy();}catch(e){} delete DA.charts['dealerTrend']; }
+}
+
+async function openDealerScorecard(dealerName) {
+  if (!fbDb || !currentAdmin) { toast('Admin login required','err'); return; }
+  const modal = document.getElementById('dealerModal');
+  const body  = document.getElementById('dealerModalContent');
+  modal.classList.remove('hidden');
+  body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted)">\u23F3 Loading\u2026</div>';
+  try {
+    const snap = await fbDb.collection('audits')
+      .where('dealer','==',dealerName)
+      .orderBy('auditDate','asc').get();
+    const audits = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderDealerScorecard(dealerName, audits);
+  } catch(e) {
+    body.innerHTML = '<div style="color:var(--danger);padding:20px">\u26A0 ' + escH(e.message) + '</div>';
+  }
+}
+
+function renderDealerScorecard(name, audits) {
+  const body = document.getElementById('dealerModalContent');
+  if (!audits.length) {
+    body.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted)">No audit history found.</div>';
+    return;
+  }
+  const last = audits[audits.length-1];
+  const avg  = +(audits.reduce((s,a)=>s+(a.finalScore||0),0)/audits.length).toFixed(1);
+  const best = Math.max(...audits.map(a=>a.finalScore||0));
+  const col  = avg>=90?'#7C3AED':avg>=70?'#D97706':avg>=60?'#64748B':'#DC2626';
+  const catL = avg>=90?'Platinum':avg>=70?'Gold':avg>=60?'Silver':'Critical';
+
+  const mini=(l,v,c)=>'<div style="background:var(--surface-2);border:1px solid var(--border);'
+    +'border-radius:var(--r-sm);padding:12px 10px;text-align:center">'
+    +'<div style="font-size:20px;font-weight:800;color:'+c+'">'+v+'</div>'
+    +'<div style="font-size:9.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-top:3px">'+l+'</div></div>';
+
+  // Section averages
+  const secMap={};
+  audits.forEach(a=>{
+    if(!Array.isArray(a.sections))return;
+    a.sections.forEach(s=>{
+      if(!secMap[s.name])secMap[s.name]=[];
+      secMap[s.name].push(s.pct||0);
+    });
+  });
+  const secRows=Object.entries(secMap).map(([n,v])=>({
+    name:n, avg:+(v.reduce((s,x)=>s+x,0)/v.length).toFixed(1)
+  })).sort((a,b)=>a.avg-b.avg);
+
+  let html='<div style="padding:18px">'
+    +'<div style="margin-bottom:14px">'
+    +'<div style="font-size:16px;font-weight:800;color:var(--text)">'+escH(name)+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);margin-top:3px">'
+    +escH(last.region||'')+' \u00b7 '+escH(last.territory||'')+' \u00b7 ASM: '+escH(last.asm||'\u2014')+'</div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
+    +mini('Latest',last.finalScore?(+last.finalScore).toFixed(1):'\u2014',col)
+    +mini('Average',avg,col)
+    +mini('Best',best.toFixed(1),'#059669')
+    +mini('Total Audits',audits.length,'var(--teal)')
+    +'</div>'
+    +'<div style="background:var(--surface-2);border-radius:var(--r-sm);padding:12px;margin-bottom:14px">'
+    +'<div style="font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:8px">Score Trend</div>'
+    +'<div style="position:relative;height:140px"><canvas id="dealerTrendCanvas"></canvas></div></div>';
+
+  if(secRows.length){
+    html+='<div style="background:var(--surface-2);border-radius:var(--r-sm);padding:12px;margin-bottom:14px">'
+      +'<div style="font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:8px">Section Performance (avg %)</div>'
+      +secRows.map(s=>{
+        const sc=s.avg>=70?'#059669':s.avg>=50?'#D97706':'#DC2626';
+        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+          +'<div style="font-size:11px;color:var(--text);min-width:200px;flex-shrink:0">'+escH(s.name)+'</div>'
+          +'<div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden">'
+          +'<div style="height:100%;background:'+sc+';border-radius:4px;width:'+Math.min(s.avg,100).toFixed(1)+'%"></div></div>'
+          +'<div style="font-size:11.5px;font-weight:700;color:'+sc+';min-width:36px;text-align:right">'+s.avg+'%</div></div>';
+      }).join('')+'</div>';
+  }
+
+  html+='<div style="font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:8px">Audit History</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr>'+['Date','Type','Score','Category','Auditor'].map(h=>
+      '<th style="padding:6px 10px;background:var(--surface-2);border-bottom:2px solid var(--border);'
+      +'font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;text-align:left">'+h+'</th>').join('')+'</tr></thead>'
+    +'<tbody>'+[...audits].reverse().map(a=>{
+      const sc=a.finalScore||0,c2=sc>=90?'#7C3AED':sc>=70?'#D97706':sc>=60?'#64748B':'#DC2626';
+      return '<tr style="border-bottom:1px solid var(--border-2)">'
+        +'<td style="padding:6px 10px;font-size:12px">'+escH(a.auditDate||'\u2014')+'</td>'
+        +'<td style="padding:6px 10px;font-size:12px">'+escH(a.auditType||'\u2014')+'</td>'
+        +'<td style="padding:6px 10px;font-size:14px;font-weight:800;color:'+c2+'">'+sc.toFixed(1)+'</td>'
+        +'<td style="padding:6px 10px;font-size:12px;font-weight:700;color:'+c2+'">'+escH(a.category||'\u2014')+'</td>'
+        +'<td style="padding:6px 10px;font-size:12px">'+escH(a.cseDse||'\u2014')+'</td>'
+        +'</tr>';
+    }).join('')+'</tbody></table></div></div>';
+
+  body.innerHTML=html;
+
+  // Render trend chart
+  if(DA.charts['dealerTrend']){try{DA.charts['dealerTrend'].destroy();}catch(e){}delete DA.charts['dealerTrend'];}
+  setTimeout(()=>{
+    const cv=document.getElementById('dealerTrendCanvas');if(!cv)return;
+    const tc=S.dark?'#8CAFC8':'#7A90AA';
+    DA.charts['dealerTrend']=new Chart(cv,{type:'line',
+      data:{labels:audits.map(a=>a.auditDate),
+        datasets:[{data:audits.map(a=>a.finalScore||0),borderColor:col,
+          backgroundColor:col.replace(')',',0.1)').replace('rgb','rgba'),
+          fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:col}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        scales:{y:{min:0,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},color:tc}},
+          x:{grid:{display:false},ticks:{font:{size:10},color:tc}}},
+        plugins:{legend:{display:false}}}});
+  },80);
+}
+
+// ── MONTHLY EXECUTIVE PDF ─────────────────────────────────────
+async function generateMonthlyPDF(){
+  if(!DA.filtered.length){toast('No audit data to generate report','info');return;}
+  const dates=DA.filtered.map(a=>a.auditDate).filter(Boolean).sort();
+  const period=dates.length?(dates[0]+' to '+dates[dates.length-1]):'All periods';
+  renderMonthlyReportDiv(DA.filtered, period);
+  const div=document.getElementById('monthlyReportDiv');
+  div.style.cssText='display:block;position:absolute;left:-9999px;top:0;width:860px;'
+    +'background:#fff;padding:32px;font-family:sans-serif';
+  try{
+    toast('Generating PDF\u2026','info');
+    const canvas=await html2canvas(div,{scale:1.5,useCORS:false,backgroundColor:'#ffffff',logging:false});
+    div.style.cssText='display:none';
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    const ih=(canvas.height*pw)/canvas.width;
+    let y=0;
+    while(y<ih){if(y>0)pdf.addPage();pdf.addImage(canvas.toDataURL('image/jpeg',0.85),'JPEG',0,-y,pw,ih);y+=ph;}
+    const fn='AIS-Executive-Report-'+new Date().toISOString().split('T')[0]+'.pdf';
+    pdf.save(fn);toast('\u2705 PDF saved: '+fn,'ok');
+  }catch(e){
+    document.getElementById('monthlyReportDiv').style.cssText='display:none';
+    toast('PDF failed: '+e.message,'err');
+  }
+}
+
+function renderMonthlyReportDiv(data,period){
+  const n=data.length;
+  const avg=n?+(data.reduce((s,a)=>s+(a.finalScore||0),0)/n).toFixed(1):0;
+  const cats={Platinum:0,Gold:0,Silver:0,Critical:0};
+  data.forEach(a=>{const c=a.category||'';cats[c==='Platinum'?'Platinum':c==='Gold'?'Gold':c==='Silver'?'Silver':'Critical']++;});
+  const zM={};data.forEach(a=>{const z=a.region||'?';if(!zM[z])zM[z]=[];zM[z].push(a.finalScore||0);});
+  const zR=Object.entries(zM).map(([z,v])=>({zone:z,count:v.length,avg:+(v.reduce((s,x)=>s+x,0)/v.length).toFixed(1)})).sort((a,b)=>b.avg-a.avg);
+  const dM={};data.forEach(a=>{if(!a.dealer)return;if(!dM[a.dealer])dM[a.dealer]=[];dM[a.dealer].push(a.finalScore||0);});
+  const dR=Object.entries(dM).map(([n2,v])=>({name:n2,avg:+(v.reduce((s,x)=>s+x,0)/v.length).toFixed(1)})).sort((a,b)=>b.avg-a.avg);
+  const fM={};data.forEach(a=>{if(!Array.isArray(a.items))return;a.items.forEach(it=>{if((it.score===1||it.score===2)&&it.parameter)fM[it.parameter]=(fM[it.parameter]||0)+1;});});
+  const fR=Object.entries(fM).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const cc=s=>s>=90?'#7C3AED':s>=70?'#D97706':s>=60?'#64748B':'#DC2626';
+  const cl=s=>s>=90?'Platinum':s>=70?'Gold':s>=60?'Silver':'Critical';
+  const th=(...h2)=>'<tr>'+h2.map(c=>'<th style="padding:6px 10px;background:#0B1F3A;color:#fff;font-size:10px;font-weight:700;text-align:left;white-space:nowrap">'+c+'</th>').join('')+'</tr>';
+  const td2=(...c2)=>'<tr>'+c2.map(c=>'<td style="padding:6px 10px;border-bottom:1px solid #E2E8F0;font-size:11px;color:#0B1F3A">'+c+'</td>').join('')+'</tr>';
+  document.getElementById('monthlyReportDiv').innerHTML=`
+  <div style="color:#0B1F3A">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #0B1F3A;margin-bottom:18px">
+      <div><div style="font-size:24px;font-weight:800">AIS <span style="color:#00B5CC">Windows</span></div>
+        <div style="font-size:15px;font-weight:700;margin-top:3px">Executive Audit Summary</div>
+        <div style="font-size:11px;color:#7A90AA;margin-top:2px">Period: ${period} &nbsp;&middot;&nbsp; Generated: ${new Date().toLocaleDateString('en-IN')}</div></div>
+      <div style="text-align:right"><div style="font-size:34px;font-weight:800;color:${cc(avg)}">${avg}</div>
+        <div style="font-size:10px;color:#7A90AA">avg score / 100</div>
+        <div style="font-size:13px;font-weight:700;color:${cc(avg)}">${cl(avg)}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px">
+      ${[['Total Audits',n,'#00B5CC'],['Avg Score',avg,'#00B5CC'],['Platinum',cats.Platinum,'#7C3AED'],['Gold',cats.Gold,'#D97706'],['Silver',cats.Silver,'#64748B'],['Critical',cats.Critical,'#DC2626']].map(([l,v2,c])=>`<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:${c}">${v2}</div><div style="font-size:9px;font-weight:700;color:#7A90AA;text-transform:uppercase;margin-top:3px">${l}</div></div>`).join('')}
+    </div>
+    <div style="margin-bottom:18px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#F1F5F9;border-radius:4px">Zone Performance</div>
+      <table style="width:100%;border-collapse:collapse">${th('Zone','Audits','Avg Score','Category')}${zR.map(r=>td2(escH(r.zone),r.count,'<b style="color:'+cc(r.avg)+'">'+r.avg+'</b>','<span style="color:'+cc(r.avg)+';font-weight:700">'+cl(r.avg)+'</span>')).join('')}</table>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div><div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#F1F5F9;border-radius:4px">&#127942; Top 5 Dealers</div>
+        <table style="width:100%;border-collapse:collapse">${th('Dealer','Score','Cat.')}${dR.slice(0,5).map(r=>td2('<span style="font-size:10.5px">'+escH(r.name)+'</span>','<b style="color:'+cc(r.avg)+'">'+r.avg+'</b>','<span style="color:'+cc(r.avg)+';font-weight:700;font-size:10px">'+cl(r.avg)+'</span>')).join('')}</table>
+      </div>
+      <div><div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#FEF2F2;border-radius:4px;color:#DC2626">&#128201; Bottom 5 Dealers</div>
+        <table style="width:100%;border-collapse:collapse">${th('Dealer','Score','Cat.')}${dR.slice(-5).reverse().map(r=>td2('<span style="font-size:10.5px">'+escH(r.name)+'</span>','<b style="color:'+cc(r.avg)+'">'+r.avg+'</b>','<span style="color:'+cc(r.avg)+';font-weight:700;font-size:10px">'+cl(r.avg)+'</span>')).join('')}</table>
+      </div>
+    </div>
+    ${fR.length?`<div><div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#FEF2F2;border-radius:4px;color:#DC2626">\u26A0 Most Failed Parameters</div><table style="width:100%;border-collapse:collapse">${th('Audit Parameter','Times Failed')}${fR.map(r=>td2('<span style="font-size:10px">'+escH(r[0])+'</span>','<b style="color:#DC2626">'+r[1]+'</b>')).join('')}</table></div>`:''}
+    <div style="margin-top:20px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:9px;color:#94A3B8;text-align:center">AIS Windows Channel Initiative &middot; Confidential &middot; ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+  </div>`;
 }
 
 </script>
