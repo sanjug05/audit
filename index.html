@@ -349,6 +349,9 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
     <div class="val-modal-footer"><button class="btn btn-primary" onclick="closeValModal()">&#8592; Fix Issues in Checklist</button></div>
   </div>
 </div>
+
+<div id="offlineBanner" class="hidden" style="background:#7F1D1D;color:#fff;text-align:center;padding:9px 16px;font-size:12.5px;font-weight:600;position:sticky;top:calc(var(--nav-h) + var(--ssb-h));z-index:140;display:flex;align-items:center;justify-content:center;gap:10px"><span>&#9889; No internet connection</span><span style="font-weight:400;opacity:.8">&#8212; GPS and save features need connectivity</span></div>
+
 <div id="view-setup" class="view active">
   <div class="vc">
     <div class="vh"><div class="view-title">Audit Setup</div><div class="view-sub">Select Territory / Zone Code &#8212; Zone and Partner list auto-populate</div></div>
@@ -403,7 +406,7 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
       </div>
     </div>
     <div class="card">
-      <div class="card-hd"><span class="card-hd-icon">&#128100;</span><div class="card-hd-text"><h3>Details</h3><p>Enter Audit parameters</p></div></div>
+      <div class="card-hd"><span class="card-hd-icon">&#128100;</span><div class="card-hd-text"><h3>Audit Details</h3><p>Enter auditor name and audit parameters</p></div></div>
       <div class="card-bd">
         <div class="grid-3">
           <div class="fg"><label>CSE / DSE Name <span class="req">*</span></label><input type="text" id="fCSE" placeholder="Enter CSE/DSE name" oninput="S.header.cseDse=this.value"></div>
@@ -511,6 +514,34 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
         <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('dupeSaveModal').classList.add('hidden')">Cancel</button>
         <button class="btn btn-danger" style="flex:1" onclick="forceSubmitToSheets()">&#128190; Save Duplicate</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Location Permission Prompt Modal -->
+<div class="modal-ov" id="locationPromptModal" style="z-index:950">
+  <div class="modal-box" style="max-width:380px;width:100%;text-align:center" onclick="event.stopPropagation()">
+    <div style="padding:10px 4px 4px">
+      <div style="font-size:44px;margin-bottom:12px">&#128205;</div>
+      <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">Location Access Required</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:20px">GPS coordinates are captured with every audit to verify on-site presence.<br><br>When the browser asks, please tap <b style="color:var(--text)">Allow</b> to enable location.</div>
+      <button class="btn btn-primary btn-lg" onclick="requestLocationAccess()" style="width:100%;justify-content:center;margin-bottom:10px">&#128205; Enable Location Access</button>
+      <button onclick="skipLocationPrompt()" style="background:transparent;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:4px">Skip for now (GPS will not be captured)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Location Denied Instructions Modal -->
+<div class="modal-ov hidden" id="locationDeniedModal" style="z-index:950" onclick="if(event.target===this)dismissLocationDenied()">
+  <div class="modal-box" style="max-width:400px;width:100%" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="dismissLocationDenied()">&#10005;</button>
+    <div style="padding:10px 4px 4px">
+      <div style="font-size:40px;margin-bottom:8px">&#128683;</div>
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Location Access Blocked</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">GPS is needed to verify on-site presence. It was blocked or denied. Follow the steps below to re-enable it, then tap <b>Check Again</b>.</div>
+      <div id="locationDeniedSteps" style="background:var(--surface-2);border-radius:var(--r-sm);padding:14px;margin-bottom:16px;font-size:12.5px;line-height:1.8;color:var(--text)"></div>
+      <button class="btn btn-primary" onclick="retryLocationCheck()" style="width:100%;justify-content:center;margin-bottom:8px">&#128260; Check Again</button>
+      <button onclick="dismissLocationDenied()" style="background:transparent;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;width:100%;padding:4px">Continue without GPS</button>
     </div>
   </div>
 </div>
@@ -772,7 +803,15 @@ function switchView(v){
   if(v==='dashboard')openDashboard();
   window.scrollTo(0,0);
 }
-function toggleDark(){S.dark=!S.dark;document.body.classList.toggle('dark',S.dark);document.getElementById('darkBtn').textContent=S.dark?'\u2600\uFE0F':'\uD83C\uDF19';}
+function toggleDark(){
+  S.dark=!S.dark;
+  document.body.classList.toggle('dark',S.dark);
+  document.getElementById('darkBtn').textContent=S.dark?'\u2600\uFE0F':'\uD83C\uDF19';
+  // Re-render dashboard charts with updated theme colours
+  if(S.view==='dashboard'&&Object.keys(DA.charts).length){
+    setTimeout(()=>{ renderDashCharts(); },80);
+  }
+}
 let curPartners=[];
 function onZoneChange(z){}  // CHANGE 1: deprecated; zone now auto-derived
 // CHANGE 1: territory is primary selector; zone auto-populates from TZ map
@@ -872,7 +911,7 @@ function bannerHTML(){
     +'<div class="aib-item"><span class="aib-lbl">Date</span><span class="aib-val">'+(h.auditDate||'\u2014')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">Type</span><span class="aib-val">'+escH(h.auditType||'\u2014')+'</span></div>'
     +'<div class="aib-item"><span class="aib-lbl">CSE/DSE</span><span class="aib-val">'+escH(h.cseDse||'\u2014')+'</span></div>'+(h.gps?'<div class="aib-item"><span class="aib-lbl">GPS</span><span class="aib-val"><a href="https://maps.google.com/?q='+h.gps.lat+','+h.gps.lng+'" target="_blank" style="color:#5EEAD4;text-decoration:none">\uD83D\uDCCD '+h.gps.lat+', '+h.gps.lng+'</a></span></div>':'')
-    +'</div>';
+    +(h.gps?'<div class="aib-item"><span class="aib-lbl">&#128205; GPS</span><span class="aib-val" style="font-size:11px">'+h.gps.lat+', '+h.gps.lng+' (\u00b1'+h.gps.accuracy+'m)</span></div>':'<div class="aib-item"><span class="aib-lbl">&#128205; GPS</span><span class="aib-val" style="color:rgba(255,255,255,.4);font-size:11px">Pending…</span></div>')+'</div>';
 }
 function refreshBanner(){const b=document.getElementById('clBanner');if(b)b.outerHTML=bannerHTML();}
 function secHTML(sec){
@@ -964,9 +1003,13 @@ function updateSecIndicator(sid){
 function updateSSB(){
   const sc=finalScore();const cat=getCategory(sc);const co=completion();
   document.getElementById('ssbScore').textContent=sc.toFixed(1);
-  document.getElementById('ssbFill').style.width=Math.min(sc,100).toFixed(1)+'%';
+  const fillEl=document.getElementById('ssbFill');
+  fillEl.style.width=Math.min(sc,100).toFixed(1)+'%';
+  fillEl.style.background=cat.cls==='cat-critical'?'linear-gradient(90deg,#DC2626,#991B1B)':'linear-gradient(90deg,var(--teal),var(--teal-dark))';
   const cb=document.getElementById('ssbCat');cb.textContent=cat.label;cb.className='ssb-cat '+cat.cls;
-  document.getElementById('ssbComp').textContent=co.s+' / '+co.t;
+  const compEl=document.getElementById('ssbComp');
+  compEl.textContent=co.s+' / '+co.t;
+  compEl.style.color=co.s===co.t?'var(--success)':co.s>0?'var(--teal)':'var(--text-muted)';
   document.getElementById('ssbPartner').textContent=S.header.Partner||'No Partner selected';
 }
 function onRespChange(itemId,val){
@@ -1246,6 +1289,7 @@ async function shareEmail(){
   window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
 }
 async function submitToSheets(){
+  if(!navigator.onLine){toast('No internet \u2013 cannot save right now','err');return;}
   if(!SHEETS_SCRIPT_URL){toast('Google Sheets not configured. Add your Apps Script URL to SHEETS_SCRIPT_URL in the script.','err');return;}
   const btn=document.getElementById('sheetsBtn');if(btn){btn.disabled=true;btn.textContent='Saving\u2026';}
   const sc=finalScore();const cat=getCategory(sc);const cnt=statusCounts();const actions=itemsRequiringAction();const h=S.header;
@@ -1309,7 +1353,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('fCSE').addEventListener('change',function(){S.header.cseDse=this.value;});
   document.getElementById('fDate').addEventListener('change',function(){S.header.auditDate=this.value;});
   document.getElementById('fType').addEventListener('change',function(){S.header.auditType=this.value;});
-  injectManifest();registerSW();initFirebase();checkAppVersion();checkDraft();
+  injectManifest();registerSW();initFirebase();checkAppVersion();checkDraft();setTimeout(checkLocationPermission,1500);
 });
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();deferredInstallPrompt=e;
@@ -1716,7 +1760,7 @@ function renderTables(){
 
 
 // ── APP VERSION & UPDATE ──────────────────────────────────────
-const APP_VERSION='1.5.0';
+const APP_VERSION='5.1.0';
 
 function checkAppVersion(){
   const prev=localStorage.getItem('ais_app_version');
@@ -1977,9 +2021,15 @@ function captureGPS(){
         lng:+pos.coords.longitude.toFixed(6),
         accuracy:Math.round(pos.coords.accuracy)
       };
-      console.log('[GPS]',S.header.gps);
+      console.log('[GPS] Captured',S.header.gps);
     },
-    err=>console.warn('[GPS]',err.message),
+    err=>{
+      console.warn('[GPS]',err.message);
+      if(err.code===err.PERMISSION_DENIED){
+        populateLocationDeniedSteps();
+        document.getElementById('locationDeniedModal').classList.remove('hidden');
+      }
+    },
     {timeout:8000,enableHighAccuracy:true,maximumAge:0}
   );
 }
@@ -2499,6 +2549,195 @@ window.onScore=function(id,sid,score){
   const row=document.getElementById('ir-'+id);
   if(row&&score>0){row.style.borderLeft='';row.style.background='';}
 };
+
+
+// ── GPS PERMISSION MANAGEMENT ─────────────────────────────────
+let _gpsPermListener = null;
+
+async function checkLocationPermission(){
+  if(!navigator.geolocation){ console.warn('[GPS] Not supported'); return; }
+
+  // Use Permissions API if available for non-intrusive check
+  if(navigator.permissions){
+    try{
+      const perm = await navigator.permissions.query({name:'geolocation'});
+
+      if(perm.state==='granted'){
+        // Already allowed — silently warm up GPS
+        document.getElementById('locationPromptModal').classList.add('hidden');
+        captureGPS();
+        return;
+      }
+      if(perm.state==='denied'){
+        populateLocationDeniedSteps();
+        document.getElementById('locationDeniedModal').classList.remove('hidden');
+        return;
+      }
+      // 'prompt' — show our explanation before browser native prompt
+      document.getElementById('locationPromptModal').classList.remove('hidden');
+
+      // Watch for permission change (user may grant in settings while modal open)
+      if(_gpsPermListener) _gpsPermListener.onchange = null;
+      _gpsPermListener = perm;
+      perm.onchange = ()=>{
+        if(perm.state==='granted'){
+          document.getElementById('locationPromptModal').classList.add('hidden');
+          document.getElementById('locationDeniedModal').classList.add('hidden');
+          captureGPS();
+          toast('\uD83D\uDCCD Location access enabled','ok');
+        } else if(perm.state==='denied'){
+          document.getElementById('locationPromptModal').classList.add('hidden');
+          populateLocationDeniedSteps();
+          document.getElementById('locationDeniedModal').classList.remove('hidden');
+        }
+      };
+      return;
+    }catch(e){ /* Permissions API not available */ }
+  }
+
+  // Fallback: show prompt modal and let native browser handle it
+  document.getElementById('locationPromptModal').classList.remove('hidden');
+}
+
+function requestLocationAccess(){
+  // Triggered by "Enable Location Access" button — fires browser native prompt
+  document.getElementById('locationPromptModal').classList.add('hidden');
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      S.header.gps={
+        lat:+pos.coords.latitude.toFixed(6),
+        lng:+pos.coords.longitude.toFixed(6),
+        accuracy:Math.round(pos.coords.accuracy)
+      };
+      toast('\uD83D\uDCCD Location access enabled \u2013 GPS captured','ok');
+    },
+    err=>{
+      if(err.code===err.PERMISSION_DENIED){
+        populateLocationDeniedSteps();
+        document.getElementById('locationDeniedModal').classList.remove('hidden');
+      }
+    },
+    {timeout:10000,enableHighAccuracy:true,maximumAge:0}
+  );
+}
+
+function skipLocationPrompt(){
+  document.getElementById('locationPromptModal').classList.add('hidden');
+  toast('GPS skipped \u2013 location will not be captured for this audit','info');
+}
+
+function retryLocationCheck(){
+  document.getElementById('locationDeniedModal').classList.add('hidden');
+  // Small delay so the modal hides cleanly before re-check
+  setTimeout(checkLocationPermission, 400);
+}
+
+function dismissLocationDenied(){
+  document.getElementById('locationDeniedModal').classList.add('hidden');
+}
+
+function populateLocationDeniedSteps(){
+  const el = document.getElementById('locationDeniedSteps');
+  if(!el) return;
+  const ua = navigator.userAgent;
+  const isAndroid = /Android/.test(ua);
+  const isIOS     = /iPad|iPhone|iPod/.test(ua);
+  const isSamsung = /SamsungBrowser/.test(ua);
+
+  let steps = '';
+  if(isIOS){
+    steps =
+      '<b style="color:var(--teal)">\uD83C\uDF4E iPhone / iPad (Safari):</b><br>'
+      +'1. Open <b>Settings</b> app<br>'
+      +'2. Scroll to <b>Safari</b><br>'
+      +'3. Tap <b>Location</b> \u2192 select <b>Allow</b><br>'
+      +'4. Come back to this app and tap <b>Check Again</b>';
+  } else if(isSamsung){
+    steps =
+      '<b style="color:var(--teal)">\uD83D\uDCF1 Samsung Browser:</b><br>'
+      +'1. Tap the <b>three dots</b> menu \u2192 <b>Settings</b><br>'
+      +'2. Tap <b>Sites and downloads</b> \u2192 <b>Location</b><br>'
+      +'3. Find this site and set to <b>Allow</b><br>'
+      +'4. Tap <b>Check Again</b> below';
+  } else if(isAndroid){
+    steps =
+      '<b style="color:var(--teal)">\uD83D\uDCF1 Android (Chrome):</b><br>'
+      +'1. Tap the <b>lock icon</b> \uD83D\uDD12 in the address bar<br>'
+      +'2. Tap <b>Permissions</b> \u2192 <b>Location</b><br>'
+      +'3. Select <b>Allow</b><br>'
+      +'4. Tap <b>Check Again</b> below<br><br>'
+      +'<span style="color:var(--text-muted);font-size:11px">Or go to: Settings \u2192 Apps \u2192 Chrome \u2192 Permissions \u2192 Location \u2192 Allow</span>';
+  } else {
+    steps =
+      '<b style="color:var(--teal)">\uD83D\uDCBB Desktop Browser:</b><br>'
+      +'1. Click the <b>lock icon</b> \uD83D\uDD12 in the address bar<br>'
+      +'2. Click <b>Site settings</b> or <b>Permissions</b><br>'
+      +'3. Set <b>Location</b> to <b>Allow</b><br>'
+      +'4. <b>Reload the page</b> and try again';
+  }
+  el.innerHTML = steps;
+}
+
+// Also check permission when user navigates to Checklist
+// so if they granted it in a prior visit we capture immediately
+const _origGoChecklist = window.goChecklist;
+window.goChecklist = function(){
+  _origGoChecklist();
+  // Re-check GPS silently after entering checklist
+  if(navigator.geolocation && navigator.permissions){
+    navigator.permissions.query({name:'geolocation'}).then(p=>{
+      if(p.state==='granted') captureGPS();
+      else if(p.state==='denied'){
+        populateLocationDeniedSteps();
+        // Show denied modal only if GPS not already captured
+        if(!S.header.gps){
+          document.getElementById('locationDeniedModal').classList.remove('hidden');
+        }
+      }
+    }).catch(()=>{});
+  }
+};
+
+
+// ── ONLINE / OFFLINE INDICATOR ────────────────────────────────
+function updateOnlineStatus(){
+  const b=document.getElementById('offlineBanner');
+  if(!b)return;
+  if(navigator.onLine){
+    b.classList.add('hidden');
+  }else{
+    b.classList.remove('hidden');
+  }
+}
+window.addEventListener('online', ()=>{
+  updateOnlineStatus();
+  toast('Back online \u2013 you can save now','ok');
+  // Re-attempt GPS if not yet captured
+  if(!S.header.gps) captureGPS();
+});
+window.addEventListener('offline', ()=>{
+  updateOnlineStatus();
+  toast('No internet connection','err');
+});
+// Check immediately on load
+document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(updateOnlineStatus,500); });
+
+// ── PREVENT SAVE-TO-FIRESTORE WHILE OFFLINE ───────────────────
+// (Firestore has its own offline queue, but surface a note if needed)
+const _origSaveToFirestore = window.saveToFirestore;
+window.saveToFirestore = function(payload){
+  if(!navigator.onLine){ console.log('[FB] Offline – Firestore will queue when back online'); }
+  _origSaveToFirestore(payload);
+};
+
+// ── DASHBOARD: refresh charts on dark-mode toggle ─────────────
+// (toggleDark already calls renderDashCharts via override above)
+
+// ── CHECKLIST: live completion colour in SSB progress text ─────
+// (Already wired in updateSSB override above)
+
+// ── PRINT: hide offline banner and GPS modals from print ───────
+// (already handled by .no-print / @media print CSS)
 
 </script>
 </body>
