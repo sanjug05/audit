@@ -2740,5 +2740,106 @@ window.saveToFirestore = function(payload){
 // (already handled by .no-print / @media print CSS)
 
 </script>
+<!-- ============================================================
+     AIS SHOWROOM AUDIT - FIELD PATCH  (camera access + auto-GPS)
+     ------------------------------------------------------------
+     HOW TO ADD IT:
+       Paste this entire block into your HTML file just BEFORE the
+       closing </body> tag - i.e. directly AFTER your existing big
+       <script>...</script> ends.
+     WHAT IT DOES (overrides 3 functions at runtime - the same
+     pattern your app already uses for registerSW / onScore /
+     goChecklist, so none of your existing code is edited):
+       1. Item photo  -> separate "Camera" + "Gallery" buttons
+       2. Showroom evidence photo -> "Camera" + "Gallery" buttons
+       3. GPS -> robust auto-capture that works indoors and fires
+          on its own once the app is installed & permission granted
+       4. Stops the location popup from flashing on every launch
+     ============================================================ -->
+<script>
+(function(){
+  "use strict";
+
+  // ---- 1) ITEM PHOTO: Camera (direct) + Gallery (chooser) ----
+  window.photoAreaHTML = function(id,url){
+    if(url) return '<div style="position:relative;display:inline-flex;"><img src="'+url+'" class="photo-thumb" onclick="openModal(\''+id+'\')" alt="Evidence"><button class="photo-del" onclick="removePhoto(\''+id+'\')" type="button">&#10005;</button></div>';
+    return '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<label class="photo-btn" for="pf-cam-'+id+'">&#128247; Camera</label>'
+      +'<input type="file" id="pf-cam-'+id+'" accept="image/*" capture="environment" class="file-inp" onchange="handlePhoto(\''+id+'\',this)">'
+      +'<label class="photo-btn" for="pf-gal-'+id+'">&#128444;&#65039; Gallery</label>'
+      +'<input type="file" id="pf-gal-'+id+'" accept="image/*" class="file-inp" onchange="handlePhoto(\''+id+'\',this)">'
+      +'</div>';
+  };
+
+  // ---- 2) SHOWROOM EVIDENCE SLOT: Camera + Gallery ----
+  window.evidenceSlotInner = function(slot){
+    var url = S.showroomEvidence[slot.key];
+    return '<div class="ev-slot-icon">'+slot.icon+'</div><span class="ev-slot-label">'+escH(slot.label)+'</span>'
+      +(url?'<div style="position:relative;display:inline-flex;margin-bottom:8px;"><img src="'+url+'" class="ev-slot-thumb" onclick="openEvidenceModal(\''+slot.key+'\')" alt="'+escH(slot.label)+'"><button class="photo-del" onclick="removeEvidencePhoto(\''+slot.key+'\')" type="button">&#10005;</button></div>':'')
+      +'<br><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">'
+      +'<label class="photo-btn" for="evcam-'+slot.key+'">&#128247; '+(url?'Retake':'Camera')+'</label>'
+      +'<input type="file" id="evcam-'+slot.key+'" accept="image/*" capture="environment" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)">'
+      +'<label class="photo-btn" for="evgal-'+slot.key+'">&#128444;&#65039; Gallery</label>'
+      +'<input type="file" id="evgal-'+slot.key+'" accept="image/*" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)">'
+      +'</div>';
+  };
+
+  // ---- 3) ROBUST AUTO-GPS (indoor-friendly, fires on its own) ----
+  var _gpsWatchId=null, _gpsBest=null, _gpsStopTimer=null;
+  function gpsStore(pos){
+    if(_gpsBest && pos.coords.accuracy > _gpsBest.coords.accuracy) return; // keep most accurate
+    _gpsBest = pos;
+    S.header.gps = {
+      lat:+pos.coords.latitude.toFixed(6),
+      lng:+pos.coords.longitude.toFixed(6),
+      accuracy:Math.round(pos.coords.accuracy)
+    };
+    if(S.view==='checklist' && document.getElementById('clBanner') && typeof refreshBanner==='function') refreshBanner();
+  }
+  window.stopGPS = function(){
+    if(_gpsWatchId!==null){ try{ navigator.geolocation.clearWatch(_gpsWatchId); }catch(e){} _gpsWatchId=null; }
+    clearTimeout(_gpsStopTimer);
+  };
+  window.captureGPS = function(){            // same name -> every existing call uses this
+    if(!navigator.geolocation) return;
+    if(_gpsWatchId!==null) return;           // already running
+    navigator.geolocation.getCurrentPosition(   // 1) fast coarse fix (cached OK) so we have something fast
+      function(p){ gpsStore(p); }, function(){},
+      {timeout:12000, enableHighAccuracy:false, maximumAge:60000}
+    );
+    _gpsWatchId = navigator.geolocation.watchPosition(  // 2) refine continuously
+      function(p){ gpsStore(p); if(_gpsBest && _gpsBest.coords.accuracy<=35) window.stopGPS(); },
+      function(err){
+        if(err && err.code===err.PERMISSION_DENIED){
+          window.stopGPS();
+          if(typeof populateLocationDeniedSteps==='function') populateLocationDeniedSteps();
+          var m=document.getElementById('locationDeniedModal');
+          if(m && !S.header.gps) m.classList.remove('hidden');
+        }
+      },
+      {timeout:20000, enableHighAccuracy:true, maximumAge:15000}
+    );
+    clearTimeout(_gpsStopTimer);
+    _gpsStopTimer = setTimeout(window.stopGPS, 90000);  // safety stop; keeps best fix
+  };
+
+  // ---- 4) Kill the location-popup flash + auto-warm GPS on launch ----
+  function initFieldPatch(){
+    var pm = document.getElementById('locationPromptModal');
+    if(pm) pm.classList.add('hidden');       // CSS left it visible by default
+    if(navigator.geolocation && navigator.permissions){
+      navigator.permissions.query({name:'geolocation'}).then(function(p){
+        if(p.state==='granted'){ window.captureGPS(); }                 // silent auto-capture
+        else if(p.state==='prompt'){ if(pm) pm.classList.remove('hidden'); } // ask once
+        // 'denied' handled by the app's own checkLocationPermission
+      }).catch(function(){});
+    }
+    // If the checklist was somehow already drawn, redraw so new photo buttons appear
+    if(S.clRendered && typeof renderChecklist==='function') renderChecklist();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initFieldPatch);
+  else initFieldPatch();
+})();
+</script>
 </body>
 </html>
