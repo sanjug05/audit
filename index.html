@@ -519,7 +519,7 @@ body.dark .app-footer{background:#060E1B;border-top-color:rgba(255,255,255,.04)}
 </div>
 
 <!-- Location Permission Prompt Modal -->
-<div class="modal-ov" id="locationPromptModal" style="z-index:950">
+<div class="modal-ov hidden" id="locationPromptModal" style="z-index:950">
   <div class="modal-box" style="max-width:380px;width:100%;text-align:center" onclick="event.stopPropagation()">
     <div style="padding:10px 4px 4px">
       <div style="font-size:44px;margin-bottom:12px">&#128205;</div>
@@ -966,7 +966,7 @@ function critExtraHTML(itemId){
 }
 function photoAreaHTML(id,url){
   if(url)return'<div style="position:relative;display:inline-flex;"><img src="'+url+'" class="photo-thumb" onclick="openModal(\''+id+'\')" alt="Evidence"><button class="photo-del" onclick="removePhoto(\''+id+'\')" type="button">&#10005;</button></div>';
-  return'<label class="photo-btn" for="pf-'+id+'">&#128247; Take / Upload Photo</label><input type="file" id="pf-'+id+'" accept="image/*" class="file-inp" onchange="handlePhoto(\''+id+'\',this)">';
+  return'<div style="display:flex;gap:7px;flex-wrap:wrap"><label class="photo-btn" for="pf-cam-'+id+'">&#128247; Camera</label><input type="file" id="pf-cam-'+id+'" accept="image/*" capture="environment" class="file-inp" onchange="handlePhoto(\''+id+'\',this)"><label class="photo-btn" for="pf-gal-'+id+'">&#128194; Gallery</label><input type="file" id="pf-gal-'+id+'" accept="image/*" class="file-inp" onchange="handlePhoto(\''+id+'\',this)"></div>';
 }
 function evidenceCardHTML(){
   return'<div class="card" style="margin-top:16px">'
@@ -980,8 +980,8 @@ function evidenceSlotInner(slot){
   const url=S.showroomEvidence[slot.key];
   return'<div class="ev-slot-icon">'+slot.icon+'</div><span class="ev-slot-label">'+escH(slot.label)+'</span>'
     +(url?'<div style="position:relative;display:inline-flex;margin-bottom:8px;"><img src="'+url+'" class="ev-slot-thumb" onclick="openEvidenceModal(\''+slot.key+'\')" alt="'+escH(slot.label)+'"><button class="photo-del" onclick="removeEvidencePhoto(\''+slot.key+'\')" type="button">&#10005;</button></div>':'')
-    +'<br><label class="photo-btn" for="evf-'+slot.key+'">&#128247; '+(url?'Replace':'Take / Upload')+' Photo</label>'
-    +'<input type="file" id="evf-'+slot.key+'" accept="image/*" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)">';
+    +'<br><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"><label class="photo-btn" for="evcam-'+slot.key+'">&#128247; '+(url?'Retake':'Camera')+'</label><input type="file" id="evcam-'+slot.key+'" accept="image/*" capture="environment" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)"><label class="photo-btn" for="evgal-'+slot.key+'">&#128194; Gallery</label>'
+    +'<input type="file" id="evgal-'+slot.key+'" accept="image/*" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)"></div>';
 }
 function toggleSec(sid){document.getElementById('sb-'+sid).classList.toggle('coll');document.getElementById('stg-'+sid).classList.toggle('coll');}
 function onScore(id,sid,score){
@@ -1262,1583 +1262,548 @@ async function shareWhatsApp(){
     try{
       toast('Generating PDF report\u2026','info');const pdf=await buildReportPDF();
       if(pdf){
-        const fn='AIS-Audit-'+(S.header.Partner||'report').replace(/[^a-zA-Z0-9\-]/g,'_')+'-'+S.header.auditDate+'.pdf';
+        const fn='AIS-Audit-'+(S.header.Partner||'report').replace(/[^a-z0-9]/gi,'_')+'-'+S.header.auditDate+'.pdf';
         const blob=pdf.output('blob');const file=new File([blob],fn,{type:'application/pdf'});
-        if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'AIS Windows Showroom Audit',text:'Audit Report \u2013 '+(S.header.Partner||'')});return;}catch(e){}}
-        pdf.save(fn);toast('PDF saved! Now open WhatsApp to attach and send it.','ok');
-        setTimeout(()=>window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener'),1200);return;
+        if(navigator.canShare&&navigator.canShare({files:[file]})){
+          await navigator.share({files:[file],title:'AIS Showroom Audit',text:txt});
+          return;
+        }
+        pdf.save(fn);
       }
-    }catch(e){toast('PDF failed \u2013 sharing text summary instead.','info');}
+    }catch(e){/* fall through to text share */}
   }
-  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener');
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
 async function shareEmail(){
-  const h=S.header;
-  const subject='AIS Windows Showroom Audit \u2013 '+(h.Partner||'Partner')+' \u2013 '+(h.auditDate||new Date().toLocaleDateString('en-IN'));
+  const subject='AIS Showroom Audit \u2013 '+(S.header.Partner||'Report')+' \u2013 '+S.header.auditDate;
   const body=buildEmailBody();
   if(typeof html2canvas!=='undefined'&&typeof window.jspdf!=='undefined'){
     try{
       toast('Generating PDF report\u2026','info');const pdf=await buildReportPDF();
       if(pdf){
-        const fn='AIS-Audit-'+(h.Partner||'report').replace(/[^a-zA-Z0-9\-]/g,'_')+'-'+h.auditDate+'.pdf';
-        pdf.save(fn);toast('PDF downloaded! Please attach it to your email.','ok');
-        setTimeout(()=>{window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);},1200);return;
+        const fn='AIS-Audit-'+(S.header.Partner||'report').replace(/[^a-z0-9]/gi,'_')+'-'+S.header.auditDate+'.pdf';
+        const blob=pdf.output('blob');const file=new File([blob],fn,{type:'application/pdf'});
+        if(navigator.canShare&&navigator.canShare({files:[file]})){
+          await navigator.share({files:[file],title:subject,text:'AIS Showroom Audit Report attached.'});
+          return;
+        }
+        pdf.save(fn);
+        toast('PDF saved \u2013 attach it to your email','info');
       }
-    }catch(e){toast('PDF failed \u2013 opening text email instead.','info');}
+    }catch(e){}
   }
   window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
 }
-async function submitToSheets(){
-  if(!navigator.onLine){toast('No internet \u2013 cannot save right now','err');return;}
-  if(!SHEETS_SCRIPT_URL){toast('Google Sheets not configured. Add your Apps Script URL to SHEETS_SCRIPT_URL in the script.','err');return;}
-  const btn=document.getElementById('sheetsBtn');if(btn){btn.disabled=true;btn.textContent='Saving\u2026';}
-  const sc=finalScore();const cat=getCategory(sc);const cnt=statusCounts();const actions=itemsRequiringAction();const h=S.header;
-  const evCount=EVIDENCE_SLOTS.filter(sl=>S.showroomEvidence[sl.key]).length;
+// ---- Google Sheets submission ----
+let _pendingSheetPayload=null;
+function buildSheetPayload(){
+  const h=S.header;const sc=finalScore();const cat=getCategory(sc);const cnt=statusCounts();const actions=itemsRequiringAction();
   const payload={
-    submittedAt:new Date().toISOString(),Partner:h.Partner,city:h.city,state:h.state,region:h.region,
-    territory:h.territory,asm:h.asm,cseDse:h.cseDse,auditDate:h.auditDate,auditType:h.auditType,
-    finalScore:+sc.toFixed(2),category:cat.label,excellent:cnt[5],good:cnt[4],average:cnt[3],weak:cnt[2],poor:cnt[1],notScored:cnt[0],
-    itemsRequiringAction:actions.length,evidencePhotos:evCount,
-    gpsLat:h.gps?h.gps.lat:'',gpsLng:h.gps?h.gps.lng:'',gpsAccuracy:h.gps?h.gps.accuracy:'',gpsLink:h.gps?'https://maps.google.com/?q='+h.gps.lat+','+h.gps.lng:'',
-    sections:SECTIONS.map(sec=>{const ss=secScore(sec.id);return{name:sec.name,pct:+ss.pct.toFixed(1),actual:+ss.actual.toFixed(2),max:+ss.max.toFixed(2)};}),
-    items:SECTIONS.flatMap(sec=>sec.items.map(it=>{
-      const is=IS(it.id);const resp=is.responsiblePerson==='Other'?(is.responsiblePersonOther||'Other'):is.responsiblePerson;
-      return{section:sec.name,parameter:it.p,weight:it.w,score:is.score,status:SLBL[is.score],observation:is.obs,responsiblePerson:resp||'',targetDate:is.date,hasPhoto:!!is.photo};
-    }))
+    submittedAt:new Date().toISOString(),Partner:h.Partner,dealer:h.Partner,Dealer:h.Partner,partnerName:h.Partner,city:h.city,state:h.state,region:h.region,territory:h.territory,zone:h.zone,asm:h.asm,cseDse:h.cseDse,auditDate:h.auditDate,auditType:h.auditType,
+    finalScore:+sc.toFixed(2),category:cat.label,
+    excellentCount:cnt[5],goodCount:cnt[4],averageCount:cnt[3],weakCount:cnt[2],poorCount:cnt[1],notScoredCount:cnt[0],
+    itemsRequiringAction:actions.length,
+    gpsLat:h.gps?h.gps.lat:'',gpsLng:h.gps?h.gps.lng:'',gpsAccuracy:h.gps?h.gps.accuracy:'',
+    evidenceFrontElevation:S.showroomEvidence.frontElevation?'Yes':'No',
+    evidenceReception:S.showroomEvidence.reception?'Yes':'No',
+    evidenceIndoorBranding:S.showroomEvidence.indoorBranding?'Yes':'No',
+    evidenceShowroomInside:S.showroomEvidence.showroomInside?'Yes':'No'
   };
-  try{
-    saveToFirestore(payload); // parallel non-blocking Firestore save
-  saveActionItemsToFirestore(payload); // track critical failures as action items
-  toast('Saving audit to Google Sheets\u2026','info');
-    await fetch(SHEETS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-    toast('\u2705 Audit record saved to Google Sheets!','ok');
-    S.savedToSheets=true;
-    S.lastSavedAt=new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    if(btn){btn.disabled=false;btn.style.background='#0B8043';btn.innerHTML='\u2705 Saved \u00b7 Save Again';}
-  }catch(e){
-    toast('Sheets save failed: '+e.message,'err');
-    if(btn){btn.disabled=false;btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Save to Sheets';}
+  SECTIONS.forEach(sec=>{const ss=secScore(sec.id);payload['section_'+sec.id+'_pct']=+ss.pct.toFixed(1);
+    sec.items.forEach(it=>{const is=IS(it.id);const resp=is.responsiblePerson==='Other'?is.responsiblePersonOther:is.responsiblePerson;
+      payload[it.id+'_score']=is.score;payload[it.id+'_obs']=is.obs||'';payload[it.id+'_resp']=resp||'';payload[it.id+'_date']=is.date||'';});});
+  return payload;
+}
+function auditKey(){return (S.header.Partner||'')+'|'+(S.header.auditDate||'')+'|'+(S.header.auditType||'');}
+function alreadySavedKeys(){try{return JSON.parse(localStorage.getItem('ais_saved_audits_v1')||'[]');}catch(e){return[];}}
+function markSavedKey(k){try{const a=alreadySavedKeys();if(!a.includes(k)){a.push(k);localStorage.setItem('ais_saved_audits_v1',JSON.stringify(a));}}catch(e){}}
+function submitToSheets(){
+  if(!S.header.Partner){toast('Select a Partner before saving','err');return;}
+  const k=auditKey();
+  if(alreadySavedKeys().includes(k)){
+    document.getElementById('dupeSaveMsg').innerHTML='An audit for <b>'+escH(S.header.Partner)+'</b> on <b>'+escH(S.header.auditDate)+'</b> ('+escH(S.header.auditType)+') was already saved from this device. Save another copy?';
+    document.getElementById('dupeSaveModal').classList.remove('hidden');
+    return;
   }
+  doSheetSubmit();
 }
-// CHANGE 1+2: reset clears territory/zoneDisplay (no zoneSelect); unfreezes audit
-function resetConfirm(){
-  if(!confirm('Reset the entire audit form? All scores, observations, photos, and data will be cleared.'))return;
-  SECTIONS.forEach(sec=>sec.items.forEach(it=>{S.items[it.id]={score:0,obs:'',date:'',responsiblePerson:'',responsiblePersonOther:'',photo:''}}));
-  S.showroomEvidence={frontElevation:'',reception:'',indoorBranding:'',showroomInside:''};
-  S.header={zone:'',territory:'',Partner:'',city:'',state:'',region:'',asm:'',cseDse:'',auditDate:new Date().toISOString().split('T')[0],auditType:''};
-  S.clRendered=false;
-  S.frozen=false;
-  S.savedToSheets=false;S.lastSavedAt="";
-  unlockNavSetup();
-  const sb=document.getElementById('sheetsBtn');
-  if(sb){sb.style.background='';sb.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Save to Sheets';}
-  const ts=document.getElementById('terrSelect');if(ts)ts.value='';
-  const zd=document.getElementById('zoneDisplay');if(zd)zd.value='';
-  const ds=document.getElementById('PartnerSearch');if(ds){ds.value='';ds.disabled=true;ds.placeholder='Select Territory first\u2026';}
-  ['fCity','fState','fRegion','fASM','fCSE','fType'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  const fd=document.getElementById('fDate');if(fd)fd.value=S.header.auditDate;
-  curPartners=[];switchView('setup');toast('Form reset','info');
+function forceSubmitToSheets(){document.getElementById('dupeSaveModal').classList.add('hidden');doSheetSubmit(true);}
+function doSheetSubmit(force){
+  const btn=document.getElementById('sheetsBtn');
+  const payload=buildSheetPayload();
+  if(btn){btn.disabled=true;btn.innerHTML='\u23f3 Saving\u2026';}
+  toast('Saving to Google Sheets\u2026','info');
+  fetch(SHEETS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(()=>{
+      S.savedToSheets=true;S.lastSavedAt=new Date().toISOString();markSavedKey(auditKey());
+      toast('\u2705 Saved to Google Sheets','ok');
+      if(btn){btn.innerHTML='\u2705 Saved';setTimeout(()=>{btn.disabled=false;btn.innerHTML='<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z\"/></svg>Save to Sheets';},2500);}
+    })
+    .catch(e=>{
+      toast('Save failed: '+e.message,'err');
+      if(btn){btn.disabled=false;btn.innerHTML='<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z\"/></svg>Save to Sheets';}
+    });
+  // Parallel: persist to Firestore (best-effort)
+  saveToFirestore(payload);
 }
-function toast(msg,type='info'){
-  const wrap=document.getElementById('toastWrap');
-  const t=document.createElement('div');
-  t.className='toast toast-'+(type==='ok'?'ok':type==='err'?'err':'info');
-  t.innerHTML='<span>'+(type==='ok'?'\u2713':type==='err'?'\u26a0':'\u2139')+'</span><span>'+escH(msg)+'</span>';
-  wrap.appendChild(t);
-  setTimeout(()=>{t.style.animation='toastOut .25s ease forwards';setTimeout(()=>t.remove(),260);},3200);
-}
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('fDate').value=S.header.auditDate;
-  document.addEventListener('click',e=>{if(!e.target.closest('.sd-wrap'))document.getElementById('PartnerDD').classList.add('hidden');});
-  document.getElementById('fCSE').addEventListener('change',function(){S.header.cseDse=this.value;});
-  document.getElementById('fDate').addEventListener('change',function(){S.header.auditDate=this.value;});
-  document.getElementById('fType').addEventListener('change',function(){S.header.auditType=this.value;});
-  injectManifest();registerSW();initFirebase();checkAppVersion();checkDraft();setTimeout(checkLocationPermission,1500);
-});
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();deferredInstallPrompt=e;
-  const btn=document.getElementById('installBtn');if(btn)btn.classList.remove('hidden');
-});
-window.addEventListener('appinstalled',()=>{
-  toast('App installed successfully!','ok');
-  const btn=document.getElementById('installBtn');if(btn)btn.classList.add('hidden');
-  deferredInstallPrompt=null;
-});
-
-// ── FIREBASE CONFIG ────────────────────────────────────────────
-// TODO: Replace with your Firebase project config values
-const FB_CONFIG = {
-  apiKey:            "AIzaSyDav3rI7fTr8KrXYxvnz5LB82CgjRq4v20",
-  authDomain:        "ais-showroom-dashboard.firebaseapp.com",
-  projectId:         "ais-showroom-dashboard",
-  storageBucket:     "ais-showroom-dashboard.firebasestorage.app",
-  messagingSenderId: "175667492150",
-  appId:             "1:175667492150:web:cb124eb267b4689e6a2f97"
-};
-let fbDb = null, fbAuth = null, currentAdmin = null;
-const DA = { all:[], filtered:[], charts:{} };
-
+// ---- Firebase ----
+const FB_CONFIG={apiKey:"AIzaSyDav3rI7fTr8KrXYxvnz5LB82CgjRq4v20",authDomain:"ais-showroom-dashboard.firebaseapp.com",projectId:"ais-showroom-dashboard",storageBucket:"ais-showroom-dashboard.firebasestorage.app",messagingSenderId:"175667492150",appId:"1:175667492150:web:cb124eb267b4689e6a2f97"};
+let fbApp=null,fbAuth=null,fbDb=null,currentAdmin=null;
 function initFirebase(){
   try{
-    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
-    fbAuth = firebase.auth();
-    fbDb   = firebase.firestore();
-    fbAuth.onAuthStateChanged(async user=>{
-      if(!user){ currentAdmin=null; onAdminOut(); return; }
-      try{
-        const doc = await fbDb.collection('users').doc(user.uid).get();
-        if(doc.exists && doc.data().role==='admin'){
-          currentAdmin = {uid:user.uid, email:user.email, ...doc.data()};
-          onAdminIn();
-        } else {
-          await fbAuth.signOut();
-          toast('Access denied \u2013 admin role required','err');
-        }
-      }catch(e){ await fbAuth.signOut(); toast('Auth check failed: '+e.message,'err'); }
+    if(typeof firebase==='undefined')return;
+    fbApp=firebase.initializeApp(FB_CONFIG);fbAuth=firebase.auth();fbDb=firebase.firestore();
+    fbAuth.onAuthStateChanged(function(user){
+      currentAdmin=user||null;
+      const tab=document.getElementById('navDashTab');
+      if(user){if(tab)tab.classList.remove('hidden');}
+      else{if(tab)tab.classList.add('hidden');}
     });
-  }catch(e){ console.warn('[FB] Init failed:',e.message); }
+  }catch(e){/* offline / blocked */}
 }
-
-function onAdminIn(){
-  const tab=document.getElementById('navDashTab');
-  if(tab) tab.classList.remove('hidden');
-  const btn=document.getElementById('adminLoginBtn');
-  if(btn){ btn.innerHTML='\uD83D\uDD13'; btn.title='Logout ('+currentAdmin.email+')';}
-  closeAdminModal();
-  toast('Welcome '+(currentAdmin.name||currentAdmin.email),'ok');
+function saveToFirestore(payload){
+  if(!fbDb){return;}
+  if(!navigator.onLine){return;}
+  try{
+    const doc={...payload,
+      itemsDetail:SECTIONS.map(sec=>({section:sec.name,items:sec.items.map(it=>{const is=IS(it.id);const resp=is.responsiblePerson==='Other'?is.responsiblePersonOther:is.responsiblePerson;return{id:it.id,parameter:it.p,weight:it.w,critical:it.cr,score:is.score,observation:is.obs||'',responsiblePerson:resp||'',targetDate:is.date||'',photo:is.photo||''};})})),
+      evidence:Object.fromEntries(EVIDENCE_SLOTS.map(sl=>[sl.key,S.showroomEvidence[sl.key]||''])),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+    fbDb.collection('audits').add(doc).then(function(ref){saveActionItemsToFirestore(ref.id,payload);}).catch(function(){});
+  }catch(e){}
 }
-function onAdminOut(){
-  const tab=document.getElementById('navDashTab');
-  if(tab) tab.classList.add('hidden');
-  const btn=document.getElementById('adminLoginBtn');
-  if(btn){ btn.innerHTML='\uD83D\uDD12'; btn.title='Admin Login';}
-  if(S.view==='dashboard') switchView('setup');
+function saveActionItemsToFirestore(auditId,payload){
+  if(!fbDb)return;
+  const actions=itemsRequiringAction();
+  actions.forEach(function(c){
+    const is=IS(c.id);const resp=is.responsiblePerson==='Other'?is.responsiblePersonOther:is.responsiblePerson;
+    try{
+      fbDb.collection('actionItems').add({
+        auditId:auditId,Partner:payload.Partner,territory:payload.territory,zone:payload.zone,region:payload.region,asm:payload.asm,
+        auditDate:payload.auditDate,parameter:c.p,section:c.secName,score:c.score,
+        observation:is.obs||'',responsiblePerson:resp||'',targetDate:is.date||'',status:'Open',
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(){});
+    }catch(e){}
+  });
 }
-
-async function doAdminLogin(){
-  const email=document.getElementById('adminEmail').value.trim();
-  const pass=document.getElementById('adminPass').value;
-  const err=document.getElementById('adminLoginErr');
-  err.textContent='';
-  if(!email||!pass){err.textContent='Enter email and password.';return;}
-  const btn=document.getElementById('adminLoginBtn2');
-  btn.disabled=true; btn.textContent='Signing in\u2026';
-  try{ await fbAuth.signInWithEmailAndPassword(email,pass); }
-  catch(e){
-    err.textContent=e.message;
-    btn.disabled=false; btn.textContent='Sign In';
+function fetchLastAudit(partnerName){
+  if(!fbDb||!partnerName)return;
+  try{
+    fbDb.collection('audits').where('Partner','==',partnerName).limit(10).get().then(function(snap){
+      if(snap.empty)return;
+      let latest=null;
+      snap.forEach(function(d){const x=d.data();if(!latest||(x.auditDate||'')>(latest.auditDate||''))latest=x;});
+      if(latest&&S.header.Partner===partnerName){
+        toast('Last audit: '+(latest.auditDate||'\u2014')+' \u2013 '+(latest.finalScore!=null?(+latest.finalScore).toFixed(1):'\u2014'),'info');
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+// ---- GPS (robust auto-capture: fast coarse fix, then high-accuracy refine) ----
+let _gpsWatchId=null,_gpsBest=null,_gpsStopTimer=null;
+function gpsStore(pos){
+  const a=pos.coords.accuracy||9999;
+  if(!_gpsBest||a<_gpsBest.accuracy){
+    _gpsBest={lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6),accuracy:Math.round(a)};
+    S.header.gps=_gpsBest;
+    if(S.clRendered)refreshBanner();
   }
 }
-async function doAdminLogout(){
-  if(fbAuth) await fbAuth.signOut();
-  toast('Logged out','info');
+function stopGPS(){
+  if(_gpsWatchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(_gpsWatchId);_gpsWatchId=null;}
+  if(_gpsStopTimer){clearTimeout(_gpsStopTimer);_gpsStopTimer=null;}
 }
+function captureGPS(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(function(pos){gpsStore(pos);},function(err){
+    if(err&&err.code===1){populateLocationDeniedSteps();const m=document.getElementById('locationDeniedModal');if(m)m.classList.remove('hidden');}
+  },{enableHighAccuracy:false,maximumAge:60000,timeout:12000});
+  try{
+    _gpsWatchId=navigator.geolocation.watchPosition(function(pos){
+      gpsStore(pos);
+      if(_gpsBest&&_gpsBest.accuracy<=35)stopGPS();
+    },function(err){},{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+  }catch(e){}
+  if(_gpsStopTimer)clearTimeout(_gpsStopTimer);
+  _gpsStopTimer=setTimeout(stopGPS,90000);
+}
+function checkLocationPermission(){
+  if(!navigator.geolocation){const m=document.getElementById('locationPromptModal');if(m)m.classList.add('hidden');return;}
+  if(navigator.permissions&&navigator.permissions.query){
+    navigator.permissions.query({name:'geolocation'}).then(function(st){
+      if(st.state==='granted'){const m=document.getElementById('locationPromptModal');if(m)m.classList.add('hidden');captureGPS();}
+      else if(st.state==='prompt'){const m=document.getElementById('locationPromptModal');if(m)m.classList.remove('hidden');}
+      else{const m=document.getElementById('locationPromptModal');if(m)m.classList.add('hidden');}
+      st.onchange=function(){if(st.state==='granted'){const m=document.getElementById('locationPromptModal');if(m)m.classList.add('hidden');captureGPS();}};
+    }).catch(function(){captureGPS();});
+  }else{captureGPS();}
+}
+function requestLocationAccess(){
+  const m=document.getElementById('locationPromptModal');if(m)m.classList.add('hidden');
+  if(!navigator.geolocation){toast('Geolocation not supported on this device','err');return;}
+  navigator.geolocation.getCurrentPosition(function(pos){gpsStore(pos);captureGPS();toast('\ud83d\udccd Location enabled','ok');},
+    function(err){if(err&&err.code===1){populateLocationDeniedSteps();const d=document.getElementById('locationDeniedModal');if(d)d.classList.remove('hidden');}else{toast('Could not get location','err');}},
+    {enableHighAccuracy:true,maximumAge:0,timeout:15000});
+}
+function skipLocationPrompt(){const m=document.getElementById('locationPromptModal');if(m)m.classList.add('hidden');}
+function retryLocationCheck(){const d=document.getElementById('locationDeniedModal');if(d)d.classList.add('hidden');requestLocationAccess();}
+function dismissLocationDenied(){const d=document.getElementById('locationDeniedModal');if(d)d.classList.add('hidden');}
+function populateLocationDeniedSteps(){
+  const el=document.getElementById('locationDeniedSteps');if(!el)return;
+  const ua=navigator.userAgent||'';let steps='';
+  if(/iPhone|iPad|iPod/i.test(ua)){
+    steps='1. Open <b>Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services</b><br>2. Ensure Location Services is <b>On</b><br>3. Find <b>Safari Websites</b> &rsaquo; set to <b>While Using</b><br>4. Return here and tap <b>Check Again</b>';
+  }else if(/Android/i.test(ua)){
+    steps='1. Tap the <b>\ud83d\udd12 lock icon</b> in the address bar<br>2. Tap <b>Permissions</b> \u2192 <b>Location</b><br>3. Set to <b>Allow</b><br>4. Return here and tap <b>Check Again</b>';
+  }else{
+    steps='1. Click the <b>\ud83d\udd12 lock icon</b> in the address bar<br>2. Set <b>Location</b> to <b>Allow</b><br>3. Reload if prompted, then tap <b>Check Again</b>';
+  }
+  el.innerHTML=steps;
+}
+// ---- Unscored blocker ----
+function showUnscoredBlocker(unscored){
+  const body=document.getElementById('valModalBody');
+  body.innerHTML='<p class="val-count">'+unscored.length+' item'+(unscored.length>1?'s':'')+' not yet scored. All 21 parameters are mandatory:</p>'
+    +'<ul class="val-list">'+unscored.map(u=>'<li class="val-item"><span class="val-item-field">Not Scored</span><span class="val-item-param">'+escH(u.p.length>68?u.p.substring(0,65)+'\u2026':u.p)+'</span><span class="val-item-sec">'+escH(u.secName)+'</span></li>').join('')+'</ul>'
+    +'<p class="val-hint">Score every parameter (1\u20135) before viewing the summary.</p>';
+  document.getElementById('valOverlay').classList.remove('hidden');
+  unscored.forEach(u=>{const row=document.getElementById('ir-'+u.id);if(row)row.classList.add('item-needs-action');});
+}
+// ---- Signature pads ----
+function buildSigRow(auditorName,asmName){
+  return'<div class="rpt-sig">'
+    +'<div class="sig-line">Audited by: '+escH(auditorName||'\u2014')+'<br><span style="font-size:9px">CSE / DSE Signature</span></div>'
+    +'<div class="sig-line">Partner Representative<br><span style="font-size:9px">Name &amp; Signature</span></div>'
+    +'<div class="sig-line">ASM / RM: '+escH(asmName||'\u2014')+'<br><span style="font-size:9px">Signature</span></div>'
+    +'</div>';
+}
+function initSignaturePads(){/* signature lines are print-only placeholders in v5.1.0 */}
+// ---- Draft autosave / resume ----
+function saveDraft(){
+  try{localStorage.setItem('ais_audit_draft_v2',JSON.stringify({header:S.header,items:S.items,showroomEvidence:S.showroomEvidence,savedAt:new Date().toISOString()}));}catch(e){}
+}
+function loadDraft(){
+  try{
+    const raw=localStorage.getItem('ais_audit_draft_v2');if(!raw)return;
+    const d=JSON.parse(raw);if(!d||!d.header||!d.header.Partner)return;
+    const scored=d.items?Object.values(d.items).filter(x=>x&&x.score>0).length:0;
+    if(scored===0)return;
+    if(confirm('Resume your in-progress audit for '+(d.header.Partner||'a Partner')+' ('+scored+' items scored)?')){
+      S.header=Object.assign(S.header,d.header);
+      if(d.items)Object.keys(d.items).forEach(k=>{if(S.items[k])S.items[k]=Object.assign(S.items[k],d.items[k]);});
+      if(d.showroomEvidence)S.showroomEvidence=Object.assign(S.showroomEvidence,d.showroomEvidence);
+      const ts=document.getElementById('terrSelect');if(ts&&S.header.territory){ts.value=S.header.territory;onTerrChange(S.header.territory);}
+      if(S.header.Partner){const ps=document.getElementById('PartnerSearch');if(ps)ps.value=S.header.Partner;
+        document.getElementById('fCity').value=S.header.city||'';document.getElementById('fState').value=S.header.state||'';
+        document.getElementById('fRegion').value=S.header.region||'';document.getElementById('fASM').value=S.header.asm||'';}
+      const fc=document.getElementById('fCSE');if(fc)fc.value=S.header.cseDse||'';
+      const fd=document.getElementById('fDate');if(fd)fd.value=S.header.auditDate||'';
+      const ft=document.getElementById('fType');if(ft)ft.value=S.header.auditType||'';
+      S.clRendered=false;switchView('checklist');toast('Draft restored','ok');
+    }
+  }catch(e){}
+}
+// ---- Reset ----
+function resetConfirm(){
+  if(!confirm('Reset the entire audit form? All scores, observations, photos, and data will be cleared.'))return;
+  SECTIONS.forEach(sec=>sec.items.forEach(it=>{S.items[it.id]={score:0,obs:'',date:'',responsiblePerson:'',responsiblePersonOther:'',photo:''};}));
+  S.showroomEvidence={frontElevation:'',reception:'',indoorBranding:'',showroomInside:''};
+  S.header={zone:'',territory:'',Partner:'',city:'',state:'',region:'',asm:'',cseDse:'',auditDate:new Date().toISOString().split('T')[0],auditType:''};
+  S.clRendered=false;S.frozen=false;S.savedToSheets=false;
+  unlockNavSetup();stopGPS();_gpsBest=null;
+  const ts=document.getElementById('terrSelect');if(ts)ts.value='';
+  const zd=document.getElementById('zoneDisplay');if(zd)zd.value='';
+  const ps=document.getElementById('PartnerSearch');if(ps){ps.value='';ps.disabled=true;ps.placeholder='Select Territory first\u2026';}
+  ['fCity','fState','fRegion','fASM','fCSE','fType'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const fd=document.getElementById('fDate');if(fd)fd.value=S.header.auditDate;
+  curPartners=[];
+  try{localStorage.removeItem('ais_audit_draft_v2');}catch(e){}
+  switchView('setup');toast('Form reset','info');
+}
+// ---- Admin auth ----
 function showAdminLogin(){
-  if(currentAdmin){ doAdminLogout(); return; }
+  if(currentAdmin){switchView('dashboard');return;}
+  document.getElementById('adminLoginErr').textContent='';
   document.getElementById('adminModal').classList.remove('hidden');
-  setTimeout(()=>{ const e=document.getElementById('adminEmail'); if(e)e.focus(); },100);
+  setTimeout(()=>{const e=document.getElementById('adminEmail');if(e)e.focus();},100);
 }
-function closeAdminModal(){ document.getElementById('adminModal').classList.add('hidden'); }
-
-// Non-blocking Firestore save (parallel to Sheets, fire-and-forget)
-function saveToFirestore(payload){
-  if(!fbDb) return;
-  fbDb.collection('audits').add({
-    ...payload,
-    _savedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>console.log('[FB] Audit saved to Firestore'))
-    .catch(e=>console.warn('[FB] Firestore save failed:',e.message));
+function closeAdminModal(){document.getElementById('adminModal').classList.add('hidden');}
+function doAdminLogin(){
+  const email=(document.getElementById('adminEmail').value||'').trim();
+  const pass=document.getElementById('adminPass').value||'';
+  const err=document.getElementById('adminLoginErr');const btn=document.getElementById('adminLoginBtn2');
+  if(!email||!pass){err.textContent='Enter email and password';return;}
+  if(!fbAuth){err.textContent='Authentication unavailable (offline?)';return;}
+  err.textContent='';if(btn){btn.disabled=true;btn.textContent='Signing in\u2026';}
+  fbAuth.signInWithEmailAndPassword(email,pass).then(function(){
+    closeAdminModal();document.getElementById('adminPass').value='';
+    if(btn){btn.disabled=false;btn.textContent='Sign In';}
+    switchView('dashboard');toast('Welcome back','ok');
+  }).catch(function(e){
+    if(btn){btn.disabled=false;btn.textContent='Sign In';}
+    err.textContent=(e&&e.code==='auth/invalid-credential')?'Invalid email or password':(e.message||'Login failed');
+  });
 }
-
-// ── DASHBOARD ─────────────────────────────────────────────────
+function adminLogout(){if(fbAuth){fbAuth.signOut().then(function(){toast('Signed out','info');switchView('setup');});}}
+// ---- Dashboard ----
+const DA={audits:[],actionItems:[],charts:{},filters:{zone:'',territory:'',type:'',from:'',to:''}};
 async function openDashboard(){
   const root=document.getElementById('dashRoot');
   if(!currentAdmin){
-    root.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;'
-      +'justify-content:center;min-height:300px;gap:16px;text-align:center">'
-      +'<div style="font-size:40px">\uD83D\uDD12</div>'
-      +'<div style="font-size:16px;font-weight:800;color:var(--text)">Admin Dashboard</div>'
-      +'<div style="font-size:13px;color:var(--text-muted)">Sign in as admin to view audit analytics</div>'
-      +'<button class="btn btn-primary" onclick="showAdminLogin()">Admin Login</button></div>';
+    root.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:16px;text-align:center"><div style="font-size:40px">&#128272;</div><div style="font-size:16px;font-weight:800;color:var(--text)">Admin Dashboard</div><div style="font-size:13px;color:var(--text-muted)">Sign in as admin to view audit analytics</div><button class="btn btn-primary" onclick="showAdminLogin()">Admin Login</button></div>';
     return;
   }
   renderDashShell();
   await loadAudits();
 }
-
 function renderDashShell(){
-  document.getElementById('dashRoot').innerHTML=
-    '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">'
-    +'<div><div class="view-title">Admin Dashboard</div>'
-    +'<div class="view-sub" id="dashSubLbl">Loading audits\u2026</div></div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    +'<button class="btn btn-secondary" onclick="loadAudits()">&#8635; Refresh</button>'
-    +'<button class="btn btn-ghost" onclick="generateMonthlyPDF()">&#128196; Monthly PDF</button><button class="btn btn-danger" onclick="doAdminLogout()">Logout</button></div></div>'
-    +'<div id="dashFilterBar" style="background:var(--surface);border:1px solid var(--border);'
-    +'border-radius:var(--r);padding:14px 16px;margin-bottom:14px"></div>'
-    +'<div id="dashKPIs" style="margin-bottom:14px">'
-    +'<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">'
-    +'\u23F3 Fetching audit records\u2026</div></div>'
-    +'<div id="actionItemsSection" style="margin-bottom:14px"></div>'+'<div id="dashCharts" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px"></div>'
+  const root=document.getElementById('dashRoot');
+  root.innerHTML='<div class="vh" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px">'
+    +'<div><div class="view-title">Audit Analytics</div><div class="view-sub">Live data from all submitted audits</div></div>'
+    +'<div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="loadAudits()">\u21bb Refresh</button><button class="btn btn-secondary" onclick="adminLogout()">Sign Out</button></div></div>'
+    +'<div id="dashFilters" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"></div>'
+    +'<div id="dashKpis" class="grid-4" style="margin-bottom:14px"></div>'
+    +'<div id="dashCharts" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px"></div>'
     +'<div id="dashTables"></div>';
 }
-
 async function loadAudits(){
-  if(!fbDb||!currentAdmin) return;
-  const sub=document.getElementById('dashSubLbl');
-  if(sub) sub.textContent='Loading\u2026';
+  const kpis=document.getElementById('dashKpis');if(kpis)kpis.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Loading audits\u2026</div>';
+  if(!fbDb){if(kpis)kpis.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--danger);padding:20px">Database unavailable</div>';return;}
   try{
-    const snap=await fbDb.collection('audits').orderBy('auditDate','desc').limit(500).get();
-    DA.all=snap.docs.map(d=>({id:d.id,...d.data()}));
-    DA.filtered=[...DA.all];
-    if(sub) sub.textContent=DA.all.length+' audit'+(DA.all.length!==1?'s':'')+' loaded';
-    buildFilterBar();
-    renderKPIs();
-    renderDashCharts();
-    renderTables();
-  }catch(e){
-    const el=document.getElementById('dashKPIs');
-    if(el) el.innerHTML='<div style="color:var(--danger);padding:16px;font-size:13px">'
-      +'\u26A0 Failed to load: '+escH(e.message)+'</div>';
-    toast('Dashboard load failed','err');
-  }
+    const snap=await fbDb.collection('audits').limit(2000).get();
+    DA.audits=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const aiSnap=await fbDb.collection('actionItems').limit(3000).get();
+    DA.actionItems=aiSnap.docs.map(d=>({id:d.id,...d.data()}));
+    renderFilters();renderDash();
+  }catch(e){if(kpis)kpis.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--danger);padding:20px">Failed to load: '+escH(e.message)+'</div>';}
 }
-
-function buildFilterBar(){
-  const fb=document.getElementById('dashFilterBar');if(!fb)return;
-  const uniq=key=>[...new Set(DA.all.map(a=>a[key]).filter(Boolean))].sort();
-  const sel=(id,lbl,opts)=>'<div class="fg" style="flex:1;min-width:110px">'
-    +'<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">'+lbl+'</label>'
-    +'<select id="'+id+'" onchange="applyDashFilters()" style="padding:7px 9px;border:1.5px solid var(--border);'
-    +'border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);font-size:12px;width:100%">'
-    +'<option value="">All</option>'+opts.map(o=>'<option value="'+escH(o)+'">'+escH(o)+'</option>').join('')
-    +'</select></div>';
-  const dateInp=(id,lbl)=>'<div class="fg" style="flex:1;min-width:120px">'
-    +'<label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">'+lbl+'</label>'
-    +'<input type="date" id="'+id+'" onchange="applyDashFilters()" style="padding:7px 9px;border:1.5px solid var(--border);'
-    +'border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);font-size:12px;width:100%"></div>';
-  fb.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">'
-    +dateInp('dfFrom','From Date')+dateInp('dfTo','To Date')
-    +sel('dfZone','Zone',uniq('region'))
-    +sel('dfTerr','Territory',uniq('territory'))
-    +sel('dfState','State',uniq('state'))
-    +sel('dfCity','City',uniq('city'))
-    +sel('dfPartner','Partner',uniq('Partner'))
-    +sel('dfAsm','ASM / RM',uniq('asm'))
-    +'<div style="flex:0;padding-top:18px">'
-    +'<button class="btn btn-secondary" onclick="clearDashFilters()">&#10005; Clear</button></div>'
-    +'</div>';
-}
-
-function applyDashFilters(){
-  const g=id=>{const e=document.getElementById(id);return e?e.value:'';};
-  const from=g('dfFrom'),to=g('dfTo'),zone=g('dfZone'),terr=g('dfTerr'),
-        state=g('dfState'),city=g('dfCity'),Partner=g('dfPartner'),asm=g('dfAsm');
-  DA.filtered=DA.all.filter(a=>{
-    if(from&&a.auditDate<from) return false;
-    if(to  &&a.auditDate>to)   return false;
-    if(zone  &&a.region   !==zone)   return false;
-    if(terr  &&a.territory!==terr)   return false;
-    if(state &&a.state    !==state)  return false;
-    if(city  &&a.city     !==city)   return false;
-    if(Partner&&a.Partner   !==Partner) return false;
-    if(asm   &&a.asm      !==asm)    return false;
+function filteredAudits(){
+  const f=DA.filters;
+  return DA.audits.filter(a=>{
+    if(f.zone&&(a.zone||'')!==f.zone&&(a.region||'')!==f.zone)return false;
+    if(f.territory&&(a.territory||'')!==f.territory)return false;
+    if(f.type&&(a.auditType||'')!==f.type)return false;
+    if(f.from&&(a.auditDate||'')<f.from)return false;
+    if(f.to&&(a.auditDate||'')>f.to)return false;
     return true;
   });
-  const sub=document.getElementById('dashSubLbl');
-  if(sub) sub.textContent=DA.filtered.length+' of '+DA.all.length+' audits';
-  renderKPIs(); renderDashCharts(); renderTables(); loadActionItems();
 }
-
-function clearDashFilters(){
-  ['dfFrom','dfTo','dfZone','dfTerr','dfState','dfCity','dfPartner','dfAsm']
-    .forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  DA.filtered=[...DA.all];
-  const sub=document.getElementById('dashSubLbl');
-  if(sub) sub.textContent=DA.all.length+' audits loaded';
-  renderKPIs(); renderDashCharts(); renderTables();
+function renderFilters(){
+  const el=document.getElementById('dashFilters');if(!el)return;
+  const zones=[...new Set(DA.audits.map(a=>a.zone||a.region).filter(Boolean))].sort();
+  const terrs=[...new Set(DA.audits.map(a=>a.territory).filter(Boolean))].sort();
+  const types=[...new Set(DA.audits.map(a=>a.auditType).filter(Boolean))].sort();
+  const sel=(id,label,opts,val)=>'<div class="fg" style="min-width:140px"><label>'+label+'</label><select id="'+id+'" onchange="onFilterChange()"><option value="">All</option>'+opts.map(o=>'<option'+(o===val?' selected':'')+'>'+escH(o)+'</option>').join('')+'</select></div>';
+  el.innerHTML=sel('fltZone','Zone',zones,DA.filters.zone)+sel('fltTerr','Territory',terrs,DA.filters.territory)+sel('fltType','Audit Type',types,DA.filters.type)
+    +'<div class="fg" style="min-width:130px"><label>From</label><input type="date" id="fltFrom" value="'+(DA.filters.from||'')+'" onchange="onFilterChange()"></div>'
+    +'<div class="fg" style="min-width:130px"><label>To</label><input type="date" id="fltTo" value="'+(DA.filters.to||'')+'" onchange="onFilterChange()"></div>'
+    +'<button class="btn btn-secondary" onclick="clearFilters()">Clear</button>';
 }
-
-function renderKPIs(){
-  const el=document.getElementById('dashKPIs');if(!el)return;
-  const d=DA.filtered,n=d.length;
-  if(!n){el.innerHTML='<div style="color:var(--text-muted);padding:20px;text-align:center;'
-    +'font-size:13px">No audits match current filters.</div>';return;}
-  const avg=+(d.reduce((s,a)=>s+(a.finalScore||0),0)/n).toFixed(1);
-  const cats={Platinum:0,Gold:0,Silver:0,Critical:0};
-  d.forEach(a=>{
-    const c=a.category||'';
-    if(c==='Platinum') cats.Platinum++;
-    else if(c==='Gold') cats.Gold++;
-    else if(c==='Silver') cats.Silver++;
-    else cats.Critical++;
-  });
-  const kpi=(label,val,col,sub)=>'<div style="background:var(--surface);border:1px solid var(--border);'
-    +'border-radius:var(--r);padding:16px 12px;text-align:center;box-shadow:var(--shadow-xs)">'
-    +'<div style="font-size:26px;font-weight:800;color:'+col+';line-height:1">'+val+'</div>'
-    +'<div style="font-size:11.5px;font-weight:700;color:var(--text);margin-top:5px">'+label+'</div>'
-    +(sub?'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">'+sub+'</div>':'')
-    +'</div>';
-  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px">'
-    +kpi('Total Audits',n,'var(--teal)','')
-    +kpi('Avg Score',avg,'var(--teal)',n+' audits')
-    +kpi('Platinum',cats.Platinum,'#7C3AED','\u226590 pts')
-    +kpi('Gold',cats.Gold,'#D97706','70\u201389 pts')
-    +kpi('Silver',cats.Silver,'#64748B','60\u201369 pts')
-    +kpi('Critical',cats.Critical,'#DC2626','<60 pts')
-    +'</div>';
+function onFilterChange(){
+  DA.filters.zone=document.getElementById('fltZone').value;
+  DA.filters.territory=document.getElementById('fltTerr').value;
+  DA.filters.type=document.getElementById('fltType').value;
+  DA.filters.from=document.getElementById('fltFrom').value;
+  DA.filters.to=document.getElementById('fltTo').value;
+  renderDash();
 }
-
-function destroyChart(k){
-  if(DA.charts[k]){try{DA.charts[k].destroy();}catch(e){}delete DA.charts[k];}
+function clearFilters(){DA.filters={zone:'',territory:'',type:'',from:'',to:''};renderFilters();renderDash();}
+function renderDash(){renderKpis();renderDashCharts();renderTables();}
+function renderKpis(){
+  const el=document.getElementById('dashKpis');if(!el)return;
+  const a=filteredAudits();const n=a.length;
+  const avg=n?a.reduce((s,x)=>s+(+x.finalScore||0),0)/n:0;
+  const openAI=DA.actionItems.filter(x=>(x.status||'Open')==='Open').length;
+  const critical=a.filter(x=>(x.category||'').toLowerCase().includes('critical')).length;
+  const box=(v,l,c)=>'<div class="sc-box" style="border-top:3px solid '+c+'"><div class="sc-box-count" style="color:'+c+'">'+v+'</div><div class="sc-box-lbl">'+l+'</div></div>';
+  el.innerHTML=box(n,'Audits','#00B5CC')+box(avg.toFixed(1),'Avg Score','#7C3AED')+box(critical,'Critical','#DC2626')+box(openAI,'Open Actions','#D97706');
 }
-
+function destroyCharts(){Object.values(DA.charts).forEach(c=>{try{c.destroy();}catch(e){}});DA.charts={};}
+function chartColors(){const dark=document.body.classList.contains('dark');return{grid:dark?'rgba(255,255,255,.08)':'rgba(11,31,58,.08)',text:dark?'#8CAFC8':'#3D5473'};}
 function renderDashCharts(){
-  const el=document.getElementById('dashCharts');if(!el)return;
-  const d=DA.filtered;
-  if(!d.length){el.innerHTML='';return;}
-  el.innerHTML=
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-xs)">'
-    +'<div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:10px">Category Distribution</div>'
-    +'<div style="position:relative;height:220px"><canvas id="chartCat"></canvas></div></div>'
-    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-xs)">'
-    +'<div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:10px">Avg Score by Zone</div>'
-    +'<div style="position:relative;height:220px"><canvas id="chartZone"></canvas></div></div>'
-    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-xs);grid-column:1/-1">'
-    +'<div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:10px">Score Trend (last 60 audits, sorted by date)</div>'
-    +'<div style="position:relative;height:200px"><canvas id="chartTrend"></canvas></div></div>';
-
-  const tc=S.dark?'#8CAFC8':'#7A90AA';
-  const gridC=S.dark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
-
-  // Category donut
-  destroyChart('cat');
-  DA.charts['cat']=new Chart(document.getElementById('chartCat'),{
-    type:'doughnut',
-    data:{
-      labels:['Platinum','Gold','Silver','Critical'],
-      datasets:[{
-        data:[
-          d.filter(a=>a.category==='Platinum').length,
-          d.filter(a=>a.category==='Gold').length,
-          d.filter(a=>a.category==='Silver').length,
-          d.filter(a=>!['Platinum','Gold','Silver'].includes(a.category)).length
-        ],
-        backgroundColor:['#7C3AED','#D97706','#64748B','#DC2626'],
-        borderWidth:2,borderColor:S.dark?'#111C2E':'#fff'
-      }]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'right',labels:{font:{size:11},color:tc,padding:8}}}}
-  });
-
-  // Zone bar
-  destroyChart('zone');
-  const zMap={};
-  d.forEach(a=>{const z=a.region||'Unknown';if(!zMap[z])zMap[z]=[];zMap[z].push(a.finalScore||0);});
-  const zL=Object.keys(zMap).sort();
-  const zD=zL.map(z=>+(zMap[z].reduce((s,v)=>s+v,0)/zMap[z].length).toFixed(1));
-  DA.charts['zone']=new Chart(document.getElementById('chartZone'),{
-    type:'bar',
-    data:{labels:zL,datasets:[{label:'Avg Score',data:zD,
-      backgroundColor:'rgba(0,181,204,.65)',borderColor:'#00B5CC',borderWidth:1,borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      scales:{y:{min:0,max:100,grid:{color:gridC},ticks:{font:{size:10},color:tc}},
-              x:{grid:{display:false},ticks:{font:{size:10},color:tc}}},
-      plugins:{legend:{display:false}}}
-  });
-
-  // Trend line
-  destroyChart('trend');
-  const sorted=[...d].filter(a=>a.auditDate).sort((a,b)=>a.auditDate.localeCompare(b.auditDate)).slice(-60);
-  DA.charts['trend']=new Chart(document.getElementById('chartTrend'),{
-    type:'line',
-    data:{
-      labels:sorted.map(a=>a.auditDate),
-      datasets:[{label:'Score',data:sorted.map(a=>a.finalScore||0),
-        borderColor:'#00B5CC',backgroundColor:'rgba(0,181,204,.08)',
-        fill:true,tension:0.4,pointRadius:2,pointHoverRadius:4}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      scales:{y:{min:0,max:100,grid:{color:gridC},ticks:{font:{size:10},color:tc}},
-              x:{grid:{display:false},ticks:{maxTicksLimit:12,font:{size:10},color:tc}}},
-      plugins:{legend:{display:false}}}
-  });
+  const wrap=document.getElementById('dashCharts');if(!wrap)return;
+  if(typeof Chart==='undefined'){wrap.innerHTML='<div style="color:var(--text-muted)">Charts unavailable offline</div>';return;}
+  destroyCharts();
+  wrap.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px">Category Distribution</div><canvas id="chCat" height="180"></canvas></div>'
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px">Average Score by Zone</div><canvas id="chZone" height="180"></canvas></div>'
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;grid-column:1/-1"><div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px">Audits Over Time</div><canvas id="chTime" height="120"></canvas></div>';
+  const a=filteredAudits();const col=chartColors();
+  const cats=['Platinum','Gold','Silver','Improvement Required / Critical'];
+  const catCounts=cats.map(c=>a.filter(x=>(x.category||'')===c).length);
+  DA.charts.cat=new Chart(document.getElementById('chCat'),{type:'doughnut',data:{labels:['Platinum','Gold','Silver','Critical'],datasets:[{data:catCounts,backgroundColor:['#7C3AED','#D97706','#64748B','#DC2626']}]},options:{plugins:{legend:{position:'bottom',labels:{color:col.text,font:{size:11}}}},maintainAspectRatio:true}});
+  const zones=[...new Set(a.map(x=>x.zone||x.region).filter(Boolean))].sort();
+  const zoneAvg=zones.map(z=>{const zz=a.filter(x=>(x.zone||x.region)===z);return zz.length?zz.reduce((s,x)=>s+(+x.finalScore||0),0)/zz.length:0;});
+  DA.charts.zone=new Chart(document.getElementById('chZone'),{type:'bar',data:{labels:zones,datasets:[{label:'Avg Score',data:zoneAvg.map(v=>+v.toFixed(1)),backgroundColor:'#00B5CC'}]},options:{scales:{y:{beginAtZero:true,max:100,grid:{color:col.grid},ticks:{color:col.text}},x:{grid:{display:false},ticks:{color:col.text}}},plugins:{legend:{display:false}},maintainAspectRatio:true}});
+  const byDate={};a.forEach(x=>{const d=(x.auditDate||'').slice(0,7);if(d)byDate[d]=(byDate[d]||0)+1;});
+  const months=Object.keys(byDate).sort();
+  DA.charts.time=new Chart(document.getElementById('chTime'),{type:'line',data:{labels:months,datasets:[{label:'Audits',data:months.map(m=>byDate[m]),borderColor:'#7C3AED',backgroundColor:'rgba(124,58,237,.15)',fill:true,tension:.3}]},options:{scales:{y:{beginAtZero:true,grid:{color:col.grid},ticks:{color:col.text,precision:0}},x:{grid:{display:false},ticks:{color:col.text}}},plugins:{legend:{display:false}},maintainAspectRatio:true}});
 }
-
 function renderTables(){
   const el=document.getElementById('dashTables');if(!el)return;
-  const d=DA.filtered;if(!d.length){el.innerHTML='';return;}
-
-  // Partner aggregation
-  const dMap={};
-  d.forEach(a=>{
-    if(!a.Partner)return;
-    if(!dMap[a.Partner]) dMap[a.Partner]={scores:[],region:a.region||'',territory:a.territory||''};
-    dMap[a.Partner].scores.push(a.finalScore||0);
-  });
-  const dRows=Object.entries(dMap).map(([name,v])=>({
-    name,region:v.region,territory:v.territory,count:v.scores.length,
-    avg:+(v.scores.reduce((s,x)=>s+x,0)/v.scores.length).toFixed(1)
-  })).sort((a,b)=>b.avg-a.avg);
-
-  // Zone aggregation
-  const zMap={};
-  d.forEach(a=>{
-    const z=a.region||'?';
-    if(!zMap[z]) zMap[z]={scores:[],territories:new Set()};
-    zMap[z].scores.push(a.finalScore||0);
-    if(a.territory) zMap[z].territories.add(a.territory);
-  });
-  const zRows=Object.entries(zMap).map(([zone,v])=>({
-    zone,count:v.scores.length,terrs:v.territories.size,
-    avg:+(v.scores.reduce((s,x)=>s+x,0)/v.scores.length).toFixed(1)
-  })).sort((a,b)=>b.avg-a.avg);
-
-  // Most failed items
-  const fMap={};
-  d.forEach(a=>{
-    if(!Array.isArray(a.items))return;
-    a.items.forEach(it=>{
-      if((it.score===1||it.score===2)&&it.parameter)
-        fMap[it.parameter]=(fMap[it.parameter]||0)+1;
-    });
-  });
-  const fRows=Object.entries(fMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
-
-  // Territory aggregation
-  const tMap={};
-  d.forEach(a=>{
-    const t=a.territory||'?';
-    if(!tMap[t]) tMap[t]={scores:[],region:a.region||''};
-    tMap[t].scores.push(a.finalScore||0);
-  });
-  const tRows=Object.entries(tMap).map(([terr,v])=>({
-    terr,region:v.region,count:v.scores.length,
-    avg:+(v.scores.reduce((s,x)=>s+x,0)/v.scores.length).toFixed(1)
-  })).sort((a,b)=>b.avg-a.avg);
-
-  const catBadge=s=>s>=90?'<span style="color:#7C3AED;font-weight:700">Platinum</span>'
-    :s>=70?'<span style="color:#D97706;font-weight:700">Gold</span>'
-    :s>=60?'<span style="color:#64748B;font-weight:700">Silver</span>'
-    :'<span style="color:#DC2626;font-weight:700">Critical</span>';
-
-  const th=(...cols)=>'<tr>'+cols.map(c=>'<th class="dash-stat-tbl" style="padding:7px 10px;'
-    +'background:var(--surface-2);border-bottom:2px solid var(--border);font-size:10.5px;'
-    +'font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;'
-    +'text-align:left">'+c+'</th>').join('')+'</tr>';
-  const tr=(...cells)=>'<tr style="border-bottom:1px solid var(--border-2)">'+cells.map(c=>
-    '<td style="padding:7px 10px;font-size:12px;color:var(--text);vertical-align:top">'+c+'</td>').join('')+'</tr>';
-  const tbl=(hdrs,rows)=>'<div style="overflow-x:auto"><table class="dash-stat-tbl" style="width:100%;border-collapse:collapse">'
-    +'<thead>'+th(...hdrs)+'</thead><tbody>'+rows.join('')+'</tbody></table></div>';
-  const card=(icon,title,body)=>'<div style="background:var(--surface);border:1px solid var(--border);'
-    +'border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-xs)">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">'+icon+' '+title+'</div>'+body+'</div>';
-
-  const scoreCell=s=>'<span style="font-weight:800;font-size:13px">'+s+'</span>';
-
-  el.innerHTML=
-    card('\uD83C\uDFC6','Top 5 Partners',
-      tbl(['Partner','Zone','Territory','Audits','Avg Score','Category'],
-        dRows.slice(0,5).map(r=>tr(dlnk(r.name),escH(r.region),escH(r.territory),r.count,scoreCell(r.avg),catBadge(r.avg)))))
-    +card('\uD83D\uDCC9','Bottom 5 Partners',
-      tbl(['Partner','Zone','Territory','Audits','Avg Score','Category'],
-        dRows.slice(-5).reverse().map(r=>tr(dlnk(r.name),escH(r.region),escH(r.territory),r.count,
-          '<span style="font-weight:800;font-size:13px;color:var(--danger)">'+r.avg+'</span>',catBadge(r.avg)))))
-    +card('\uD83C\uDF0E','Zone Performance',
-      tbl(['Zone','Audits','Territories','Avg Score','Category'],
-        zRows.map(r=>tr(escH(r.zone),r.count,r.terrs,scoreCell(r.avg),catBadge(r.avg)))))
-    +card('\uD83D\uDCCC','Territory Performance',
-      tbl(['Territory','Zone','Audits','Avg Score','Category'],
-        tRows.map(r=>tr(escH(r.terr),escH(r.region),r.count,scoreCell(r.avg),catBadge(r.avg)))))
-    +(fRows.length ? card('\u26A0','Most Failed Audit Items (Score 1\u20132)',
-      tbl(['Audit Parameter','Times Scored Poor / Weak'],
-        fRows.map(r=>tr('<span style="font-size:11.5px">'+escH(r[0])+'</span>',
-          '<span style="font-weight:800;color:var(--danger)">'+r[1]+'</span>')))) : '');
-  renderReauditTable();
+  const a=filteredAudits();
+  const byPartner={};a.forEach(x=>{const k=x.Partner||'\u2014';if(!byPartner[k])byPartner[k]={n:0,sum:0,last:''};byPartner[k].n++;byPartner[k].sum+=(+x.finalScore||0);if((x.auditDate||'')>byPartner[k].last)byPartner[k].last=x.auditDate||'';});
+  const partners=Object.entries(byPartner).map(([k,v])=>({Partner:k,avg:v.sum/v.n,n:v.n,last:v.last})).sort((p,q)=>q.avg-p.avg);
+  const top=partners.slice(0,5),bottom=partners.slice(-5).reverse();
+  const card=(title,rows)=>'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">'+title+'</div><div style="overflow-x:auto"><table class="dash-stat-tbl"><thead><tr><th>Partner</th><th>Avg</th><th>Audits</th><th>Last</th></tr></thead><tbody>'+rows.map(p=>'<tr><td style="cursor:pointer;color:var(--teal);font-weight:600" onclick="openPartnerScorecard(\''+escH(p.Partner).replace(/'/g,"\\'")+'\')">'+escH(p.Partner)+'</td><td style="font-weight:700">'+p.avg.toFixed(1)+'</td><td>'+p.n+'</td><td style="font-size:11px;color:var(--text-muted)">'+escH(p.last||'\u2014')+'</td></tr>').join('')+'</tbody></table></div></div>';
+  // Most-failed parameters
+  const failCount={};a.forEach(x=>{(x.itemsDetail||[]).forEach(sec=>{(sec.items||[]).forEach(it=>{if(it.score>0&&it.score<=2){failCount[it.parameter]=(failCount[it.parameter]||0)+1;}});});});
+  const fails=Object.entries(failCount).sort((p,q)=>q[1]-p[1]).slice(0,8);
+  const failsCard='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Most-Failed Parameters</div>'+(fails.length?'<div style="overflow-x:auto"><table class="dash-stat-tbl"><thead><tr><th>Parameter</th><th>Times Failed</th></tr></thead><tbody>'+fails.map(f=>'<tr><td>'+escH(f[0])+'</td><td style="font-weight:700;color:var(--danger)">'+f[1]+'</td></tr>').join('')+'</tbody></table></div>':'<div style="color:var(--text-muted);font-size:12px">No failed parameters in range</div>')+'</div>';
+  // Open action items
+  const openItems=DA.actionItems.filter(x=>(x.status||'Open')==='Open').slice(0,40);
+  const aiCard='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Open Action Items ('+DA.actionItems.filter(x=>(x.status||"Open")==="Open").length+')</div>'+(openItems.length?'<div style="overflow-x:auto"><table class="dash-stat-tbl"><thead><tr><th>Partner</th><th>Parameter</th><th>Target</th><th>Responsible</th></tr></thead><tbody>'+openItems.map(it=>'<tr><td>'+escH(it.Partner||'\u2014')+'</td><td>'+escH(it.parameter||'\u2014')+'</td><td style="font-size:11px">'+escH(it.targetDate||'\u2014')+'</td><td style="font-size:11px">'+escH(it.responsiblePerson||'\u2014')+'</td></tr>').join('')+'</tbody></table></div>':'<div style="color:var(--text-muted);font-size:12px">No open action items</div>')+'</div>';
+  el.innerHTML=card('\ud83c\udfc6 Top Partners',top)+card('\u26a0 Needs Attention',bottom)+failsCard+aiCard;
 }
-
-
-// ── APP VERSION & UPDATE ──────────────────────────────────────
-const APP_VERSION='5.1.0';
-
-function checkAppVersion(){
-  const prev=localStorage.getItem('ais_app_version');
-  localStorage.setItem('ais_app_version',APP_VERSION);
-  if(prev&&prev!==APP_VERSION){
-    setTimeout(()=>toast('\u2705 App updated to v'+APP_VERSION,'ok'),800);
+function openPartnerScorecard(name){
+  const recs=DA.audits.filter(x=>x.Partner===name).sort((p,q)=>(q.auditDate||'').localeCompare(p.auditDate||''));
+  const c=document.getElementById('PartnerModalContent');
+  if(!recs.length){c.innerHTML='<div style="padding:20px;color:var(--text-muted)">No audits found.</div>';}
+  else{
+    const latest=recs[0];
+    c.innerHTML='<div style="padding:18px"><div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">'+escH(name)+'</div>'
+      +'<div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">'+escH(latest.city||'')+(latest.city?', ':'')+escH(latest.state||'')+' \u00b7 '+escH(latest.territory||'')+'</div>'
+      +'<div class="status-grid" style="grid-template-columns:repeat(3,1fr)"><div class="sc-box"><div class="sc-box-count" style="color:var(--teal)">'+recs.length+'</div><div class="sc-box-lbl">Audits</div></div>'
+      +'<div class="sc-box"><div class="sc-box-count" style="color:#7C3AED">'+((+latest.finalScore||0).toFixed(1))+'</div><div class="sc-box-lbl">Latest</div></div>'
+      +'<div class="sc-box"><div class="sc-box-count" style="color:#D97706">'+(recs.reduce((s,x)=>s+(+x.finalScore||0),0)/recs.length).toFixed(1)+'</div><div class="sc-box-lbl">Average</div></div></div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text-2);margin:8px 0">Audit History</div>'
+      +'<div style="overflow-x:auto"><table class="dash-stat-tbl"><thead><tr><th>Date</th><th>Type</th><th>Score</th><th>Category</th></tr></thead><tbody>'
+      +recs.map(r=>'<tr><td>'+escH(r.auditDate||'\u2014')+'</td><td style="font-size:11px">'+escH(r.auditType||'\u2014')+'</td><td style="font-weight:700">'+((+r.finalScore||0).toFixed(1))+'</td><td style="font-size:11px">'+escH(r.category||'\u2014')+'</td></tr>').join('')
+      +'</tbody></table></div></div>';
   }
+  document.getElementById('PartnerModal').classList.remove('hidden');
 }
-
-let _updateReg=null;
-function showUpdateBanner(reg){
-  _updateReg=reg;
-  const b=document.getElementById('updateBanner');
-  if(b)b.classList.remove('hidden');
-}
-function doAppUpdate(){
-  if(_updateReg&&_updateReg.waiting){
-    _updateReg.waiting.postMessage('SKIP_WAITING');
-  }else{
-    // Force reload clearing cache
-    if('caches' in window){
-      caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k))))
-        .then(()=>window.location.reload(true));
-    }else{
-      window.location.reload(true);
-    }
-  }
-}
-
-// ── IMPROVED SERVICE WORKER ───────────────────────────────────
-// Overrides the registerSW defined earlier; called from DOMContentLoaded
-(function overrideSW(){
-  const _orig=window.registerSW;
-  window.registerSW=function(){
-    if(!('serviceWorker' in navigator))return;
-    const CACHE='ais-audit-v'+APP_VERSION;
-    const swCode=`
-const C='${CACHE}';
-self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(C).then(c=>c.addAll(['./index.html','./']).catch(()=>{})));
-});
-self.addEventListener('activate',e=>{
-  e.waitUntil(
-    caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==C).map(k=>caches.delete(k))))
-      .then(()=>self.clients.claim())
-  );
-});
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET')return;
-  if(e.request.mode==='navigate'){
-    e.respondWith(
-      fetch(e.request).then(r=>{
-        const cl=r.clone();
-        caches.open(C).then(c=>c.put(e.request,cl));
-        return r;
-      }).catch(()=>caches.match(e.request))
-    );
-    return;
-  }
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>r)));
-});
-self.addEventListener('message',e=>{
-  if(e&&e.data==='SKIP_WAITING')self.skipWaiting();
-});`.replace('${CACHE}',CACHE);
-    try{
-      const blob=new Blob([swCode],{type:'application/javascript'});
-      let refreshing=false;
-      navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(!refreshing){refreshing=true;window.location.reload();}
-      });
-      navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'})
-        .then(reg=>{
-          if(reg.waiting&&navigator.serviceWorker.controller)showUpdateBanner(reg);
-          reg.addEventListener('updatefound',()=>{
-            const sw=reg.installing;
-            if(!sw)return;
-            sw.addEventListener('statechange',()=>{
-              if(sw.state==='installed'&&navigator.serviceWorker.controller)
-                showUpdateBanner(reg);
-            });
-          });
-          // Periodic update check every 30 min
-          setInterval(()=>reg.update(),30*60*1000);
-        }).catch(e=>console.log('[SW]',e.message));
-    }catch(e){console.log('[SW]',e);}
-  };
-})();
-
-// Show install card when PWA is installable
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  deferredInstallPrompt=e;
-  const btn=document.getElementById('installBtn');
-  if(btn)btn.classList.remove('hidden');
-  const card=document.getElementById('installCard');
-  if(card)card.classList.remove('hidden');
-});
-window.addEventListener('appinstalled',()=>{
-  toast('App installed successfully!','ok');
-  const btn=document.getElementById('installBtn');if(btn)btn.classList.add('hidden');
-  const card=document.getElementById('installCard');if(card)card.classList.add('hidden');
-  deferredInstallPrompt=null;
-});
-
-// iOS: show install card in Safari even without beforeinstallprompt
-document.addEventListener('DOMContentLoaded',()=>{
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.navigator.standalone;
-  if(isIOS){
-    const card=document.getElementById('installCard');
-    if(card)card.classList.remove('hidden');
-    const btn=document.getElementById('installCardBtn');
-    if(btn)btn.textContent='\u2295 Add to Home Screen';
-  }
-});
-
+function closePartnerModal(){document.getElementById('PartnerModal').classList.add('hidden');}
+// ---- PWA install / update ----
 function enhancedInstallApp(){
-  if(deferredInstallPrompt){
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.then(r=>{
-      if(r.outcome==='accepted')toast('Installing app\u2026','ok');
-      deferredInstallPrompt=null;
-      const card=document.getElementById('installCard');if(card)card.classList.add('hidden');
-    });
-  }else if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
-    showIOSInstall();
-  }else{
-    toast('Use Chrome or Edge on Android for one-tap install','info');
-  }
+  const isiOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window.MSStream;
+  if(deferredInstallPrompt){installApp();return;}
+  if(isiOS){document.getElementById('iosInstallModal').classList.remove('hidden');return;}
+  toast('Use your browser menu \u2192 Install / Add to Home Screen','info');
 }
-function showIOSInstall(){
-  document.getElementById('iosInstallModal').classList.remove('hidden');
+let _swReg=null;
+function doAppUpdate(){
+  document.getElementById('updateBanner').classList.add('hidden');
+  if(_swReg&&_swReg.waiting){_swReg.waiting.postMessage({type:'SKIP_WAITING'});}
+  setTimeout(()=>location.reload(),300);
 }
-
-// ── DRAFT & RESUME ────────────────────────────────────────────
-const DRAFT_KEY='ais_audit_draft_v2';
-
-function saveDraft(){
-  if(S.frozen)return;
-  try{
-    const draft={
-      header:S.header,
-      items:S.items,
-      savedAt:new Date().toISOString(),
-      _v:APP_VERSION
-    };
-    localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
-  }catch(e){console.warn('[Draft] Save failed:',e.message);}
-}
-
-function clearDraft(){localStorage.removeItem(DRAFT_KEY);}
-
-function checkDraft(){
-  try{
-    const raw=localStorage.getItem(DRAFT_KEY);
-    if(!raw)return;
-    const d=JSON.parse(raw);
-    if(!d.header||!d.header.Partner)return;
-    showDraftBanner(d);
-  }catch(e){}
-}
-
-function showDraftBanner(draft){
-  const existing=document.getElementById('draftBanner');
-  if(existing)existing.remove();
-  const root=document.querySelector('#view-setup .vc');
-  if(!root)return;
-  const ago=formatTimeAgo(draft.savedAt);
-  const scored=Object.values(draft.items||{}).filter(i=>i.score>0).length;
-  const el=document.createElement('div');
-  el.id='draftBanner';
-  el.style.cssText='background:linear-gradient(135deg,var(--navy),var(--navy-3));border-radius:var(--r);'
-    +'padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;'
-    +'margin-bottom:14px;flex-wrap:wrap;border:1.5px solid rgba(0,181,204,.35)';
-  el.innerHTML='<div style="flex:1;min-width:180px">'
-    +'<div style="font-weight:800;color:#fff;font-size:13px">&#128203; Unsaved Draft Found</div>'
-    +'<div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:3px">'
-    +escH(draft.header.Partner)+' &middot; '+scored+' items scored &middot; '+ago+'</div></div>'
-    +'<div style="display:flex;gap:8px;flex-shrink:0">'
-    +'<button class="btn btn-primary" onclick="restoreDraft()">Continue Draft</button>'
-    +'<button class="btn btn-secondary" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6)" '
-    +'onclick="discardDraft()">Discard</button></div>';
-  // Insert as first child after any installCard
-  const installCard=document.getElementById('installCard');
-  if(installCard&&installCard.parentNode===root){
-    installCard.after(el);
-  }else{
-    root.insertBefore(el,root.firstChild);
-  }
-}
-
-function restoreDraft(){
-  try{
-    const raw=localStorage.getItem(DRAFT_KEY);
-    if(!raw)return;
-    const draft=JSON.parse(raw);
-    // Restore header
-    Object.assign(S.header,draft.header);
-    // Restore items
-    if(draft.items) Object.assign(S.items,draft.items);
-    // Update setup UI
-    const ts=document.getElementById('terrSelect');
-    if(ts){
-      ts.value=S.header.territory||'';
-      if(S.header.territory){
-        curPartners=PartnerS.filter(d=>d.t===S.header.territory).sort((a,b)=>a.n.localeCompare(b.n));
-        const di=document.getElementById('PartnerSearch');
-        if(di){di.disabled=false;di.value=S.header.Partner||'';}
-        const zd=document.getElementById('zoneDisplay');
-        if(zd)zd.value=S.header.zone||'';
-      }
-    }
-    const el=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val||'';};
-    el('fCity',S.header.city);el('fState',S.header.state);
-    el('fRegion',S.header.region);el('fASM',S.header.asm);
-    el('fCSE',S.header.cseDse);el('fDate',S.header.auditDate);
-    const ft=document.getElementById('fType');if(ft)ft.value=S.header.auditType||'';
-    // Force checklist re-render with restored scores
-    S.clRendered=false;
-    const db=document.getElementById('draftBanner');if(db)db.remove();
-    toast('Draft restored \u2013 '+Object.values(S.items).filter(i=>i.score>0).length+' items scored','ok');
-    goChecklist();
-  }catch(e){toast('Could not restore draft: '+e.message,'err');}
-}
-
-function discardDraft(){
-  clearDraft();
-  const db=document.getElementById('draftBanner');if(db)db.remove();
-  toast('Draft discarded','info');
-}
-
-function formatTimeAgo(iso){
-  if(!iso)return '';
-  const d=Math.floor((Date.now()-new Date(iso).getTime())/1000);
-  if(d<60)return 'just now';
-  if(d<3600)return Math.floor(d/60)+'m ago';
-  if(d<86400)return Math.floor(d/3600)+'h ago';
-  return Math.floor(d/86400)+'d ago';
-}
-
-// Clear draft when audit is successfully submitted
-const _origSubmit=window.submitToSheets;
-// Hook clearDraft on successful sheet save (toast check)
-(function(){
-  const orig=window.toast;
-  window.toast=function(msg,type){
-    orig(msg,type);
-    if(type==='ok'&&msg.includes('Google Sheets'))clearDraft();
-  };
-})();
-
-// ── GPS STAMP ─────────────────────────────────────────────────
-function captureGPS(){
-  if(!navigator.geolocation)return;
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      S.header.gps={
-        lat:+pos.coords.latitude.toFixed(6),
-        lng:+pos.coords.longitude.toFixed(6),
-        accuracy:Math.round(pos.coords.accuracy)
-      };
-      console.log('[GPS] Captured',S.header.gps);
-    },
-    err=>{
-      console.warn('[GPS]',err.message);
-      if(err.code===err.PERMISSION_DENIED){
-        populateLocationDeniedSteps();
-        document.getElementById('locationDeniedModal').classList.remove('hidden');
-      }
-    },
-    {timeout:8000,enableHighAccuracy:true,maximumAge:0}
-  );
-}
-
-// ── PREVIOUS AUDIT BADGE ──────────────────────────────────────
-function fetchLastAudit(PartnerName){
-  if(!fbDb)return;
-  fbDb.collection('audits')
-    .where('Partner','==',PartnerName)
-    .orderBy('auditDate','desc')
-    .limit(1)
-    .get()
-    .then(snap=>{
-      if(snap.empty)return;
-      showLastAuditBadge(snap.docs[0].data());
-    })
-    .catch(()=>{});
-}
-
-function showLastAuditBadge(a){
-  const old=document.getElementById('lastAuditBadge');if(old)old.remove();
-  const sc=a.finalScore||0;
-  const col=sc>=90?'#7C3AED':sc>=70?'#D97706':sc>=60?'#64748B':'#DC2626';
-  const el=document.createElement('div');
-  el.id='lastAuditBadge';
-  el.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);'
-    +'padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;'
-    +'flex-wrap:wrap;box-shadow:var(--shadow-xs)';
-  el.innerHTML='<span style="font-size:10.5px;font-weight:700;color:var(--text-muted);'
-    +'text-transform:uppercase;letter-spacing:.07em">Last Audit</span>'
-    +'<span style="font-size:22px;font-weight:800;color:'+col+'">'+sc.toFixed(1)+'</span>'
-    +'<span style="font-size:12px;font-weight:700;color:'+col+'">'+escH(a.category||'\u2014')+'</span>'
-    +'<span style="font-size:12px;color:var(--text-muted)">'+escH(a.auditDate||'')+'</span>'
-    +'<span style="font-size:11.5px;color:var(--text-muted)">by '+escH(a.cseDse||'\u2014')+'</span>'
-    +(a.auditType?'<span style="font-size:11px;color:var(--text-muted)">\u00b7 '+escH(a.auditType)+'</span>':'');
-  const PartnerCard=document.querySelector('.card-open');
-  if(PartnerCard)PartnerCard.after(el);
-}
-
-// ── RE-AUDIT TABLE (added to dashboard) ──────────────────────
-function renderReauditTable(){
-  const el=document.getElementById('dashTables');if(!el)return;
-  const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString().split('T')[0];
-  const latestMap={};
-  DA.all.forEach(a=>{
-    if(!a.Partner)return;
-    if(!latestMap[a.Partner]||a.auditDate>latestMap[a.Partner].date)
-      latestMap[a.Partner]={date:a.auditDate,score:a.finalScore||0,
-        region:a.region||'',territory:a.territory||'',cseDse:a.cseDse||''};
-  });
-  const overdue=Object.entries(latestMap)
-    .filter(([,v])=>v.date<cutoff)
-    .sort((a,b)=>a[1].date.localeCompare(b[1].date))
-    .slice(0,25);
-  if(!overdue.length)return;
-  const today=new Date().toISOString().split('T')[0];
-  const daysSince=d=>{
-    const ms=new Date(today).getTime()-new Date(d).getTime();
-    return Math.floor(ms/86400000);
-  };
-  const th=(...cols)=>'<tr>'+cols.map(c=>'<th style="padding:7px 10px;background:var(--surface-2);'
-    +'border-bottom:2px solid var(--border);font-size:10.5px;font-weight:700;color:var(--text-2);'
-    +'text-transform:uppercase;letter-spacing:.05em;text-align:left">'+c+'</th>').join('')+'</tr>';
-  const tr2=(...cells)=>'<tr style="border-bottom:1px solid var(--border-2)">'+cells.map(c=>
-    '<td style="padding:7px 10px;font-size:12px;color:var(--text)">'+c+'</td>').join('')+'</tr>';
-  const rows=overdue.map(([name,v])=>{
-    const days=daysSince(v.date);
-    const urgency=days>60?'color:#DC2626;font-weight:700':days>45?'color:#D97706;font-weight:700':'color:var(--text-muted)';
-    return tr2(escH(name),escH(v.region),escH(v.territory),
-      v.date,'<span style="'+urgency+'">'+days+' days ago</span>',
-      v.score?v.score.toFixed(1):'\u2014');
-  });
-  el.innerHTML+='<div style="background:var(--surface);border:1px solid var(--danger-border);'
-    +'border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-xs)">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--danger);margin-bottom:12px">'
-    +'\uD83D\uDCC5 Re-audit Due (\u226530 days &middot; '+overdue.length+' Partners)</div>'
-    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead>'
-    +th('Partner','Zone','Territory','Last Audit Date','Days Since','Last Score')
-    +'</thead><tbody>'+rows.join('')+'</tbody></table></div></div>';
-}
-
-
-// ── SIGNATURE PAD HELPERS ─────────────────────────────────────
-function buildSigRow(cseDse, asm) {
-  const pad = (id, key, label, name) =>
-    '<div style="flex:1;text-align:center;min-width:140px">'
-    + '<canvas id="' + id + '" data-key="' + key + '" width="220" height="72"'
-    + ' style="border-bottom:1.5px solid #0B1F3A;width:100%;max-width:220px;'
-    + 'cursor:crosshair;display:block;margin:0 auto;touch-action:none"></canvas>'
-    + '<button onclick="clearSignature(\'' + key + '\')" style="font-size:9px;'
-    + 'color:#94A3B8;background:none;border:none;cursor:pointer;margin-top:3px">'
-    + 'Clear</button>'
-    + '<div style="font-size:10px;color:#7A90AA;margin-top:3px">' + label
-    + (name ? '<br><b style="font-size:11px;color:#0B1F3A">' + escH(name) + '</b>' : '')
-    + '</div></div>';
-  return '<div class="rpt-sig">'
-    + pad('sigAuditor','auditor','Auditor Signature (CSE/DSE)', cseDse)
-    + pad('sigPartner','PartnerRep','Partner Representative Signature', '')
-    + pad('sigASM','asm','ASM / RM Signature', asm)
-    + '</div>';
-}
-
-function initSignaturePads() {
-  ['sigAuditor','sigPartner','sigASM'].forEach(id => {
-    const cv = document.getElementById(id);
-    if (!cv) return;
-    const ctx = cv.getContext('2d');
-    ctx.strokeStyle = '#0B1F3A'; ctx.lineWidth = 2;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    let drawing = false, lx = 0, ly = 0;
-    const pos = e => {
-      const r = cv.getBoundingClientRect();
-      const src = e.touches ? e.touches[0] : e;
-      const scaleX = cv.width / r.width;
-      const scaleY = cv.height / r.height;
-      return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
-    };
-    const start = e => { e.preventDefault(); drawing = true; const p = pos(e); lx = p.x; ly = p.y; ctx.beginPath(); ctx.arc(lx,ly,1,0,Math.PI*2); ctx.fillStyle='#0B1F3A'; ctx.fill(); };
-    const draw  = e => {
-      if (!drawing) return; e.preventDefault();
-      const p = pos(e);
-      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(p.x, p.y); ctx.stroke();
-      lx = p.x; ly = p.y;
-      const k = cv.dataset.key;
-      if (k) S.signatures[k] = cv.toDataURL();
-    };
-    const stop = () => { drawing = false; };
-    cv.addEventListener('mousedown', start);
-    cv.addEventListener('mousemove', draw);
-    cv.addEventListener('mouseup',   stop);
-    cv.addEventListener('mouseleave',stop);
-    cv.addEventListener('touchstart',start, {passive:false});
-    cv.addEventListener('touchmove', draw,  {passive:false});
-    cv.addEventListener('touchend',  stop);
-    // Restore saved sig
-    const k = cv.dataset.key;
-    if (k && S.signatures[k]) {
-      const img = new Image();
-      img.onload = () => ctx.drawImage(img, 0, 0);
-      img.src = S.signatures[k];
-    }
-  });
-}
-
-function clearSignature(key) {
-  const ids = { auditor:'sigAuditor', PartnerRep:'sigPartner', asm:'sigASM' };
-  const cv = document.getElementById(ids[key]);
-  if (cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
-  S.signatures[key] = '';
-}
-
-// ── ACTION ITEM TRACKER ───────────────────────────────────────
-function saveActionItemsToFirestore(payload) {
-  if (!fbDb) return;
-  const failed = (payload.items || []).filter(it => it.score === 1 || it.score === 2);
-  if (!failed.length) return;
-  const batch = fbDb.batch();
-  failed.forEach(item => {
-    const ref = fbDb.collection('actionItems').doc();
-    batch.set(ref, {
-      Partner:          payload.Partner    || '',
-      zone:            payload.region    || '',
-      territory:       payload.territory || '',
-      city:            payload.city      || '',
-      state:           payload.state     || '',
-      asm:             payload.asm       || '',
-      cseDse:          payload.cseDse    || '',
-      auditDate:       payload.auditDate || '',
-      section:         item.section      || '',
-      parameter:       item.parameter    || '',
-      score:           item.score        || 0,
-      observation:     item.observation  || '',
-      responsiblePerson: item.responsiblePerson || '',
-      targetDate:      item.targetDate   || '',
-      status:          'Open',
-      createdAt:       firebase.firestore.FieldValue.serverTimestamp()
-    });
-  });
-  batch.commit()
-    .then(()  => console.log('[FB] Action items saved:', failed.length))
-    .catch(e  => console.warn('[FB] Action items failed:', e.message));
-}
-
-async function loadActionItems() {
-  if (!fbDb || !currentAdmin) return;
-  const el = document.getElementById('actionItemsSection');
-  if (!el) return;
-  el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:10px">Loading action items\u2026</div>';
-  try {
-    const snap = await fbDb.collection('actionItems')
-      .orderBy('createdAt','desc').limit(300).get();
-    renderActionItems(snap.docs.map(d => ({id:d.id,...d.data()})));
-  } catch(e) {
-    el.innerHTML = '<div style="color:var(--danger);font-size:12px;padding:10px">Action items failed: ' + escH(e.message) + '</div>';
-  }
-}
-
-function renderActionItems(items) {
-  const el = document.getElementById('actionItemsSection'); if (!el) return;
-  const today = new Date().toISOString().split('T')[0];
-  const open  = items.filter(i=>i.status==='Open').length;
-  const inProg= items.filter(i=>i.status==='In Progress').length;
-  const closed= items.filter(i=>i.status==='Closed').length;
-  const overdue= items.filter(i=>i.status!=='Closed'&&i.targetDate&&i.targetDate<today).length;
-
-  const mini=(l,v,c)=>'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 10px;text-align:center;box-shadow:var(--shadow-xs)">'
-    +'<div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div>'
-    +'<div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-top:3px">'+l+'</div></div>';
-
-  const statusBtns = (id, cur) => {
-    const opts = ['Open','In Progress','Closed'];
-    return opts.filter(o=>o!==cur).map(o=>
-      '<button onclick="updateActionItemStatus(\''+id+'\',\''+o+'\')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);cursor:pointer;margin-right:4px;white-space:nowrap">'+o+'</button>'
-    ).join('');
-  };
-
-  let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-xs)">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--text)">&#9889; Action Item Tracker</div>'
-    +'<button onclick="loadActionItems()" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--text-2);cursor:pointer">&#8635; Refresh</button>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
-    +mini('Open',open,'#DC2626')+mini('In Progress',inProg,'#D97706')
-    +mini('Closed',closed,'#059669')+mini('Overdue',overdue,'#DC2626')
-    +'</div>';
-
-  if (!items.length) {
-    html += '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">\u2705 No action items found.</div>';
-  } else {
-    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px">'
-      +'<thead><tr>'+['Date','Partner','Zone','Section','Parameter','Score','Responsible','Target','Status','Change'].map(h=>
-        '<th style="padding:6px 10px;background:var(--surface-2);border-bottom:2px solid var(--border);'
-        +'font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;text-align:left;'
-        +'white-space:nowrap">'+h+'</th>').join('')+'</tr></thead><tbody>'
-      +items.map(it=>{
-        const overdue2 = it.status!=='Closed'&&it.targetDate&&it.targetDate<today;
-        const sc=it.score===1?'<span style="color:#DC2626;font-weight:700">1-Poor</span>':'<span style="color:#EA580C;font-weight:700">2-Weak</span>';
-        const stBg=it.status==='Closed'?'#ECFDF5':it.status==='In Progress'?'#FFFBEB':'#FEF2F2';
-        const stC =it.status==='Closed'?'#059669':it.status==='In Progress'?'#D97706':'#DC2626';
-        const rowBg=overdue2?'background:rgba(220,38,38,.04)':'';
-        return '<tr style="border-bottom:1px solid var(--border-2);'+rowBg+'">'
-          +'<td style="padding:6px 10px;white-space:nowrap">'+escH(it.auditDate||'')+'</td>'
-          +'<td style="padding:6px 10px;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escH(it.Partner||'')+'">'+escH((it.Partner||'').substring(0,18)+(it.Partner&&it.Partner.length>18?'\u2026':''))+'</td>'
-          +'<td style="padding:6px 10px;white-space:nowrap">'+escH(it.zone||'')+'</td>'
-          +'<td style="padding:6px 10px;font-size:10.5px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH((it.section||'').replace(' & ',' & '))+'</td>'
-          +'<td style="padding:6px 10px;font-size:10.5px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escH(it.parameter||'')+'">'+escH((it.parameter||'').substring(0,30)+(it.parameter&&it.parameter.length>30?'\u2026':''))+'</td>'
-          +sc.replace('<span','<td style="padding:6px 10px"><span')+'</span></td>'
-          +'<td style="padding:6px 10px;font-size:10.5px">'+escH(it.responsiblePerson||'\u2014')+'</td>'
-          +'<td style="padding:6px 10px;white-space:nowrap;'+(overdue2?'color:#DC2626;font-weight:700':'')+'">'+escH(it.targetDate||'\u2014')+'</td>'
-          +'<td style="padding:6px 10px"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+stBg+';color:'+stC+'">'+escH(it.status)+'</span></td>'
-          +'<td style="padding:6px 10px;white-space:nowrap">'+statusBtns(it.id, it.status)+'</td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div>';
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-async function updateActionItemStatus(docId, newStatus) {
-  if (!fbDb) return;
-  try {
-    const upd = { status: newStatus, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-    if (newStatus === 'Closed') upd.closedAt = firebase.firestore.FieldValue.serverTimestamp();
-    await fbDb.collection('actionItems').doc(docId).update(upd);
-    toast('Status updated \u2192 ' + newStatus, 'ok');
-    loadActionItems();
-  } catch(e) { toast('Update failed: ' + e.message, 'err'); }
-}
-
-// ── Partner SCORECARD ──────────────────────────────────────────
-function dlnk(name) {
-  const safe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  return '<span style="cursor:pointer;color:var(--teal);font-weight:700;'
-    +'text-decoration:underline;text-decoration-style:dotted" '
-    +'onclick="openPartnerScorecard(\'' + safe + '\')" title="View scorecard">'
-    + escH(name) + '</span>';
-}
-
-function closePartnerModal() {
-  document.getElementById('PartnerModal').classList.add('hidden');
-  // Destroy Partner chart to free memory
-  if (DA.charts['PartnerTrend']) { try{DA.charts['PartnerTrend'].destroy();}catch(e){} delete DA.charts['PartnerTrend']; }
-}
-
-async function openPartnerScorecard(PartnerName) {
-  if (!fbDb || !currentAdmin) { toast('Admin login required','err'); return; }
-  const modal = document.getElementById('PartnerModal');
-  const body  = document.getElementById('PartnerModalContent');
-  modal.classList.remove('hidden');
-  body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted)">\u23F3 Loading\u2026</div>';
-  try {
-    const snap = await fbDb.collection('audits')
-      .where('Partner','==',PartnerName)
-      .get();
-    const audits = snap.docs.map(d=>({id:d.id,...d.data()}))
-      .sort((a,b)=>(a.auditDate||'').localeCompare(b.auditDate||''));
-    renderPartnerScorecard(PartnerName, audits);
-  } catch(e) {
-    body.innerHTML = '<div style="color:var(--danger);padding:20px">\u26A0 ' + escH(e.message) + '</div>';
-  }
-}
-
-function renderPartnerScorecard(name, audits) {
-  const body = document.getElementById('PartnerModalContent');
-  if (!audits.length) {
-    body.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted)">No audit history found.</div>';
-    return;
-  }
-  const last = audits[audits.length-1];
-  const avg  = +(audits.reduce((s,a)=>s+(a.finalScore||0),0)/audits.length).toFixed(1);
-  const best = Math.max(...audits.map(a=>a.finalScore||0));
-  const col  = avg>=90?'#7C3AED':avg>=70?'#D97706':avg>=60?'#64748B':'#DC2626';
-  const catL = avg>=90?'Platinum':avg>=70?'Gold':avg>=60?'Silver':'Critical';
-
-  const mini=(l,v,c)=>'<div style="background:var(--surface-2);border:1px solid var(--border);'
-    +'border-radius:var(--r-sm);padding:12px 10px;text-align:center">'
-    +'<div style="font-size:20px;font-weight:800;color:'+c+'">'+v+'</div>'
-    +'<div style="font-size:9.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-top:3px">'+l+'</div></div>';
-
-  // Section averages
-  const secMap={};
-  audits.forEach(a=>{
-    if(!Array.isArray(a.sections))return;
-    a.sections.forEach(s=>{
-      if(!secMap[s.name])secMap[s.name]=[];
-      secMap[s.name].push(s.pct||0);
-    });
-  });
-  const secRows=Object.entries(secMap).map(([n,v])=>({
-    name:n, avg:+(v.reduce((s,x)=>s+x,0)/v.length).toFixed(1)
-  })).sort((a,b)=>a.avg-b.avg);
-
-  let html='<div style="padding:18px">'
-    +'<div style="margin-bottom:14px">'
-    +'<div style="font-size:16px;font-weight:800;color:var(--text)">'+escH(name)+'</div>'
-    +'<div style="font-size:12px;color:var(--text-muted);margin-top:3px">'
-    +escH(last.region||'')+' \u00b7 '+escH(last.territory||'')+' \u00b7 ASM: '+escH(last.asm||'\u2014')+'</div></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
-    +mini('Latest',last.finalScore?(+last.finalScore).toFixed(1):'\u2014',col)
-    +mini('Average',avg,col)
-    +mini('Best',best.toFixed(1),'#059669')
-    +mini('Total Audits',audits.length,'var(--teal)')
-    +'</div>'
-    +'<div style="background:var(--surface-2);border-radius:var(--r-sm);padding:12px;margin-bottom:14px">'
-    +'<div style="font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:8px">Score Trend</div>'
-    +'<div style="position:relative;height:140px"><canvas id="PartnerTrendCanvas"></canvas></div></div>';
-
-  if(secRows.length){
-    html+='<div style="background:var(--surface-2);border-radius:var(--r-sm);padding:12px;margin-bottom:14px">'
-      +'<div style="font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:8px">Section Performance (avg %)</div>'
-      +secRows.map(s=>{
-        const sc=s.avg>=70?'#059669':s.avg>=50?'#D97706':'#DC2626';
-        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
-          +'<div style="font-size:11px;color:var(--text);min-width:200px;flex-shrink:0">'+escH(s.name)+'</div>'
-          +'<div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden">'
-          +'<div style="height:100%;background:'+sc+';border-radius:4px;width:'+Math.min(s.avg,100).toFixed(1)+'%"></div></div>'
-          +'<div style="font-size:11.5px;font-weight:700;color:'+sc+';min-width:36px;text-align:right">'+s.avg+'%</div></div>';
-      }).join('')+'</div>';
-  }
-
-  html+='<div style="font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:8px">Audit History</div>'
-    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
-    +'<thead><tr>'+['Date','Type','Score','Category','Auditor'].map(h=>
-      '<th style="padding:6px 10px;background:var(--surface-2);border-bottom:2px solid var(--border);'
-      +'font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;text-align:left">'+h+'</th>').join('')+'</tr></thead>'
-    +'<tbody>'+[...audits].reverse().map(a=>{
-      const sc=a.finalScore||0,c2=sc>=90?'#7C3AED':sc>=70?'#D97706':sc>=60?'#64748B':'#DC2626';
-      return '<tr style="border-bottom:1px solid var(--border-2)">'
-        +'<td style="padding:6px 10px;font-size:12px">'+escH(a.auditDate||'\u2014')+'</td>'
-        +'<td style="padding:6px 10px;font-size:12px">'+escH(a.auditType||'\u2014')+'</td>'
-        +'<td style="padding:6px 10px;font-size:14px;font-weight:800;color:'+c2+'">'+sc.toFixed(1)+'</td>'
-        +'<td style="padding:6px 10px;font-size:12px;font-weight:700;color:'+c2+'">'+escH(a.category||'\u2014')+'</td>'
-        +'<td style="padding:6px 10px;font-size:12px">'+escH(a.cseDse||'\u2014')+'</td>'
-        +'</tr>';
-    }).join('')+'</tbody></table></div></div>';
-
-  body.innerHTML=html;
-
-  // Render trend chart
-  if(DA.charts['PartnerTrend']){try{DA.charts['PartnerTrend'].destroy();}catch(e){}delete DA.charts['PartnerTrend'];}
-  setTimeout(()=>{
-    const cv=document.getElementById('PartnerTrendCanvas');if(!cv)return;
-    const tc=S.dark?'#8CAFC8':'#7A90AA';
-    DA.charts['PartnerTrend']=new Chart(cv,{type:'line',
-      data:{labels:audits.map(a=>a.auditDate),
-        datasets:[{data:audits.map(a=>a.finalScore||0),borderColor:col,
-          backgroundColor:col.replace(')',',0.1)').replace('rgb','rgba'),
-          fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:col}]},
-      options:{responsive:true,maintainAspectRatio:false,
-        scales:{y:{min:0,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},color:tc}},
-          x:{grid:{display:false},ticks:{font:{size:10},color:tc}}},
-        plugins:{legend:{display:false}}}});
-  },80);
-}
-
-// ── MONTHLY EXECUTIVE PDF ─────────────────────────────────────
-async function generateMonthlyPDF(){
-  if(!DA.filtered.length){toast('No audit data to generate report','info');return;}
-  const dates=DA.filtered.map(a=>a.auditDate).filter(Boolean).sort();
-  const period=dates.length?(dates[0]+' to '+dates[dates.length-1]):'All periods';
-  renderMonthlyReportDiv(DA.filtered, period);
-  const div=document.getElementById('monthlyReportDiv');
-  div.style.cssText='display:block;position:absolute;left:-9999px;top:0;width:860px;'
-    +'background:#fff;padding:32px;font-family:sans-serif';
-  try{
-    toast('Generating PDF\u2026','info');
-    const canvas=await html2canvas(div,{scale:1.5,useCORS:false,backgroundColor:'#ffffff',logging:false});
-    div.style.cssText='display:none';
-    const{jsPDF}=window.jspdf;
-    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
-    const ih=(canvas.height*pw)/canvas.width;
-    let y=0;
-    while(y<ih){if(y>0)pdf.addPage();pdf.addImage(canvas.toDataURL('image/jpeg',0.85),'JPEG',0,-y,pw,ih);y+=ph;}
-    const fn='AIS-Executive-Report-'+new Date().toISOString().split('T')[0]+'.pdf';
-    pdf.save(fn);toast('\u2705 PDF saved: '+fn,'ok');
-  }catch(e){
-    document.getElementById('monthlyReportDiv').style.cssText='display:none';
-    toast('PDF failed: '+e.message,'err');
-  }
-}
-
-function renderMonthlyReportDiv(data,period){
-  const n=data.length;
-  const avg=n?+(data.reduce((s,a)=>s+(a.finalScore||0),0)/n).toFixed(1):0;
-  const cats={Platinum:0,Gold:0,Silver:0,Critical:0};
-  data.forEach(a=>{const c=a.category||'';cats[c==='Platinum'?'Platinum':c==='Gold'?'Gold':c==='Silver'?'Silver':'Critical']++;});
-  const zM={};data.forEach(a=>{const z=a.region||'?';if(!zM[z])zM[z]=[];zM[z].push(a.finalScore||0);});
-  const zR=Object.entries(zM).map(([z,v])=>({zone:z,count:v.length,avg:+(v.reduce((s,x)=>s+x,0)/v.length).toFixed(1)})).sort((a,b)=>b.avg-a.avg);
-  const dM={};data.forEach(a=>{if(!a.Partner)return;if(!dM[a.Partner])dM[a.Partner]=[];dM[a.Partner].push(a.finalScore||0);});
-  const dR=Object.entries(dM).map(([n2,v])=>({name:n2,avg:+(v.reduce((s,x)=>s+x,0)/v.length).toFixed(1)})).sort((a,b)=>b.avg-a.avg);
-  const fM={};data.forEach(a=>{if(!Array.isArray(a.items))return;a.items.forEach(it=>{if((it.score===1||it.score===2)&&it.parameter)fM[it.parameter]=(fM[it.parameter]||0)+1;});});
-  const fR=Object.entries(fM).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const cc=s=>s>=90?'#7C3AED':s>=70?'#D97706':s>=60?'#64748B':'#DC2626';
-  const cl=s=>s>=90?'Platinum':s>=70?'Gold':s>=60?'Silver':'Critical';
-  const th=(...h2)=>'<tr>'+h2.map(c=>'<th style="padding:6px 10px;background:#0B1F3A;color:#fff;font-size:10px;font-weight:700;text-align:left;white-space:nowrap">'+c+'</th>').join('')+'</tr>';
-  const td2=(...c2)=>'<tr>'+c2.map(c=>'<td style="padding:6px 10px;border-bottom:1px solid #E2E8F0;font-size:11px;color:#0B1F3A">'+c+'</td>').join('')+'</tr>';
-  document.getElementById('monthlyReportDiv').innerHTML=`
-  <div style="color:#0B1F3A">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #0B1F3A;margin-bottom:18px">
-      <div><div style="font-size:24px;font-weight:800">AIS <span style="color:#00B5CC">Windows</span></div>
-        <div style="font-size:15px;font-weight:700;margin-top:3px">Executive Audit Summary</div>
-        <div style="font-size:11px;color:#7A90AA;margin-top:2px">Period: ${period} &nbsp;&middot;&nbsp; Generated: ${new Date().toLocaleDateString('en-IN')}</div></div>
-      <div style="text-align:right"><div style="font-size:34px;font-weight:800;color:${cc(avg)}">${avg}</div>
-        <div style="font-size:10px;color:#7A90AA">avg score / 100</div>
-        <div style="font-size:13px;font-weight:700;color:${cc(avg)}">${cl(avg)}</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px">
-      ${[['Total Audits',n,'#00B5CC'],['Avg Score',avg,'#00B5CC'],['Platinum',cats.Platinum,'#7C3AED'],['Gold',cats.Gold,'#D97706'],['Silver',cats.Silver,'#64748B'],['Critical',cats.Critical,'#DC2626']].map(([l,v2,c])=>`<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:${c}">${v2}</div><div style="font-size:9px;font-weight:700;color:#7A90AA;text-transform:uppercase;margin-top:3px">${l}</div></div>`).join('')}
-    </div>
-    <div style="margin-bottom:18px">
-      <div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#F1F5F9;border-radius:4px">Zone Performance</div>
-      <table style="width:100%;border-collapse:collapse">${th('Zone','Audits','Avg Score','Category')}${zR.map(r=>td2(escH(r.zone),r.count,'<b style="color:'+cc(r.avg)+'">'+r.avg+'</b>','<span style="color:'+cc(r.avg)+';font-weight:700">'+cl(r.avg)+'</span>')).join('')}</table>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
-      <div><div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#F1F5F9;border-radius:4px">&#127942; Top 5 Partners</div>
-        <table style="width:100%;border-collapse:collapse">${th('Partner','Score','Cat.')}${dR.slice(0,5).map(r=>td2('<span style="font-size:10.5px">'+escH(r.name)+'</span>','<b style="color:'+cc(r.avg)+'">'+r.avg+'</b>','<span style="color:'+cc(r.avg)+';font-weight:700;font-size:10px">'+cl(r.avg)+'</span>')).join('')}</table>
-      </div>
-      <div><div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#FEF2F2;border-radius:4px;color:#DC2626">&#128201; Bottom 5 Partners</div>
-        <table style="width:100%;border-collapse:collapse">${th('Partner','Score','Cat.')}${dR.slice(-5).reverse().map(r=>td2('<span style="font-size:10.5px">'+escH(r.name)+'</span>','<b style="color:'+cc(r.avg)+'">'+r.avg+'</b>','<span style="color:'+cc(r.avg)+';font-weight:700;font-size:10px">'+cl(r.avg)+'</span>')).join('')}</table>
-      </div>
-    </div>
-    ${fR.length?`<div><div style="font-size:12px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#FEF2F2;border-radius:4px;color:#DC2626">\u26A0 Most Failed Parameters</div><table style="width:100%;border-collapse:collapse">${th('Audit Parameter','Times Failed')}${fR.map(r=>td2('<span style="font-size:10px">'+escH(r[0])+'</span>','<b style="color:#DC2626">'+r[1]+'</b>')).join('')}</table></div>`:''}
-    <div style="margin-top:20px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:9px;color:#94A3B8;text-align:center">AIS Windows Channel Initiative &middot; Confidential &middot; ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
-  </div>`;
-}
-
-
-// ── DUPLICATE SAVE: force-save after warning confirmed ────────
-async function forceSubmitToSheets(){
-  document.getElementById('dupeSaveModal').classList.add('hidden');
-  S.savedToSheets=false; // temporarily clear flag so submitToSheets proceeds
-  await submitToSheets();
-}
-
-// ── MANDATORY SCORING BLOCKER ─────────────────────────────────
-function showUnscoredBlocker(unscored){
-  const body=document.getElementById('valModalBody');
-  body.innerHTML=
-    '<p class="val-count">'+unscored.length+' question'+(unscored.length>1?'s':'')+' still unscored — all parameters are mandatory:</p>'
-    +'<ul class="val-list">'
-    +unscored.map(it=>'<li class="val-item">'
-      +'<span class="val-item-sec">'+escH(it.secName)+'</span>'
-      +'<span class="val-item-param">'+escH(it.p.length>72?it.p.substring(0,69)+'\u2026':it.p)+'</span>'
-      +'</li>').join('')
-    +'</ul>'
-    +'<p class="val-hint">Score every parameter 1\u20135 before proceeding to Summary. Open each section and rate all items.</p>';
-  // Update modal header text for this context
-  const hdr=document.querySelector('.val-modal-hdr span');
-  if(hdr)hdr.textContent='\uD83D\uDCCB All Questions Must Be Scored';
-  document.getElementById('valOverlay').classList.remove('hidden');
-  // Highlight unscored rows in checklist
-  unscored.forEach(it=>{
-    const row=document.getElementById('ir-'+it.id);
-    if(row){
-      row.style.borderLeft='3px solid var(--danger)';
-      row.style.background='rgba(220,38,38,.04)';
-    }
-    // Also ensure the section is expanded so user can see it
-    const secId=it.id.replace(/_\d+$/,'');
-    const secBody=document.getElementById('sb-'+secId);
-    const secToggle=document.getElementById('stg-'+secId);
-    if(secBody&&secBody.classList.contains('coll')){
-      secBody.classList.remove('coll');
-      if(secToggle)secToggle.classList.remove('coll');
-    }
-  });
-}
-
-// Clear unscored highlight when a score is picked
-// (already done in onScore via item-needs-action removal — extend it)
-const _origOnScore=window.onScore;
-window.onScore=function(id,sid,score){
-  _origOnScore(id,sid,score);
-  // Remove unscored highlight when user picks a score
-  const row=document.getElementById('ir-'+id);
-  if(row&&score>0){row.style.borderLeft='';row.style.background='';}
-};
-
-
-// ── GPS PERMISSION MANAGEMENT ─────────────────────────────────
-let _gpsPermListener = null;
-
-async function checkLocationPermission(){
-  if(!navigator.geolocation){ console.warn('[GPS] Not supported'); return; }
-
-  // Use Permissions API if available for non-intrusive check
-  if(navigator.permissions){
-    try{
-      const perm = await navigator.permissions.query({name:'geolocation'});
-
-      if(perm.state==='granted'){
-        // Already allowed — silently warm up GPS
-        document.getElementById('locationPromptModal').classList.add('hidden');
-        captureGPS();
-        return;
-      }
-      if(perm.state==='denied'){
-        populateLocationDeniedSteps();
-        document.getElementById('locationDeniedModal').classList.remove('hidden');
-        return;
-      }
-      // 'prompt' — show our explanation before browser native prompt
-      document.getElementById('locationPromptModal').classList.remove('hidden');
-
-      // Watch for permission change (user may grant in settings while modal open)
-      if(_gpsPermListener) _gpsPermListener.onchange = null;
-      _gpsPermListener = perm;
-      perm.onchange = ()=>{
-        if(perm.state==='granted'){
-          document.getElementById('locationPromptModal').classList.add('hidden');
-          document.getElementById('locationDeniedModal').classList.add('hidden');
-          captureGPS();
-          toast('\uD83D\uDCCD Location access enabled','ok');
-        } else if(perm.state==='denied'){
-          document.getElementById('locationPromptModal').classList.add('hidden');
-          populateLocationDeniedSteps();
-          document.getElementById('locationDeniedModal').classList.remove('hidden');
-        }
-      };
-      return;
-    }catch(e){ /* Permissions API not available */ }
-  }
-
-  // Fallback: show prompt modal and let native browser handle it
-  document.getElementById('locationPromptModal').classList.remove('hidden');
-}
-
-function requestLocationAccess(){
-  // Triggered by "Enable Location Access" button — fires browser native prompt
-  document.getElementById('locationPromptModal').classList.add('hidden');
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      S.header.gps={
-        lat:+pos.coords.latitude.toFixed(6),
-        lng:+pos.coords.longitude.toFixed(6),
-        accuracy:Math.round(pos.coords.accuracy)
-      };
-      toast('\uD83D\uDCCD Location access enabled \u2013 GPS captured','ok');
-    },
-    err=>{
-      if(err.code===err.PERMISSION_DENIED){
-        populateLocationDeniedSteps();
-        document.getElementById('locationDeniedModal').classList.remove('hidden');
-      }
-    },
-    {timeout:10000,enableHighAccuracy:true,maximumAge:0}
-  );
-}
-
-function skipLocationPrompt(){
-  document.getElementById('locationPromptModal').classList.add('hidden');
-  toast('GPS skipped \u2013 location will not be captured for this audit','info');
-}
-
-function retryLocationCheck(){
-  document.getElementById('locationDeniedModal').classList.add('hidden');
-  // Small delay so the modal hides cleanly before re-check
-  setTimeout(checkLocationPermission, 400);
-}
-
-function dismissLocationDenied(){
-  document.getElementById('locationDeniedModal').classList.add('hidden');
-}
-
-function populateLocationDeniedSteps(){
-  const el = document.getElementById('locationDeniedSteps');
-  if(!el) return;
-  const ua = navigator.userAgent;
-  const isAndroid = /Android/.test(ua);
-  const isIOS     = /iPad|iPhone|iPod/.test(ua);
-  const isSamsung = /SamsungBrowser/.test(ua);
-
-  let steps = '';
-  if(isIOS){
-    steps =
-      '<b style="color:var(--teal)">\uD83C\uDF4E iPhone / iPad (Safari):</b><br>'
-      +'1. Open <b>Settings</b> app<br>'
-      +'2. Scroll to <b>Safari</b><br>'
-      +'3. Tap <b>Location</b> \u2192 select <b>Allow</b><br>'
-      +'4. Come back to this app and tap <b>Check Again</b>';
-  } else if(isSamsung){
-    steps =
-      '<b style="color:var(--teal)">\uD83D\uDCF1 Samsung Browser:</b><br>'
-      +'1. Tap the <b>three dots</b> menu \u2192 <b>Settings</b><br>'
-      +'2. Tap <b>Sites and downloads</b> \u2192 <b>Location</b><br>'
-      +'3. Find this site and set to <b>Allow</b><br>'
-      +'4. Tap <b>Check Again</b> below';
-  } else if(isAndroid){
-    steps =
-      '<b style="color:var(--teal)">\uD83D\uDCF1 Android (Chrome):</b><br>'
-      +'1. Tap the <b>lock icon</b> \uD83D\uDD12 in the address bar<br>'
-      +'2. Tap <b>Permissions</b> \u2192 <b>Location</b><br>'
-      +'3. Select <b>Allow</b><br>'
-      +'4. Tap <b>Check Again</b> below<br><br>'
-      +'<span style="color:var(--text-muted);font-size:11px">Or go to: Settings \u2192 Apps \u2192 Chrome \u2192 Permissions \u2192 Location \u2192 Allow</span>';
-  } else {
-    steps =
-      '<b style="color:var(--teal)">\uD83D\uDCBB Desktop Browser:</b><br>'
-      +'1. Click the <b>lock icon</b> \uD83D\uDD12 in the address bar<br>'
-      +'2. Click <b>Site settings</b> or <b>Permissions</b><br>'
-      +'3. Set <b>Location</b> to <b>Allow</b><br>'
-      +'4. <b>Reload the page</b> and try again';
-  }
-  el.innerHTML = steps;
-}
-
-// Also check permission when user navigates to Checklist
-// so if they granted it in a prior visit we capture immediately
-const _origGoChecklist = window.goChecklist;
-window.goChecklist = function(){
-  _origGoChecklist();
-  // Re-check GPS silently after entering checklist
-  if(navigator.geolocation && navigator.permissions){
-    navigator.permissions.query({name:'geolocation'}).then(p=>{
-      if(p.state==='granted') captureGPS();
-      else if(p.state==='denied'){
-        populateLocationDeniedSteps();
-        // Show denied modal only if GPS not already captured
-        if(!S.header.gps){
-          document.getElementById('locationDeniedModal').classList.remove('hidden');
-        }
-      }
-    }).catch(()=>{});
-  }
-};
-
-
-// ── ONLINE / OFFLINE INDICATOR ────────────────────────────────
+// ---- Online / offline ----
 function updateOnlineStatus(){
-  const b=document.getElementById('offlineBanner');
-  if(!b)return;
-  if(navigator.onLine){
-    b.classList.add('hidden');
-  }else{
-    b.classList.remove('hidden');
-  }
+  const b=document.getElementById('offlineBanner');if(!b)return;
+  if(navigator.onLine)b.classList.add('hidden');else b.classList.remove('hidden');
 }
-window.addEventListener('online', ()=>{
-  updateOnlineStatus();
-  toast('Back online \u2013 you can save now','ok');
-  // Re-attempt GPS if not yet captured
-  if(!S.header.gps) captureGPS();
+window.addEventListener('online',updateOnlineStatus);
+window.addEventListener('offline',updateOnlineStatus);
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstallPrompt=e;const ib=document.getElementById('installBtn');if(ib)ib.classList.remove('hidden');const ic=document.getElementById('installCard');if(ic)ic.classList.remove('hidden');});
+// ---- Boot ----
+document.addEventListener('DOMContentLoaded',function(){
+  const fd=document.getElementById('fDate');if(fd)fd.value=S.header.auditDate;
+  document.addEventListener('click',function(e){if(!e.target.closest('.sd-wrap')){const dd=document.getElementById('PartnerDD');if(dd)dd.classList.add('hidden');}});
+  injectManifest();registerSW();initFirebase();updateOnlineStatus();
+  setTimeout(loadDraft,400);
+  setTimeout(checkLocationPermission,1500);
 });
-window.addEventListener('offline', ()=>{
-  updateOnlineStatus();
-  toast('No internet connection','err');
-});
-// Check immediately on load
-document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(updateOnlineStatus,500); });
-
-// ── PREVENT SAVE-TO-FIRESTORE WHILE OFFLINE ───────────────────
-// (Firestore has its own offline queue, but surface a note if needed)
-const _origSaveToFirestore = window.saveToFirestore;
-window.saveToFirestore = function(payload){
-  if(!navigator.onLine){ console.log('[FB] Offline – Firestore will queue when back online'); }
-  _origSaveToFirestore(payload);
-};
-
-// ── DASHBOARD: refresh charts on dark-mode toggle ─────────────
-// (toggleDark already calls renderDashCharts via override above)
-
-// ── CHECKLIST: live completion colour in SSB progress text ─────
-// (Already wired in updateSSB override above)
-
-// ── PRINT: hide offline banner and GPS modals from print ───────
-// (already handled by .no-print / @media print CSS)
-
 </script>
-<!-- ============================================================
-     AIS SHOWROOM AUDIT - FIELD PATCH  (camera access + auto-GPS)
-     ------------------------------------------------------------
-     HOW TO ADD IT:
-       Paste this entire block into your HTML file just BEFORE the
-       closing </body> tag - i.e. directly AFTER your existing big
-       <script>...</script> ends.
-     WHAT IT DOES (overrides 3 functions at runtime - the same
-     pattern your app already uses for registerSW / onScore /
-     goChecklist, so none of your existing code is edited):
-       1. Item photo  -> separate "Camera" + "Gallery" buttons
-       2. Showroom evidence photo -> "Camera" + "Gallery" buttons
-       3. GPS -> robust auto-capture that works indoors and fires
-          on its own once the app is installed & permission granted
-       4. Stops the location popup from flashing on every launch
-     ============================================================ -->
+<!-- ====================================================================
+     RM / TERRITORY MANAGEMENT  (admin-only dashboard add-on)
+     Lets an admin change which RM covers each territory. Saved to
+     Firestore appConfig/rmAssignments so the auto-filled ASM/RM is
+     correct for everyone on NEW audits. Already-saved audits are
+     never changed.
+     ==================================================================== -->
 <script>
 (function(){
   "use strict";
+  function rmTerritories(){return [...new Set(PartnerS.map(p=>p.t))].sort();}
+  function rmDefaults(){const m={};PartnerS.forEach(p=>{if(m[p.t]===undefined)m[p.t]=p.a;});return m;}
+  function rmZones(){const m={};PartnerS.forEach(p=>{if(m[p.t]===undefined)m[p.t]=p.z;});return m;}
+  function rmAllNames(){const ov=window.rmOverrides||{};return [...new Set(PartnerS.map(p=>p.a).concat(Object.values(ov)))].filter(Boolean).sort((a,b)=>a.localeCompare(b));}
 
-  // ---- 1) ITEM PHOTO: Camera (direct) + Gallery (chooser) ----
-  window.photoAreaHTML = function(id,url){
-    if(url) return '<div style="position:relative;display:inline-flex;"><img src="'+url+'" class="photo-thumb" onclick="openModal(\''+id+'\')" alt="Evidence"><button class="photo-del" onclick="removePhoto(\''+id+'\')" type="button">&#10005;</button></div>';
-    return '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      +'<label class="photo-btn" for="pf-cam-'+id+'">&#128247; Camera</label>'
-      +'<input type="file" id="pf-cam-'+id+'" accept="image/*" capture="environment" class="file-inp" onchange="handlePhoto(\''+id+'\',this)">'
-      +'<label class="photo-btn" for="pf-gal-'+id+'">&#128444;&#65039; Gallery</label>'
-      +'<input type="file" id="pf-gal-'+id+'" accept="image/*" class="file-inp" onchange="handlePhoto(\''+id+'\',this)">'
-      +'</div>';
-  };
-
-  // ---- 2) SHOWROOM EVIDENCE SLOT: Camera + Gallery ----
-  window.evidenceSlotInner = function(slot){
-    var url = S.showroomEvidence[slot.key];
-    return '<div class="ev-slot-icon">'+slot.icon+'</div><span class="ev-slot-label">'+escH(slot.label)+'</span>'
-      +(url?'<div style="position:relative;display:inline-flex;margin-bottom:8px;"><img src="'+url+'" class="ev-slot-thumb" onclick="openEvidenceModal(\''+slot.key+'\')" alt="'+escH(slot.label)+'"><button class="photo-del" onclick="removeEvidencePhoto(\''+slot.key+'\')" type="button">&#10005;</button></div>':'')
-      +'<br><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">'
-      +'<label class="photo-btn" for="evcam-'+slot.key+'">&#128247; '+(url?'Retake':'Camera')+'</label>'
-      +'<input type="file" id="evcam-'+slot.key+'" accept="image/*" capture="environment" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)">'
-      +'<label class="photo-btn" for="evgal-'+slot.key+'">&#128444;&#65039; Gallery</label>'
-      +'<input type="file" id="evgal-'+slot.key+'" accept="image/*" class="file-inp" onchange="handleEvidencePhoto(\''+slot.key+'\',this)">'
-      +'</div>';
-  };
-
-  // ---- 3) ROBUST AUTO-GPS (indoor-friendly, fires on its own) ----
-  var _gpsWatchId=null, _gpsBest=null, _gpsStopTimer=null;
-  function gpsStore(pos){
-    if(_gpsBest && pos.coords.accuracy > _gpsBest.coords.accuracy) return; // keep most accurate
-    _gpsBest = pos;
-    S.header.gps = {
-      lat:+pos.coords.latitude.toFixed(6),
-      lng:+pos.coords.longitude.toFixed(6),
-      accuracy:Math.round(pos.coords.accuracy)
-    };
-    if(S.view==='checklist' && document.getElementById('clBanner') && typeof refreshBanner==='function') refreshBanner();
+  window.rmOverrides=window.rmOverrides||{};
+  let _rmTries=0;
+  function loadRMConfig(){
+    if(typeof fbDb==='undefined'||!fbDb){if(_rmTries++<15)setTimeout(loadRMConfig,700);return;}
+    fbDb.collection('appConfig').doc('rmAssignments').get()
+      .then(function(doc){if(doc.exists&&doc.data()&&doc.data().territoryRM){window.rmOverrides=doc.data().territoryRM||{};}})
+      .catch(function(){});
   }
-  window.stopGPS = function(){
-    if(_gpsWatchId!==null){ try{ navigator.geolocation.clearWatch(_gpsWatchId); }catch(e){} _gpsWatchId=null; }
-    clearTimeout(_gpsStopTimer);
-  };
-  window.captureGPS = function(){            // same name -> every existing call uses this
-    if(!navigator.geolocation) return;
-    if(_gpsWatchId!==null) return;           // already running
-    navigator.geolocation.getCurrentPosition(   // 1) fast coarse fix (cached OK) so we have something fast
-      function(p){ gpsStore(p); }, function(){},
-      {timeout:12000, enableHighAccuracy:false, maximumAge:60000}
-    );
-    _gpsWatchId = navigator.geolocation.watchPosition(  // 2) refine continuously
-      function(p){ gpsStore(p); if(_gpsBest && _gpsBest.coords.accuracy<=35) window.stopGPS(); },
-      function(err){
-        if(err && err.code===err.PERMISSION_DENIED){
-          window.stopGPS();
-          if(typeof populateLocationDeniedSteps==='function') populateLocationDeniedSteps();
-          var m=document.getElementById('locationDeniedModal');
-          if(m && !S.header.gps) m.classList.remove('hidden');
-        }
-      },
-      {timeout:20000, enableHighAccuracy:true, maximumAge:15000}
-    );
-    clearTimeout(_gpsStopTimer);
-    _gpsStopTimer = setTimeout(window.stopGPS, 90000);  // safety stop; keeps best fix
+
+  const _origPick=window.pickPartner;
+  window.pickPartner=function(name){
+    if(typeof _origPick==='function')_origPick(name);
+    try{
+      const d=PartnerS.find(x=>x.n===name);
+      const ov=d?(window.rmOverrides||{})[d.t]:'';
+      if(ov){S.header.asm=ov;const f=document.getElementById('fASM');if(f)f.value=ov;if(S.clRendered&&typeof refreshBanner==='function')refreshBanner();}
+    }catch(e){}
   };
 
-  // ---- 4) Kill the location-popup flash + auto-warm GPS on launch ----
-  function initFieldPatch(){
-    var pm = document.getElementById('locationPromptModal');
-    if(pm) pm.classList.add('hidden');       // CSS left it visible by default
-    if(navigator.geolocation && navigator.permissions){
-      navigator.permissions.query({name:'geolocation'}).then(function(p){
-        if(p.state==='granted'){ window.captureGPS(); }                 // silent auto-capture
-        else if(p.state==='prompt'){ if(pm) pm.classList.remove('hidden'); } // ask once
-        // 'denied' handled by the app's own checkLocationPermission
-      }).catch(function(){});
+  const _origOpenDash=window.openDashboard;
+  window.openDashboard=async function(){
+    if(typeof _origOpenDash==='function')await _origOpenDash.apply(this,arguments);
+    if(typeof currentAdmin!=='undefined'&&currentAdmin)injectRMPanel();
+  };
+
+  function injectRMPanel(){
+    const root=document.getElementById('dashRoot');if(!root)return;
+    let card=document.getElementById('rmMgmtCard');
+    if(!card){
+      card=document.createElement('div');card.id='rmMgmtCard';
+      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--shadow-xs)';
+      const tables=document.getElementById('dashTables');
+      if(tables&&tables.parentNode===root)root.insertBefore(card,tables);else root.appendChild(card);
     }
-    // If the checklist was somehow already drawn, redraw so new photo buttons appear
-    if(S.clRendered && typeof renderChecklist==='function') renderChecklist();
+    renderRMCard(card);
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initFieldPatch);
-  else initFieldPatch();
+  function renderRMCard(card){
+    const terrs=rmTerritories(),def=rmDefaults(),zone=rmZones(),ov=window.rmOverrides||{},names=rmAllNames();
+    const dl='<datalist id="rmNamesList">'+names.map(n=>'<option value="'+escH(n)+'"></option>').join('')+'</datalist>';
+    const th='padding:7px 10px;text-align:left;background:var(--surface-2);border-bottom:2px solid var(--border);font-size:10.5px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap';
+    const rows=terrs.map(function(t){
+      const cur=(ov[t]!==undefined&&ov[t]!=='')?ov[t]:(def[t]||'');
+      const isOv=ov[t]!==undefined&&ov[t]!==''&&ov[t]!==def[t];
+      return '<tr style="border-bottom:1px solid var(--border-2)">'
+        +'<td style="padding:7px 10px;font-weight:700;color:var(--text);white-space:nowrap">'+escH(t)+'</td>'
+        +'<td style="padding:7px 10px;color:var(--text-2);white-space:nowrap">'+escH(zone[t]||'')+'</td>'
+        +'<td style="padding:7px 10px;color:var(--text-muted);font-size:11.5px;white-space:nowrap">'+escH(def[t]||'\u2014')+'</td>'
+        +'<td style="padding:6px 10px"><input id="rmInp-'+t+'" list="rmNamesList" value="'+escH(cur)+'" placeholder="'+escH(def[t]||'')+'" style="padding:7px 9px;border:1.5px solid '+(isOv?'var(--teal)':'var(--border)')+';border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);font-size:12.5px;width:100%;min-width:150px"></td>'
+        +'</tr>';
+    }).join('');
+    card.innerHTML=
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text)">\uD83E\uDDD1\u200D\uD83D\uDCBC RM / Territory Management</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<button class="btn btn-secondary" onclick="resetRMAssignments()" style="padding:6px 12px;font-size:12px">\u21BA Reset to defaults</button>'
+      +'<button class="btn btn-primary" onclick="saveRMAssignments()" style="padding:6px 14px;font-size:12px">\uD83D\uDCBE Save assignments</button>'
+      +'</div></div>'
+      +'<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Change the RM for any territory \u2014 type a new name to add an RM, or replace one who has moved on. Updates the auto-filled ASM/RM for <b>new</b> audits across all devices. Clear a field to fall back to the built-in default. Already-saved audits are unchanged.</div>'
+      +dl
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>'
+      +'<th style="'+th+'">Territory</th><th style="'+th+'">Zone</th><th style="'+th+'">Default RM</th><th style="'+th+'">Assigned RM</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+  window.saveRMAssignments=async function(){
+    if(typeof fbDb==='undefined'||!fbDb||typeof currentAdmin==='undefined'||!currentAdmin){toast('Admin login required','err');return;}
+    const terrs=rmTerritories(),map={};
+    terrs.forEach(function(t){const el=document.getElementById('rmInp-'+t);if(el){const v=el.value.trim();if(v)map[t]=v;}});
+    try{
+      await fbDb.collection('appConfig').doc('rmAssignments').set({territoryRM:map,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:(currentAdmin&&currentAdmin.email)||''});
+      window.rmOverrides=map;toast('\u2705 RM assignments saved','ok');
+      const card=document.getElementById('rmMgmtCard');if(card)renderRMCard(card);
+    }catch(e){toast('Save failed: '+e.message,'err');}
+  };
+  window.resetRMAssignments=async function(){
+    if(typeof fbDb==='undefined'||!fbDb||typeof currentAdmin==='undefined'||!currentAdmin){toast('Admin login required','err');return;}
+    if(!confirm('Reset all territories to the built-in default RMs? This clears the saved overrides.'))return;
+    try{
+      await fbDb.collection('appConfig').doc('rmAssignments').delete();
+      window.rmOverrides={};toast('RM assignments reset to defaults','ok');
+      const card=document.getElementById('rmMgmtCard');if(card)renderRMCard(card);
+    }catch(e){toast('Reset failed: '+e.message,'err');}
+  };
+  window.injectRMPanel=injectRMPanel;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadRMConfig);else loadRMConfig();
 })();
 </script>
 </body>
