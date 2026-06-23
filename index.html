@@ -2840,6 +2840,296 @@ window.saveToFirestore = function(payload){
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initFieldPatch);
   else initFieldPatch();
 })();
+  <!-- ============================================================
+     AIS SHOWROOM AUDIT  -  RM MANAGEMENT  +  SHEETS COLUMN-D FIX
+     ------------------------------------------------------------
+<script>
+(function(){
+  "use strict";
+
+  try{ console.log('%c[AIS RM + Sheets patch] active','color:#00B5CC;font-weight:700'); }catch(e){}
+
+  /* =====================================================================
+     PART 1 - SHEETS COLUMN D: copy Partner -> dealer on the outgoing save
+     ===================================================================== */
+  (function(){
+    if(window.__aisSheetsFetchPatched) return;
+    window.__aisSheetsFetchPatched = true;
+    if(typeof window.fetch !== 'function') return;
+    var _origFetch = window.fetch.bind(window);
+    window.fetch = function(input, init){
+      try{
+        var url = (typeof input === 'string') ? input : (input && input.url);
+        if(url && url.indexOf('script.google.com/macros/') !== -1 && init && typeof init.body === 'string'){
+          var p = JSON.parse(init.body);
+          if(p && typeof p === 'object' && p.Partner && !p.dealer){
+            p.dealer     = p.Partner;   /* column D source in the Apps Script */
+            p.Dealer     = p.Partner;   /* harmless aliases */
+            p.dealerName = p.Partner;
+            p.partner    = p.Partner;
+            p.partnerName= p.Partner;
+            init = Object.assign({}, init, { body: JSON.stringify(p) });
+            try{ console.log('[AIS RM + Sheets patch] dealer field added for sheet:', p.Partner); }catch(e){}
+          }
+        }
+      }catch(e){ /* never block a save - fall through with the original request */ }
+      return _origFetch(input, init);
+    };
+  })();
+
+  /* =====================================================================
+     PART 2 - DASHBOARD: RM / Territory Management
+     ===================================================================== */
+
+  /* ---- defaults derived from your Partner master (PartnerS) ---- */
+  function allTerritories(){
+    try{ return Array.from(new Set(PartnerS.map(function(p){return p.t;}))).sort(); }
+    catch(e){ return []; }
+  }
+  function defaultTerrRM(){           /* territory -> RM, from the master list */
+    var m = {};
+    try{ PartnerS.forEach(function(p){ if(!(p.t in m)) m[p.t] = p.a; }); }catch(e){}
+    return m;
+  }
+  function defaultRoster(){           /* unique RM names + "Vacant" */
+    var s = [];
+    try{ s = Array.from(new Set(PartnerS.map(function(p){return p.a;}).filter(Boolean))).sort(); }catch(e){}
+    if(s.indexOf('Vacant') === -1) s.push('Vacant');
+    return s;
+  }
+
+  function ensureConfig(){
+    if(!window.rmConfig || typeof window.rmConfig !== 'object'){
+      window.rmConfig = { assignments:{}, roster:defaultRoster() };
+    }
+    if(!window.rmConfig.assignments) window.rmConfig.assignments = {};
+    if(!Array.isArray(window.rmConfig.roster) || !window.rmConfig.roster.length) window.rmConfig.roster = defaultRoster();
+    return window.rmConfig;
+  }
+  function currentRoster(){ return ensureConfig().roster.slice(); }
+
+  /* effective RM for a territory: saved override -> partner default -> '' */
+  function effectiveRM(terr, fallback){
+    var a = ensureConfig().assignments || {};
+    if(terr && Object.prototype.hasOwnProperty.call(a, terr) && a[terr]) return a[terr];
+    if(fallback) return fallback;
+    return defaultTerrRM()[terr] || '';
+  }
+  window.effectiveRM = effectiveRM;
+
+  /* ---- load saved config from Firestore (appConfig/rmConfig) ---- */
+  function loadRMConfig(){
+    ensureConfig();
+    var tries = 0;
+    (function poll(){
+      if(typeof fbDb !== 'undefined' && fbDb){
+        try{
+          fbDb.collection('appConfig').doc('rmConfig').get().then(function(doc){
+            if(doc && doc.exists){
+              var data = doc.data() || {};
+              if(data.assignments && typeof data.assignments === 'object') window.rmConfig.assignments = data.assignments;
+              if(Array.isArray(data.roster) && data.roster.length) window.rmConfig.roster = data.roster;
+              if(document.getElementById('rmPanelBody')) rmRerender();
+            }
+          }).catch(function(){ /* no read access / not created yet -> keep defaults */ });
+        }catch(e){}
+      } else if(tries++ < 40){
+        setTimeout(poll, 250);
+      }
+    })();
+  }
+
+  /* ---- apply the effective RM whenever a partner is selected ---- */
+  (function(){
+    var orig = window.pickPartner;
+    if(typeof orig !== 'function' || orig.__aisRM) return;
+    var wrapped = function(name){
+      orig.apply(this, arguments);
+      try{
+        var d = null, i;
+        for(i = 0; i < PartnerS.length; i++){ if(PartnerS[i].n === name){ d = PartnerS[i]; break; } }
+        if(d){
+          var rm = effectiveRM(d.t, d.a);
+          S.header.asm = rm;
+          var f = document.getElementById('fASM'); if(f) f.value = rm;
+        }
+      }catch(e){}
+    };
+    wrapped.__aisRM = true;
+    window.pickPartner = wrapped;
+  })();
+
+  /* ---- panel body ---- */
+  function rmBodyHTML(){
+    var roster = currentRoster();
+    var terrs  = allTerritories();
+
+    var chips = roster.map(function(name, i){
+      return '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:5px 6px 5px 12px;font-size:12px;font-weight:600;color:var(--text);margin:0 6px 6px 0">'
+        + escH(name)
+        + '<button onclick="rmRemoveIdx(' + i + ')" title="Remove" style="width:18px;height:18px;border:none;border-radius:50%;background:var(--danger-bg);color:var(--danger);cursor:pointer;font-size:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center">\u2715</button>'
+        + '</span>';
+    }).join('');
+    if(!roster.length) chips = '<span style="font-size:12px;color:var(--text-muted)">No RMs in roster yet.</span>';
+
+    var addRow = '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+      + '<input id="rmAddInput" type="text" placeholder="New RM name\u2026" onkeydown="if(event.key===\'Enter\'){event.preventDefault();rmAdd();}" style="flex:1;min-width:180px;padding:8px 11px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);font-size:13px;outline:none">'
+      + '<button class="btn btn-ghost" onclick="rmAdd()">\u2795 Add RM</button>'
+      + '</div>';
+
+    var rosterSel = roster.slice();
+    if(rosterSel.indexOf('Vacant') === -1) rosterSel.push('Vacant');
+
+    var rows = terrs.map(function(t){
+      var cur  = effectiveRM(t, defaultTerrRM()[t]);
+      var zone = (typeof TZ !== 'undefined' && TZ[t]) ? TZ[t] : '';
+      var extra = (cur && rosterSel.indexOf(cur) === -1) ? '<option value="' + escH(cur) + '" selected>' + escH(cur) + ' (current)</option>' : '';
+      var opts = extra + rosterSel.map(function(n){ return '<option value="' + escH(n) + '"' + (n === cur ? ' selected' : '') + '>' + escH(n) + '</option>'; }).join('');
+      return '<tr style="border-bottom:1px solid var(--border-2)">'
+        + '<td style="padding:6px 8px;font-weight:700;color:var(--text);white-space:nowrap">' + escH(t) + '</td>'
+        + '<td style="padding:6px 8px;color:var(--text-muted);font-size:11.5px;white-space:nowrap">' + escH(zone) + '</td>'
+        + '<td style="padding:6px 8px"><select data-terr="' + escH(t) + '" class="rmAssignSel" style="width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text);font-size:12.5px;outline:none">' + opts + '</select></td>'
+        + '</tr>';
+    }).join('');
+
+    var thS = 'padding:6px 8px;text-align:left;font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;background:var(--surface-2);border-bottom:2px solid var(--border)';
+    var table = '<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse">'
+      + '<thead><tr><th style="' + thS + '">Territory</th><th style="' + thS + '">Zone</th><th style="' + thS + '">Assigned RM</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table></div>';
+
+    return ''
+      + '<div style="font-size:11px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">RM Roster <span style="color:var(--text-muted);font-weight:600;text-transform:none;letter-spacing:0">(tap \u2715 to remove)</span></div>'
+      + '<div>' + chips + '</div>'
+      + addRow
+      + '<div style="font-size:11px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Territory \u2192 RM Assignment</div>'
+      + table
+      + '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">'
+      +   '<button class="btn btn-secondary" onclick="rmReset()">\u21BA Reset to Default</button>'
+      +   '<button class="btn btn-primary" onclick="rmSave()">\uD83D\uDCBE Save Changes</button>'
+      + '</div>'
+      + '<div id="rmSaveMsg" style="font-size:11.5px;color:var(--text-muted);text-align:right;margin-top:8px;min-height:16px"></div>';
+  }
+
+  function rmPanelHTML(){
+    return ''
+      + '<div onclick="rmToggle()" style="cursor:pointer;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,var(--surface),var(--surface-2));border-bottom:1px solid var(--border-2)">'
+      +   '<div style="display:flex;align-items:center;gap:9px;min-width:0">'
+      +     '<span style="font-size:16px;flex-shrink:0">\uD83D\uDC65</span>'
+      +     '<div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text)">RM / Territory Management</div>'
+      +     '<div style="font-size:11px;color:var(--text-muted)">Add, remove or reassign RMs across territories</div></div>'
+      +   '</div>'
+      +   '<span id="rmCaret" style="font-size:16px;color:var(--teal);transition:transform .3s;flex-shrink:0;transform:rotate(-90deg)">\u25BE</span>'
+      + '</div>'
+      + '<div id="rmPanelBody" style="padding:16px;display:none">' + rmBodyHTML() + '</div>';
+  }
+
+  function injectRMPanel(){
+    if(typeof currentAdmin === 'undefined' || !currentAdmin) return;   /* admin only */
+    var bar = document.getElementById('dashFilterBar');
+    if(!bar || !bar.parentNode) return;
+    var old = document.getElementById('rmMgmtCard');
+    if(old) old.remove();
+    var card = document.createElement('div');
+    card.id = 'rmMgmtCard';
+    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;box-shadow:var(--shadow-xs);overflow:hidden';
+    card.innerHTML = rmPanelHTML();
+    bar.parentNode.insertBefore(card, bar.nextSibling);
+  }
+
+  function rmRerender(){
+    var body = document.getElementById('rmPanelBody');
+    if(body) body.innerHTML = rmBodyHTML();
+  }
+
+  /* capture any in-progress dropdown choices before a re-render so they are not lost */
+  function rmSyncSelects(){
+    ensureConfig();
+    var sels = document.querySelectorAll('.rmAssignSel'), i;
+    for(i = 0; i < sels.length; i++){
+      var t = sels[i].getAttribute('data-terr');
+      if(t) window.rmConfig.assignments[t] = sels[i].value;
+    }
+  }
+
+  /* ---- handlers (on window, for the inline onclick attributes) ---- */
+  window.rmToggle = function(){
+    var b = document.getElementById('rmPanelBody'), c = document.getElementById('rmCaret');
+    if(!b) return;
+    var hidden = (b.style.display === 'none');
+    b.style.display = hidden ? 'block' : 'none';
+    if(c) c.style.transform = hidden ? '' : 'rotate(-90deg)';
+  };
+  window.rmRemoveIdx = function(i){
+    rmSyncSelects();
+    var r = currentRoster();
+    if(i < 0 || i >= r.length) return;
+    r.splice(i, 1);
+    ensureConfig().roster = r;
+    rmRerender();
+  };
+  window.rmAdd = function(){
+    rmSyncSelects();
+    var inp = document.getElementById('rmAddInput');
+    if(!inp) return;
+    var name = (inp.value || '').trim();
+    if(!name) return;
+    var r = currentRoster();
+    if(r.indexOf(name) !== -1){ if(typeof toast === 'function') toast('RM already in roster', 'info'); inp.value = ''; return; }
+    r.push(name); r.sort();
+    ensureConfig().roster = r;
+    rmRerender();
+    if(typeof toast === 'function') toast('Added RM: ' + name, 'ok');
+  };
+  window.rmReset = function(){
+    ensureConfig();
+    window.rmConfig.assignments = {};
+    window.rmConfig.roster = defaultRoster();
+    rmRerender();
+    var m = document.getElementById('rmSaveMsg'); if(m){ m.style.color = 'var(--text-muted)'; m.textContent = 'Reset to defaults \u2013 click Save Changes to apply.'; }
+  };
+  window.rmSave = function(){
+    rmSyncSelects();
+    var m = document.getElementById('rmSaveMsg');
+    if(m){ m.style.color = 'var(--text-muted)'; m.textContent = 'Saving\u2026'; }
+    if(typeof fbDb === 'undefined' || !fbDb){
+      if(m){ m.style.color = 'var(--danger)'; m.textContent = '\u26A0 Database not ready \u2013 wait a moment and try again.'; }
+      return;
+    }
+    var email = (typeof currentAdmin !== 'undefined' && currentAdmin) ? (currentAdmin.email || '') : '';
+    var payload = {
+      assignments: ensureConfig().assignments || {},
+      roster:      ensureConfig().roster || defaultRoster(),
+      updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy:   email
+    };
+    fbDb.collection('appConfig').doc('rmConfig').set(payload).then(function(){
+      if(m){ m.style.color = 'var(--success)'; m.textContent = '\u2713 Saved. New RM assignments apply to new audits.'; }
+      if(typeof toast === 'function') toast('RM assignments saved', 'ok');
+    }).catch(function(e){
+      if(m){ m.style.color = 'var(--danger)'; m.textContent = '\u26A0 Save failed: ' + (e && e.message ? e.message : e); }
+      if(typeof toast === 'function') toast('RM save failed', 'err');
+    });
+  };
+
+  /* ---- show the panel whenever the dashboard opens (admin only) ---- */
+  (function(){
+    var orig = window.openDashboard;
+    if(typeof orig !== 'function' || orig.__aisRM) return;
+    var wrapped = function(){
+      var r = orig.apply(this, arguments);
+      setTimeout(injectRMPanel, 0);
+      if(r && typeof r.then === 'function'){ r.then(function(){ setTimeout(injectRMPanel, 0); }, function(){}); }
+      return r;
+    };
+    wrapped.__aisRM = true;
+    window.openDashboard = wrapped;
+  })();
+
+  /* ---- kick off config load ---- */
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadRMConfig);
+  else loadRMConfig();
+
+})();
 </script>
 </body>
 </html>
