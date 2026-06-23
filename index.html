@@ -758,7 +758,7 @@ function injectManifest(){
 function registerSW(){
   if(!('serviceWorker' in navigator))return;
   const code="const V='ais-v1';self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(V).then(c=>c.addAll(['./'])));});self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});";
-  try{const blob=new Blob([code],{type:'application/javascript'});navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'}).then(()=>{}).catch(e=>{});}catch(e){}
+  try{const blob=new Blob([code],{type:'application/javascript'});navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(()=>{}).catch(e=>{});}catch(e){}
 }
 async function installApp(){
   if(!deferredInstallPrompt){toast('Open in Chrome/Edge on mobile for install support','info');return;}
@@ -1831,7 +1831,7 @@ self.addEventListener('message',e=>{
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
         if(!refreshing){refreshing=true;window.location.reload();}
       });
-      navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'})
+      navigator.serviceWorker.register('./sw.js',{scope:'./'})
         .then(reg=>{
           if(reg.waiting&&navigator.serviceWorker.controller)showUpdateBanner(reg);
           reg.addEventListener('updatefound',()=>{
