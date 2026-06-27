@@ -1,3 +1,8 @@
+/* AIS Showroom Audit - Service Worker
+   Place this file (sw.js) in the SAME folder as index.html.
+   Bump the version string below each time you deploy an update,
+   so browsers fetch the new code and the "App update available"
+   banner appears. */
 const C = 'ais-audit-v5.1.0';
 
 self.addEventListener('install', e => {
