@@ -3,7 +3,7 @@
    Bump the version string below each time you deploy an update,
    so browsers fetch the new code and the "App update available"
    banner appears. */
-const C = 'ais-audit-v5.1.0';
+const C = 'ais-audit-v6.0.0';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -39,5 +39,8 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('message', e => {
-  if (e && e.data === 'SKIP_WAITING') self.skipWaiting();
+  // Accept both a bare string 'SKIP_WAITING' and {type:'SKIP_WAITING'} —
+  // the app currently sends the object form via doAppUpdate().
+  if (!e || !e.data) return;
+  if (e.data === 'SKIP_WAITING' || e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
