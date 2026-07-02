@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AIS Audit">
 <meta name="theme-color" content="#00B5CC">
+<link rel="icon" href="./icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="./icon-512.png">
 <title>AIS Windows &#8211; Showroom Audit App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2844,7 +2846,11 @@ async function doAppUpdate(){
 
 function injectManifest(){
   if(document.getElementById('pwaManifest'))return;
-  const manifest={name:'AIS Showroom Audit',short_name:'AIS Audit',start_url:'./index.html',display:'standalone',background_color:'#0B1F3A',theme_color:'#00B5CC',icons:[{src:'https://raw.githubusercontent.com/sanjug05/audit/main/logo.png',sizes:'192x192',type:'image/png'},{src:'https://raw.githubusercontent.com/sanjug05/audit/main/logo.png',sizes:'512x512',type:'image/png'}]};
+  const manifest={name:'AIS Showroom Audit',short_name:'AIS Audit',start_url:'./index.html',display:'standalone',background_color:'#0B1F3A',theme_color:'#00B5CC',icons:[
+    {src:'./icon-192.png',sizes:'192x192',type:'image/png',purpose:'any'},
+    {src:'./icon-512.png',sizes:'512x512',type:'image/png',purpose:'any'},
+    {src:'./icon-512-maskable.png',sizes:'512x512',type:'image/png',purpose:'maskable'}
+  ]};
   const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
   const link=document.createElement('link');link.id='pwaManifest';link.rel='manifest';link.href=URL.createObjectURL(blob);
   document.head.appendChild(link);
